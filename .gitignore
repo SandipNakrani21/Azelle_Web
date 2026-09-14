@@ -1,0 +1,19 @@
+node_modules
+dist
+.vercel
+.claude
+.env
+.next
+out
+build
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+npm-debug.log*
+.DS_Store
+
+# API
+server/.env
+server/uploads/*
+!server/uploads/.gitkeep
+server/.data

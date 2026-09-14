@@ -1,0 +1,6 @@
+# Keep LF line endings in the repository (Vercel builds on Linux).
+* text=auto eol=lf
+*.webp binary
+*.png binary
+*.jpg binary
+*.mp4 binary

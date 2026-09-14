@@ -1,0 +1,446 @@
+[
+  {
+    "name": "White Oud",
+    "slug": "white-oud",
+    "family": "Woody Oud",
+    "group": "Woody",
+    "families": [
+      "Woody",
+      "Amber"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Saffron · Oud · Sandalwood",
+    "pyramid": {
+      "top": "Saffron, Bergamot, Labdanum",
+      "heart": "Oud, Rose, Patchouli",
+      "base": "Sandalwood, Amber, White Musk"
+    },
+    "description": "A rich, sophisticated woody oud. Saffron and bergamot open warm and bright before a heart of oud, rose and patchouli settles in, drying down to creamy sandalwood, amber and white musk. A high-concentration perfume extract made to leave a lasting impression, from morning meetings to late evenings.",
+    "tagline": "The art of distinction",
+    "concentration": "Perfume extract",
+    "perfumeOil": 31,
+    "longevity": "8–12 hours",
+    "highlights": [
+      "31% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium quality ingredients",
+      "Inspired by international fragrances",
+      "Cruelty free",
+      "Sulphate free"
+    ],
+    "images": [
+      "/uploads/white-oud-1.webp",
+      "/uploads/white-oud-2.webp",
+      "/uploads/white-oud-3.webp",
+      "/uploads/white-oud-4.webp",
+      "/uploads/white-oud-5.webp",
+      "/uploads/white-oud-6.webp"
+    ],
+    "tint": "#c8b9a3",
+    "inStock": true
+  },
+  {
+    "name": "Imperium",
+    "slug": "imperium",
+    "family": "Aromatic Fruity",
+    "group": "Aromatic",
+    "families": [
+      "Aromatic",
+      "Fresh",
+      "Amber"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Pineapple · Lavender · Cinnamon",
+    "pyramid": {
+      "top": "Pineapple, Juniper Berry",
+      "heart": "Lavender, Rosemary",
+      "base": "Cinnamon"
+    },
+    "description": "A bold, masculine scent built for commanding presence. Juicy pineapple and crisp juniper berry lead into aromatic lavender and rosemary, finished with a warm trail of cinnamon. Rich projection and long-lasting performance for days that call for confidence.",
+    "tagline": "King of fragrances",
+    "concentration": "Perfume",
+    "perfumeOil": 31,
+    "longevity": "8–12 hours",
+    "highlights": [
+      "31% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium quality ingredients",
+      "Inspired by international fragrances",
+      "For daily wear and special occasions"
+    ],
+    "images": [
+      "/uploads/imperium-1.webp",
+      "/uploads/imperium-2.webp",
+      "/uploads/imperium-3.webp",
+      "/uploads/imperium-4.webp",
+      "/uploads/imperium-5.webp",
+      "/uploads/imperium-6.webp"
+    ],
+    "tint": "#8a5a2b",
+    "inStock": true
+  },
+  {
+    "name": "Urban Voyage",
+    "slug": "urban-voyage",
+    "family": "Citrus Aquatic",
+    "group": "Fresh",
+    "families": [
+      "Fresh",
+      "Floral",
+      "Woody"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Grapefruit · Sea Salt · White Musk",
+    "pyramid": {
+      "top": "Grapefruit, Lemon, Bergamot, Citrus Zest",
+      "heart": "Sea Salt, Water Lily",
+      "base": "Amber Resin, White Musk, Wood"
+    },
+    "description": "A bright city escape in a bottle. Sparkling grapefruit, lemon and bergamot meet a breezy heart of sea salt and water lily, settling into warm amber resin, white musk and soft woods. Fresh, easy and made for everyday wear, from the morning commute to late nights out.",
+    "tagline": "Urban Gen Z vibes. Bottled.",
+    "concentration": "Eau de Parfum",
+    "perfumeOil": 25,
+    "longevity": "Up to 12 hours",
+    "highlights": [
+      "25% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium ingredients",
+      "Inspired by international fragrances",
+      "Vegan",
+      "Cruelty free",
+      "Sulphate free"
+    ],
+    "images": [
+      "/uploads/urban-voyage-1.webp",
+      "/uploads/urban-voyage-2.webp",
+      "/uploads/urban-voyage-3.webp",
+      "/uploads/urban-voyage-4.webp"
+    ],
+    "tint": "#b5553f",
+    "inStock": true
+  },
+  {
+    "name": "Desire Edge",
+    "slug": "desire-edge",
+    "family": "Fruity Amber",
+    "group": "Sweet",
+    "families": [
+      "Sweet",
+      "Amber",
+      "Floral"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Pineapple · Vanilla · Amber",
+    "pyramid": {
+      "top": "Pineapple, Apple, Lemon",
+      "heart": "Orange Blossom, Lavender, Iris",
+      "base": "Vanilla, Amber, Sandalwood"
+    },
+    "description": "A magnetic fragrance with a daring edge. Juicy pineapple, crisp apple and a twist of lemon open onto a sensual heart of orange blossom, lavender and iris, before settling into a warm, lingering trail of vanilla, amber and creamy sandalwood. Made for date nights and the moments you want remembered.",
+    "tagline": "Where attraction begins.",
+    "concentration": "Eau de Parfum",
+    "perfumeOil": 25,
+    "longevity": "Up to 12 hours",
+    "highlights": [
+      "25% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium ingredients",
+      "Inspired by international fragrances",
+      "Vegan",
+      "Cruelty free",
+      "Sulphate free"
+    ],
+    "tint": "#3b2a6b",
+    "inStock": true,
+    "images": [
+      "/uploads/desire-edge-1.webp",
+      "/uploads/desire-edge-2.webp",
+      "/uploads/desire-edge-3.webp",
+      "/uploads/desire-edge-4.webp",
+      "/uploads/desire-edge-5.webp"
+    ]
+  },
+  {
+    "name": "Conqueror",
+    "slug": "conqueror",
+    "family": "Aquatic Woody",
+    "group": "Fresh",
+    "families": [
+      "Fresh",
+      "Woody",
+      "Aromatic",
+      "Mossy"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Grapefruit · Marine Accord · Ambergris",
+    "pyramid": {
+      "top": "Grapefruit, Marine Accord, Bay Leaf",
+      "heart": "Hedione Jasmine, Patchouli",
+      "base": "Guaiac Wood, Oak Moss, Ambergris"
+    },
+    "description": "Built for those who lead. Sparkling grapefruit and a cool marine accord meet aromatic bay leaf, flowing into a radiant heart of hedione jasmine and earthy patchouli. The dry-down is bold and assured: smoky guaiac wood, oak moss and salty ambergris that stay with you all day. Citrus, marine and woody, with a confident edge.",
+    "tagline": "Command every room.",
+    "concentration": "Eau de Parfum",
+    "perfumeOil": 25,
+    "longevity": "Up to 12 hours",
+    "highlights": [
+      "25% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium ingredients",
+      "Inspired by international fragrances",
+      "Vegan",
+      "Cruelty free"
+    ],
+    "tint": "#1f2433",
+    "inStock": true,
+    "images": [
+      "/uploads/conqueror-1.webp",
+      "/uploads/conqueror-2.webp",
+      "/uploads/conqueror-3.webp",
+      "/uploads/conqueror-4.webp"
+    ]
+  },
+  {
+    "slug": "midnight-osmanthus",
+    "families": [
+      "Floral",
+      "Amber"
+    ],
+    "tint": "#d9a45b",
+    "inStock": true,
+    "name": "Midnight Osmanthus",
+    "family": "Floral Amber",
+    "group": "Floral",
+    "notes": "Osmanthus · Saffron · Oud",
+    "pyramid": {
+      "top": "Saffron, Pink Pepper",
+      "heart": "Osmanthus, Apricot Skin",
+      "base": "Oud, Labdanum, Suede"
+    },
+    "description": "A glowing osmanthus laid over saffron threads and a slow-burning oud base. Warm from the first breath, and closer to skin with every hour.",
+    "images": [
+      "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1600612253971-422e7f7faeb6?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1610461888750-10bfc601b874?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 8990,
+      "50": 14500,
+      "100": 24940
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  },
+  {
+    "slug": "powder-rose",
+    "families": [
+      "Floral",
+      "Sweet"
+    ],
+    "tint": "#e3a6a8",
+    "inStock": true,
+    "name": "Powder Rose",
+    "family": "Floral Musk",
+    "group": "Floral",
+    "notes": "Damask Rose · Iris · White Musk",
+    "pyramid": {
+      "top": "Pear, Pink Pepper",
+      "heart": "Damask Rose, Orris Butter",
+      "base": "White Musk, Cashmeran"
+    },
+    "description": "Rose petals dusted with iris powder, softened into a clean musk. Quiet, tailored and unmistakably close.",
+    "images": [
+      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1528740561666-dc2479dc08ab?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1622618991746-fe6004db3a47?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1563170351-be82bc888aa4?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1557170334-a9632e77c6e4?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 7750,
+      "50": 12500,
+      "100": 21500
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  },
+  {
+    "slug": "smoked-cedar",
+    "families": [
+      "Woody",
+      "Aromatic"
+    ],
+    "tint": "#8a7560",
+    "inStock": true,
+    "name": "Smoked Cedar",
+    "family": "Smoky Woods",
+    "group": "Woody",
+    "notes": "Atlas Cedar · Birch Tar · Vetiver",
+    "pyramid": {
+      "top": "Black Pepper, Cardamom",
+      "heart": "Atlas Cedar, Birch Tar",
+      "base": "Haitian Vetiver, Ambergris"
+    },
+    "description": "Split cedar over a banked fire. Dry, resinous and cool at the edges, with vetiver rooting it to the ground.",
+    "images": [
+      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1615634260167-c8cdede054de?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 9610,
+      "50": 15500,
+      "100": 26660
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  },
+  {
+    "slug": "night-sandalwood",
+    "families": [
+      "Woody",
+      "Amber",
+      "Sweet"
+    ],
+    "tint": "#c9a27e",
+    "inStock": false,
+    "name": "Night Sandalwood",
+    "family": "Creamy Woods",
+    "group": "Woody",
+    "notes": "Sandalwood · Tonka · Fig Leaf",
+    "pyramid": {
+      "top": "Fig Leaf, Bergamot",
+      "heart": "Mysore Sandalwood, Jasmine Sambac",
+      "base": "Tonka Bean, Benzoin"
+    },
+    "description": "Milky sandalwood and tonka warmed by a thread of jasmine. The scent of a late evening that doesn't want to end.",
+    "images": [
+      "https://images.unsplash.com/photo-1557170334-a9632e77c6e4?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1600612253971-422e7f7faeb6?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1619994403073-2cec844b8e63?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1528740561666-dc2479dc08ab?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1605651202774-7d573fd3f12d?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 10230,
+      "50": 16500,
+      "100": 28380
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  },
+  {
+    "slug": "crystal-neroli",
+    "families": [
+      "Fresh",
+      "Aromatic"
+    ],
+    "tint": "#e8cf6f",
+    "inStock": true,
+    "name": "Crystal Neroli",
+    "family": "Citrus Aromatic",
+    "group": "Fresh",
+    "notes": "Neroli · Bergamot · Bitter Orange Leaf",
+    "pyramid": {
+      "top": "Calabrian Bergamot, Mandarin",
+      "heart": "Tunisian Neroli, Bitter Orange Leaf",
+      "base": "Mineral Musk, Blond Woods"
+    },
+    "description": "Orange blossom caught in cold light. Sparkling citrus opens onto a clear, mineral trail that stays crisp all day.",
+    "images": [
+      "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1622618991746-fe6004db3a47?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1610461888750-10bfc601b874?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1587017539504-67cfbddac569?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 7130,
+      "50": 11500,
+      "100": 19780
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  },
+  {
+    "slug": "sea-fig",
+    "families": [
+      "Fresh",
+      "Mossy"
+    ],
+    "tint": "#8fb08a",
+    "inStock": true,
+    "name": "Sea Fig",
+    "family": "Green Aquatic",
+    "group": "Fresh",
+    "notes": "Green Fig · Sea Salt · Driftwood",
+    "pyramid": {
+      "top": "Green Fig, Lime Zest",
+      "heart": "Sea Salt, Violet Leaf",
+      "base": "Driftwood, Oakmoss"
+    },
+    "description": "Fig leaves in a salt breeze. Green, sunlit and a little wild, drying down to smooth driftwood.",
+    "images": [
+      "https://images.unsplash.com/photo-1605651202774-7d573fd3f12d?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1563170351-be82bc888aa4?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1619994403073-2cec844b8e63?auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80"
+    ],
+    "prices": {
+      "30": 7440,
+      "50": 12000,
+      "100": 20640
+    },
+    "tagline": "",
+    "concentration": "Perfume extract",
+    "perfumeOil": null,
+    "longevity": "",
+    "highlights": []
+  }
+]

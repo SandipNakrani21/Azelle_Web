@@ -1,0 +1,821 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ─────────────────────────────────────────────
+   Themes are switched by setting data-theme on <html>.
+   Ivory Osmanthus is also the bare :root fallback. */
+
+:root,
+[data-theme="blanc-osmanthe"] {
+  --bg: #f7f3ec;
+  --surface: #fffdf8;
+  --surface2: #efe9df;
+  --ink: #1b1815;
+  --soft: #7d7264;
+  --line: rgba(27, 24, 21, 0.14);
+  --accent: oklch(0.62 0.11 32);
+  --accent-ink: #fffdf8;
+  --font-display: "Marcellus", serif;
+  --font-sans: "Manrope", sans-serif;
+  color-scheme: light;
+}
+
+[data-theme="noir-ambre"] {
+  --bg: #0b0a09;
+  --surface: #151211;
+  --surface2: #1e1a18;
+  --ink: #f3ece1;
+  --soft: #a99e91;
+  --line: rgba(243, 236, 225, 0.14);
+  --accent: oklch(0.78 0.11 78);
+  --accent-ink: #0b0a09;
+  --font-display: "Cormorant Garamond", serif;
+  --font-sans: "Jost", sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme="vert-cristal"] {
+  --bg: #0a1512;
+  --surface: #11201c;
+  --surface2: #182b25;
+  --ink: #e9f1ec;
+  --soft: #8fa79c;
+  --line: rgba(233, 241, 236, 0.15);
+  --accent: oklch(0.78 0.11 168);
+  --accent-ink: #0a1512;
+  --font-display: "Bodoni Moda", serif;
+  --font-sans: "Space Grotesk", sans-serif;
+  color-scheme: dark;
+}
+
+/* Derived tokens + motion constants (mirrors the reference site's timings). */
+:root {
+  --header-h: 80px;
+  --ease-out-slow: cubic-bezier(0, 0, 0.3, 1);
+  --hover-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  --band: color-mix(in oklab, var(--accent) 30%, var(--bg));
+  --name-gradient: linear-gradient(100deg, #7a4a22 0%, color-mix(in oklab, var(--accent) 88%, #000) 40%, #8e4458 70%, #3f6b58 100%);
+  --button-gradient: linear-gradient(110deg, #e6b45a 0%, #e9a58f 30%, color-mix(in oklab, var(--accent) 78%, #fff) 55%, #cf8f9c 80%, #9fc2ad 100%);
+  /* Menu hover: the same colours as the hero / footer background (--brand-gradient), as a text-friendly sweep. */
+  --menu-gradient: linear-gradient(100deg, var(--accent) 0%, #d9a441 32%, #b46a7a 66%, #6f9c86 100%);
+  /* Brand gradient — shared by the hero and the "Shop by" sections. */
+  --brand-gradient:
+    radial-gradient(60% 70% at 85% 35%, color-mix(in oklab, var(--accent) 72%, transparent), transparent 70%),
+    radial-gradient(55% 60% at 8% 92%, color-mix(in oklab, #d9a441 58%, transparent), transparent 70%),
+    radial-gradient(50% 55% at 22% 4%, color-mix(in oklab, #6f9c86 55%, transparent), transparent 70%),
+    radial-gradient(45% 50% at 55% 62%, color-mix(in oklab, #b46a7a 38%, transparent), transparent 75%),
+    linear-gradient(135deg, color-mix(in oklab, var(--accent) 28%, var(--surface2)), color-mix(in oklab, #c9a27e 34%, var(--surface2)));
+}
+
+/* Lighter name gradient for the dark themes. */
+[data-theme="noir-ambre"],
+[data-theme="vert-cristal"] {
+  --name-gradient: linear-gradient(100deg, #f0c987 0%, color-mix(in oklab, var(--accent) 80%, #fff) 45%, #e7a6b6 75%, #9fd3bb 100%);
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg);
+    min-height: 100vh;
+    overflow-x: clip;
+  }
+
+  [id] {
+    scroll-margin-top: calc(var(--header-h) + 12px);
+  }
+
+  /* Reference site: `a, button { transition: .5s }` */
+  a,
+  button {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform,
+      text-decoration-color;
+    transition-duration: 0.5s;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--ink);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: -4rem;
+    z-index: 100;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.75rem 1.25rem;
+  }
+  .skip-link:focus {
+    top: 1rem;
+  }
+
+  /* Buttons — 47px tall, 10px radius, uppercase, 0.5s fill on hover. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 47px;
+    min-width: 160px;
+    padding: 0 1.75rem;
+    border: 1px solid var(--ink);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  /* Button hover: a hero-palette gradient fades in and drifts across the button. */
+  .btn,
+  .chip {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  .btn::before,
+  .chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--button-gradient);
+    background-size: 220% 100%;
+    background-position: 0% 50%;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-out-slow), background-position 0.9s var(--ease-out-slow);
+  }
+  .btn:not(:disabled):focus-visible,
+  .chip:not(.is-active):focus-visible {
+    border-color: transparent;
+    color: #1b1815;
+  }
+  .btn:not(:disabled):focus-visible::before,
+  .chip:not(.is-active):focus-visible::before {
+    opacity: 1;
+    background-position: 100% 50%;
+  }
+
+  .link-underline {
+    display: inline-block;
+    padding-bottom: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: var(--header-h);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  /* Text hover: the text lifts ("pops") and turns bold. -webkit-text-stroke thickens the
+     glyphs without changing their width, so neighbouring text never shifts. */
+  .nav-link span,
+  .menu-link,
+  .footer-link,
+  .link-underline,
+  .card-title,
+  .text-link,
+  .note-label {
+    display: inline-block;
+    transition: transform 0.35s var(--ease-out-slow), color 0.35s;
+  }
+  .nav-link:focus-visible span,
+  .nav-link[aria-expanded="true"] span,
+  .menu-link:focus-visible,
+  .footer-link:focus-visible,
+  .link-underline:focus-visible,
+  .text-link:focus-visible,
+  .card-title:focus-visible,
+  .note-card:focus-visible .note-label {
+    transform: translateY(-2px) scale(1.05);
+    -webkit-text-stroke: 0.5px currentColor;
+    color: var(--ink);
+  }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+  }
+  .icon-btn svg {
+    transition: transform 0.1s ease;
+  }
+  .icon-btn:hover svg {
+    transform: scale(1.07);
+  }
+
+  .section-sub {
+    margin-bottom: 0.35rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+    line-height: 1.2;
+  }
+  .section-title {
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
+  .chip {
+    height: 40px;
+    padding: 0 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .chip:hover {
+    border-color: var(--ink);
+  }
+  .chip.is-active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+
+  /* Product names: gradient-filled text. Only the fill is transparent, so the
+     hover outline (text-stroke) still draws on top. */
+  .text-gradient {
+    background-image: var(--name-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .sold-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 6%;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: #b3261e;
+    color: #fff;
+    padding: 4px 12px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Footer links: a thin line draws in under the text on hover / keyboard focus. */
+  .footer-link {
+    position: relative;
+  }
+  .footer-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s var(--ease-out-slow);
+  }
+  .footer-link:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  /* The drawn underline marks keyboard focus, so footer links skip the default focus box. */
+  .footer-link:focus-visible {
+    outline: none;
+  }
+
+  /* Menu bar + mega menu: gradient text with a gradient line drawing in underneath
+     (hover, the open menu's label, keyboard focus). */
+  .nav-link span,
+  .menu-link {
+    position: relative;
+  }
+  .nav-link span::after,
+  .menu-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -5px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--menu-gradient);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s var(--ease-out-slow);
+  }
+  .nav-link[aria-expanded="true"] span,
+  .nav-link:focus-visible span,
+  .menu-link:focus-visible {
+    background-image: var(--menu-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+
+  /* Header logo: no focus box; keyboard focus underlines "Fragrances" instead. */
+  .logo-link:focus-visible {
+    outline: none;
+  }
+  .logo-link:focus-visible .logo-tagline {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+  .nav-link[aria-expanded="true"] span::after,
+  .nav-link:focus-visible span::after,
+  .menu-link:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .social {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid color-mix(in oklab, var(--ink) 35%, transparent);
+    border-radius: 999px;
+    transition: background-color 0.5s, color 0.5s;
+  }
+  /* Social icons: black disc with a brand-gradient icon on hover / focus. */
+  .social:hover,
+  .social:focus-visible {
+    background: #0d0c0b;
+    border-color: #0d0c0b;
+    color: #e9a58f;
+  }
+  .social:hover svg,
+  .social:focus-visible svg {
+    stroke: url(#azelle-icon-gradient);
+  }
+  .social:hover svg [fill="currentColor"],
+  .social:focus-visible svg [fill="currentColor"] {
+    fill: url(#azelle-icon-gradient);
+  }
+
+  .row-scroll {
+    scrollbar-width: none;
+  }
+  .row-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .wave {
+    display: block;
+    width: 100%;
+    height: 150px;
+    margin-bottom: -1px;
+  }
+  .wave--flip {
+    margin-top: -1px;
+    margin-bottom: 0;
+    transform: rotateX(180deg);
+  }
+  @media (max-width: 1080px) {
+    .wave {
+      height: 90px;
+    }
+  }
+}
+
+/* ── Hover effects ─────────────────────────────────────────── */
+
+@media (hover: hover) {
+  /* Buttons + filter pills: gradient fades in (card hover lights up its button too). */
+  .btn:not(:disabled):hover,
+  .chip:not(.is-active):hover,
+  .product-card:hover .card-btn:not(:disabled) {
+    border-color: transparent;
+    color: #1b1815;
+  }
+  .btn:not(:disabled):hover::before,
+  .chip:not(.is-active):hover::before,
+  .product-card:hover .card-btn:not(:disabled)::before {
+    opacity: 1;
+    background-position: 100% 50%;
+  }
+
+  /* Text: pop + bold. */
+  .nav-link:hover span,
+  .menu-link:hover,
+  .footer-link:hover,
+  .link-underline:hover,
+  .text-link:hover,
+  .product-card:hover .card-title,
+  .note-card:hover .note-label {
+    transform: translateY(-2px) scale(1.05);
+    -webkit-text-stroke: 0.5px currentColor;
+    color: var(--ink);
+  }
+  .footer-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  .nav-link:hover span,
+  .menu-link:hover {
+    background-image: var(--menu-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  }
+  .nav-link:hover span::after,
+  .menu-link:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+
+@media (hover: hover) and (min-width: 1081px) {
+  /* Product card: bottle tilts 10°; photo cards zoom slightly and cross-fade to the second photo. */
+  .product-card:hover .card-media svg {
+    transform: rotate(10deg);
+  }
+  .product-card:hover .card-photo,
+  .product-card:hover .card-photo-alt {
+    transform: scale(1.05);
+  }
+  .product-card:hover .card-photo-alt {
+    opacity: 1;
+  }
+
+  /* Shop by note / family: icon grows to 110%. */
+  .note-card:hover .note-media > * {
+    transform: scale(1.1);
+  }
+}
+
+.card-photo,
+.card-photo-alt {
+  transition: transform 0.6s var(--ease-out-slow), opacity 0.5s;
+}
+.card-photo-alt {
+  opacity: 0;
+}
+.product-card .card-media svg,
+.note-card .note-media > *,
+.zoom-tile img,
+.follow-tile img {
+  transition: transform 0.5s;
+}
+.zoom-tile:hover img,
+.follow-tile:hover img {
+  transform: scale(1.03);
+}
+.slider-arrow svg {
+  transition: transform 0.5s;
+}
+.slider-arrow:not(:disabled):hover svg {
+  transform: scale(1.1);
+}
+
+/* ── Scroll reveal: slideIn .6s cubic-bezier(0,0,.3,1), 75ms stagger ── */
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0.01;
+  }
+  [data-reveal="slide"],
+  [data-reveal=""] {
+    transform: translateY(2rem);
+  }
+  [data-reveal][data-revealed] {
+    animation: slideIn 0.6s var(--ease-out-slow) forwards;
+    animation-delay: calc(var(--order, 0) * 75ms);
+  }
+  [data-reveal="fade"][data-revealed] {
+    animation-name: fadeIn;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(2rem);
+    opacity: 0.01;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0.01;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Header: solid past the hero edge, hides on scroll-down ─── */
+
+.site-header {
+  transition: transform 0.5s, background-color 0.5s, box-shadow 0.5s;
+}
+.site-header.is-solid {
+  background: var(--surface);
+  box-shadow: var(--hover-shadow);
+}
+.site-header.is-hidden {
+  transform: translateY(-100%);
+}
+.menu-panel {
+  animation: animateMenuOpen 0.2s ease;
+}
+@keyframes animateMenuOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Hero ───────────────────────────────────────────────────── */
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-gradient);
+}
+.brand-gradient {
+  background: var(--brand-gradient);
+}
+
+/* Hero tagline: one engraved serif for every word, typed in letter by letter with a blinking caret. */
+.hero-tagline {
+  font-family: "Cinzel", var(--font-display), serif;
+}
+.hero-caret {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 0.9em;
+  vertical-align: -0.08em;
+}
+.hero-caret::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.06em;
+  width: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 1px 6px rgba(27, 24, 21, 0.35);
+  animation: caret-blink 0.9s steps(1) infinite;
+}
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* The two bottles float in opposite phase: sidecan / sidecan2, 2s alternate. */
+.float-a {
+  animation: sidecan 2s ease-in-out infinite alternate;
+}
+.float-b {
+  animation: sidecan2 2s ease-in-out infinite alternate;
+}
+@keyframes sidecan {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-30px);
+  }
+}
+@keyframes sidecan2 {
+  from {
+    transform: translateY(-30px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Footer bottles: mirror-image lean from the base of the glass (95% down the SVG). Outward they splay
+   apart; inward (≈7°) the shoulders meet so the tops touch in a cross. Same size, same baseline. */
+.bottle-lean-left,
+.bottle-lean-right {
+  transform-origin: 50% 95%;
+  animation-duration: 2.8s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.bottle-lean-left {
+  animation-name: bottle-lean-left;
+}
+.bottle-lean-right {
+  animation-name: bottle-lean-right;
+}
+@keyframes bottle-lean-left {
+  from {
+    transform: rotate(-14deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+@keyframes bottle-lean-right {
+  from {
+    transform: rotate(14deg);
+  }
+  to {
+    transform: rotate(-7deg);
+  }
+}
+
+.petal {
+  position: absolute;
+  border-radius: 60% 40% 60% 40% / 70% 50% 50% 30%;
+  background: color-mix(in oklab, var(--accent) 55%, #fff);
+  opacity: 0.85;
+  transform: rotate(var(--r, 0deg));
+  animation: petal-drift 3.5s ease-in-out infinite alternate;
+}
+@keyframes petal-drift {
+  from {
+    transform: translateY(0) rotate(var(--r, 0deg));
+  }
+  to {
+    transform: translateY(-18px) rotate(calc(var(--r, 0deg) + 14deg));
+  }
+}
+
+/* ── Marquees ───────────────────────────────────────────────── */
+
+.marquee {
+  display: flex;
+  overflow: hidden;
+}
+.marquee__group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-width: 100%;
+  animation: marquee-left 20s linear infinite;
+}
+.marquee-text {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 36px);
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+@keyframes marquee-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.slide-track {
+  display: flex;
+  width: max-content;
+  animation: scroll 30s linear infinite;
+}
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ── Animated waves: two <use> layers, 12s and 5s ─────────────── */
+
+.wave__parallax > use {
+  animation: move-forever 12s linear -2s infinite;
+}
+.wave__parallax > use:nth-child(2) {
+  animation-duration: 5s;
+}
+@keyframes move-forever {
+  from {
+    transform: translate(-90px);
+  }
+  to {
+    transform: translate(85px);
+  }
+}
+
+/* ── Vertical image columns: marquee-up / marquee-down, 15s ─── */
+
+.wbox {
+  height: 678px;
+  overflow: hidden;
+  border-radius: 20px;
+}
+.wbox + .wbox {
+  transform: translateY(52px);
+}
+.wbox-ani {
+  animation: marquee-up 15s linear infinite;
+}
+/* Columns sized to their container (fit-to-content layout). */
+.wbox-fit .wbox {
+  height: calc(100% - 40px);
+}
+.wbox-fit .wbox + .wbox {
+  transform: translateY(40px);
+}
+.wbox + .wbox .wbox-ani {
+  animation-name: marquee-down;
+}
+@media (max-width: 1440px) {
+  .wbox {
+    height: 537px;
+  }
+}
+@media (max-width: 991px) {
+  .wbox {
+    height: 437px;
+  }
+}
+@keyframes marquee-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes marquee-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ── Reduced motion: no hiding, no looping ─────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
