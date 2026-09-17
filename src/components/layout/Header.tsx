@@ -251,7 +251,8 @@ export function Header() {
                     <ul className="mt-2 space-y-2.5">
                       {col.links.map((l) => (
                         <li key={l.label}>
-                          <MenuEntryLink entry={l} className="menu-link font-display text-2xl" onAuth={startAuth} />
+                          {/* py-1.5 keeps mobile menu links at a comfortable ~44px tap height. */}
+                          <MenuEntryLink entry={l} className="menu-link block py-1.5 font-display text-2xl" onAuth={startAuth} />
                         </li>
                       ))}
                     </ul>

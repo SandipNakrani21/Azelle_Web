@@ -79,7 +79,7 @@ export function CartDrawer() {
               type="button"
               onClick={closeCart}
               aria-label="Close cart"
-              className="-mr-1.5 grid h-9 w-9 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2"
+              className="-mr-1.5 grid h-10 w-10 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2 lg:h-9 lg:w-9"
             >
               <CloseIcon width={20} height={20} />
             </button>
@@ -115,7 +115,7 @@ export function CartDrawer() {
                       <div className="flex min-w-0 flex-1 flex-col">
                         <div className="flex justify-between gap-3">
                           <div className="min-w-0">
-                            <Link to={`/product/${line.product.slug}`} className="text-link font-display text-lg leading-snug">
+                            <Link to={`/product/${line.product.slug}`} className="text-link py-1.5 font-display text-lg leading-snug lg:py-0">
                               {line.product.name}
                             </Link>
                             <p className="mt-1 text-[14px]">
@@ -131,7 +131,7 @@ export function CartDrawer() {
                           <div className="w-[150px]">
                             <QtyStepper value={line.qty} onInc={() => inc(line.key)} onDec={() => dec(line.key)} label={`Quantity of ${line.product.name}`} fullWidth />
                           </div>
-                          <button type="button" onClick={() => remove(line.key)} className="text-link text-xs uppercase tracking-[0.14em] underline underline-offset-2">
+                          <button type="button" onClick={() => remove(line.key)} className="text-link py-2.5 text-xs uppercase tracking-[0.14em] underline underline-offset-2 lg:py-0">
                             Remove
                           </button>
                         </div>
@@ -150,7 +150,7 @@ export function CartDrawer() {
                       aria-expanded={couponOpen}
                       aria-controls="coupon-panel"
                       onClick={() => setCouponOpen((o) => !o)}
-                      className="flex w-full items-center justify-between gap-3 py-1.5 text-left"
+                      className="flex w-full items-center justify-between gap-3 py-3 text-left lg:py-1.5"
                     >
                       <span className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.18em]">
                         <GiftSmallIcon width={16} height={16} aria-hidden="true" />
@@ -187,7 +187,7 @@ export function CartDrawer() {
                             removeCoupon();
                             setFeedback(null);
                           }}
-                          className="text-link shrink-0 text-xs font-semibold uppercase tracking-[0.14em] underline underline-offset-2"
+                          className="text-link shrink-0 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] underline underline-offset-2 lg:py-0"
                         >
                           Remove
                         </button>
@@ -245,7 +245,8 @@ export function CartDrawer() {
 
                 {/* Continue shopping + Checkout on one line */}
                 <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-2.5">
-                  <button type="button" onClick={closeCart} className="btn btn-secondary !h-[44px] !min-w-0 !px-2 !text-[12px] !tracking-[0.08em]">
+                  {/* Smaller label on narrow phones so it isn't clipped beside Checkout. */}
+                  <button type="button" onClick={closeCart} className="btn btn-secondary !h-[44px] !min-w-0 !px-2 !text-[10.5px] !tracking-[0.03em] sm:!text-[12px] sm:!tracking-[0.08em]">
                     Continue shopping
                   </button>
                   <button type="button" className="btn btn-primary !h-[44px] !min-w-0 !px-2 !text-[12.5px] !tracking-[0.08em]" onClick={checkout}>
@@ -314,7 +315,7 @@ function CouponsDialog({
             <GiftSmallIcon width={18} height={18} aria-hidden="true" />
             Available coupons
           </h2>
-          <button type="button" onClick={onClose} aria-label="Close coupons" className="-mr-1.5 grid h-9 w-9 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2">
+          <button type="button" onClick={onClose} aria-label="Close coupons" className="-mr-1.5 grid h-10 w-10 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2 lg:h-9 lg:w-9">
             <CloseIcon width={20} height={20} />
           </button>
         </div>
@@ -358,7 +359,7 @@ function CouponsDialog({
                       const res = onApply(c.code);
                       setError(res.ok ? null : { code: c.code, message: res.message });
                     }}
-                    className="btn btn-primary !h-9 !min-w-0 shrink-0 !px-4 !text-[11.5px]"
+                    className="btn btn-primary !h-10 !min-w-0 shrink-0 !px-4 !text-[11.5px] lg:!h-9"
                   >
                     {applied ? "Applied" : "Apply"}
                   </button>

@@ -34,7 +34,8 @@ export function ShopByFamily() {
                 />
                 <Icon className="relative h-14 w-14" />
               </span>
-              <span className="note-label mt-2 block text-[13px] font-medium uppercase tracking-[0.08em]">{label}</span>
+              {/* Smaller below lg so the labels fit the narrower phone / tablet columns. */}
+              <span className="note-label mt-2 block text-[11px] font-medium uppercase tracking-[0.04em] lg:text-[13px] lg:tracking-[0.08em]">{label}</span>
             </Link>
           </li>
         ))}

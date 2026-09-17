@@ -120,7 +120,7 @@ function TextInput({
           onClick={() => setShow((s) => !s)}
           aria-label={show ? "Hide password" : "Show password"}
           aria-pressed={show}
-          className="absolute inset-y-0 right-1.5 my-auto grid h-8 w-8 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2"
+          className="absolute inset-y-0 right-1.5 my-auto grid h-10 w-10 place-items-center rounded-full transition-colors duration-300 hover:bg-surface2 lg:h-8 lg:w-8"
         >
           <EyeIcon off={show} />
         </button>
@@ -274,7 +274,7 @@ export function AuthModal() {
             type="button"
             onClick={closeAuth}
             aria-label="Close"
-            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-line bg-bg transition-colors duration-300 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+            className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full border border-line bg-bg transition-colors duration-300 hover:border-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink lg:h-9 lg:w-9"
           >
             <CloseIcon width={16} height={16} />
           </button>
@@ -340,7 +340,7 @@ export function AuthModal() {
                   <button
                     type="button"
                     onClick={() => setNotice("Password reset by email is coming soon. For help right now, please contact our team.")}
-                    className="text-link text-[14px] font-semibold"
+                    className="text-link py-1 text-[14px] font-semibold lg:py-0"
                   >
                     Forgot password?
                   </button>

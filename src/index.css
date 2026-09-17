@@ -242,9 +242,6 @@
   .icon-btn svg {
     transition: transform 0.1s ease;
   }
-  .icon-btn:hover svg {
-    transform: scale(1.07);
-  }
 
   .section-sub {
     margin-bottom: 0.35rem;
@@ -268,9 +265,6 @@
     font-size: 12px;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-  }
-  .chip:hover {
-    border-color: var(--ink);
   }
   .chip.is-active {
     background: var(--ink);
@@ -381,18 +375,16 @@
     border-radius: 999px;
     transition: background-color 0.5s, color 0.5s;
   }
-  /* Social icons: black disc with a brand-gradient icon on hover / focus. */
-  .social:hover,
+  /* Social icons: black disc with a brand-gradient icon on keyboard focus
+     (the hover version lives in the any-hover block, so taps don't stick). */
   .social:focus-visible {
     background: #0d0c0b;
     border-color: #0d0c0b;
     color: #e9a58f;
   }
-  .social:hover svg,
   .social:focus-visible svg {
     stroke: url(#azelle-icon-gradient);
   }
-  .social:hover svg [fill="currentColor"],
   .social:focus-visible svg [fill="currentColor"] {
     fill: url(#azelle-icon-gradient);
   }
@@ -424,7 +416,10 @@
 
 /* ── Hover effects ─────────────────────────────────────────── */
 
-@media (hover: hover) {
+/* `any-hover` (not `hover`) so these still run on touchscreen laptops, where the primary pointer is
+   reported as touch even when a mouse is attached. Phones and tablets have no hovering pointer, so
+   they are still excluded. */
+@media (any-hover: hover) {
   /* Buttons + filter pills: gradient fades in (card hover lights up its button too). */
   .btn:not(:disabled):hover,
   .chip:not(.is-active):hover,
@@ -468,10 +463,55 @@
     transform: scaleX(1);
     transform-origin: left;
   }
+
+  /* Icon buttons, filter chips, social icons, image tiles and carousel arrows.
+     Kept here so a tap on a touch screen never leaves a stuck hover state. */
+  .icon-btn:hover svg {
+    transform: scale(1.07);
+  }
+  .chip:hover {
+    border-color: var(--ink);
+  }
+  .social:hover {
+    background: #0d0c0b;
+    border-color: #0d0c0b;
+    color: #e9a58f;
+  }
+  .social:hover svg {
+    stroke: url(#azelle-icon-gradient);
+  }
+  .social:hover svg [fill="currentColor"] {
+    fill: url(#azelle-icon-gradient);
+  }
+  .zoom-tile:hover img,
+  .follow-tile:hover img {
+    transform: scale(1.03);
+  }
+  .slider-arrow:not(:disabled):hover svg {
+    transform: scale(1.1);
+  }
 }
 
 
-@media (hover: hover) and (min-width: 1081px) {
+/* ── Touch tap targets ───────────────────────────────────────────────────
+   Below 1024px the small text links grow to a finger-sized hit area. The
+   padding is invisible (no background), so the desktop layout is untouched. */
+@media (max-width: 1023.98px) {
+  .footer-link {
+    padding-block: 8px;
+  }
+  .footer-link::after {
+    bottom: 5px;
+  }
+  .link-underline {
+    padding-block: 10px 14px;
+  }
+  .card-title {
+    padding-block: 10px;
+  }
+}
+
+@media (any-hover: hover) and (min-width: 1024px) {
   /* Product card: bottle tilts 10°; photo cards zoom slightly and cross-fade to the second photo. */
   .product-card:hover .card-media svg {
     transform: rotate(10deg);
@@ -503,15 +543,8 @@
 .follow-tile img {
   transition: transform 0.5s;
 }
-.zoom-tile:hover img,
-.follow-tile:hover img {
-  transform: scale(1.03);
-}
 .slider-arrow svg {
   transition: transform 0.5s;
-}
-.slider-arrow:not(:disabled):hover svg {
-  transform: scale(1.1);
 }
 
 /* ── Scroll reveal: slideIn .6s cubic-bezier(0,0,.3,1), 75ms stagger ── */

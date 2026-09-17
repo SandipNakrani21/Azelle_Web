@@ -114,7 +114,7 @@ export default function ProductPage() {
                   <Link
                     key={family}
                     to={`/collection?group=${family}`}
-                    className="rounded-full border border-line bg-surface px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 hover:border-ink"
+                    className="rounded-full border border-line bg-surface px-3 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors duration-300 hover:border-ink lg:py-1.5"
                   >
                     {family}
                   </Link>
@@ -215,7 +215,8 @@ export default function ProductPage() {
               </div>
 
               {/* Add to cart (35%) + Buy it now (65%) */}
-              <div data-reveal="slide" style={revealOrder(5)} className="mt-7 grid grid-cols-[35fr_65fr] gap-3">
+              {/* Stacked on phones (side by side would clip "Add to cart"), 35 / 65 from small tablets up. */}
+              <div data-reveal="slide" style={revealOrder(5)} className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-[35fr_65fr]">
                 <button type="button" className="btn btn-primary !h-[54px] !min-w-0 !px-3" disabled={!product.inStock} onClick={() => add(product.id, sizeId, qty)}>
                   {product.inStock ? "Add to cart" : "Sold out"}
                 </button>

@@ -164,7 +164,78 @@ export default function AdminProducts() {
       </div>
 
       <div className="mt-6 overflow-hidden rounded-[18px] border border-line bg-surface">
-        <div className="overflow-x-auto">
+        {/* Phones and tablets: stacked cards (the table below needs 920px and would scroll sideways). */}
+        <ul className="divide-y divide-line lg:hidden">
+          {loadState === "loading" &&
+            Array.from({ length: 4 }, (_, i) => (
+              <li key={i} aria-hidden="true" className="flex animate-pulse items-center gap-3 px-4 py-4">
+                <span className="h-16 w-16 rounded-[10px] bg-surface2" />
+                <span className="h-4 w-40 rounded bg-surface2" />
+              </li>
+            ))}
+
+          {loadState === "ready" &&
+            products.map((p) => {
+              const active = p.status === "active";
+              return (
+                <li key={p.id} className="px-4 py-4">
+                  <div className="flex gap-3">
+                    <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-surface2">
+                      {p.images[0] ? (
+                        <img src={sized(p.images[0], 160)} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <Bottle tint={p.tint} name={p.name} decorative className="h-12 w-auto" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold leading-snug">{p.name}</p>
+                      <p className="text-xs">/{p.slug}</p>
+                      <p className="mt-1 text-xs leading-snug">{p.families.join(", ")}</p>
+                    </div>
+                    <p className="shrink-0 font-semibold tabular-nums">{formatPrice(p.prices["50"])}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <StockBadge inStock={p.inStock} />
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={active}
+                      aria-label={`Show ${p.name} on the store`}
+                      onClick={() => void toggleStatus(p)}
+                      disabled={busyId === p.id}
+                      className="inline-flex items-center gap-2.5 py-1 disabled:opacity-60"
+                    >
+                      <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${active ? "bg-[#2f7d4f]" : "bg-[color-mix(in_oklab,var(--ink)_28%,transparent)]"}`}>
+                        <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${active ? "translate-x-5" : "translate-x-0"}`} />
+                      </span>
+                      <span className="text-xs font-semibold">{active ? "Active" : "Inactive"}</span>
+                    </button>
+                    <span className="text-xs">Updated {formatDate(p.updatedAt)}</span>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Link to={`/admin/products/${p.id}/edit`} className="btn btn-secondary !h-11 !min-w-0 !px-3 !text-[11px]" aria-label={`Edit ${p.name}`}>
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteTarget(p);
+                        setDeleteOpen(true);
+                      }}
+                      className="btn !h-11 !min-w-0 border-[#b3261e] !px-3 !text-[11px] text-[#b3261e]"
+                      aria-label={`Delete ${p.name}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+        </ul>
+
+        <div className="hidden overflow-x-auto lg:block">
           <table className="w-full min-w-[920px] text-left text-sm">
             <thead className="border-b border-line bg-surface2 text-[11px] uppercase tracking-[0.16em]">
               <tr>

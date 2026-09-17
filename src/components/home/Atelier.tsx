@@ -18,8 +18,9 @@ export function Atelier() {
     <section id="studio" aria-labelledby="atelier-h" className="relative my-6">
       <Wave color="var(--band)" className="h-[60px] md:h-[90px]" />
       <div className="bg-[var(--band)] py-14 md:py-20">
-        <div className="mx-auto grid max-w-[1200px] items-stretch gap-10 px-6 md:grid-cols-[minmax(0,540px)_auto] md:justify-center md:px-10 lg:gap-20">
-          <div className="relative mx-auto h-[420px] w-full max-w-[540px] md:h-[560px]" aria-hidden="true">
+        {/* Side by side from lg only — at tablet widths both columns were too narrow. */}
+        <div className="mx-auto grid max-w-[1200px] items-stretch gap-10 px-6 md:px-10 lg:grid-cols-[minmax(0,540px)_auto] lg:justify-center lg:gap-20">
+          <div className="relative mx-auto h-[420px] w-full max-w-[540px] md:h-[480px] lg:h-[560px]" aria-hidden="true">
             <div className="wbox-fit absolute inset-0 flex gap-[10px] md:gap-5">
             {[COLUMN_A, COLUMN_B].map((column, c) => (
               <div key={c} className="wbox w-[calc(50%-5px)] md:w-[calc(50%-10px)]">

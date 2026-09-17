@@ -29,6 +29,7 @@ export function ProductCard({ product, order = 0 }: { product: Product; order?: 
         {!product.inStock && <span className="sold-badge">Sold out</span>}
       </Link>
       <h3 className="mt-5 text-[15px] font-medium uppercase leading-snug tracking-[0.06em]">
+        {/* .card-title and .link-underline get extra padding below lg (index.css) for a tap-sized target. */}
         <Link to={href} className="card-title text-gradient">
           {product.name}
         </Link>
