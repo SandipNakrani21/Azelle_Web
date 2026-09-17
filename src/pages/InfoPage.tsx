@@ -16,6 +16,7 @@ import {
   WhatsAppIcon,
 } from "@/components/ui/Icons";
 import { Ornament } from "@/components/ui/Ornament";
+import { MAILTO_URL, WHATSAPP_URL } from "@/lib/contact";
 import { COMPANY, INFO_PAGES, LAST_UPDATED, RELATED_PAGES, type IconKey, type InfoBlock, type InfoFormKind } from "@/content/infoPages";
 import NotFound from "./NotFound";
 
@@ -36,7 +37,7 @@ const ICONS: Record<IconKey, IconType> = {
 const accentInk = { color: "color-mix(in oklab, var(--accent) 70%, var(--ink))" };
 
 const iconRing = (Icon: IconType, size = 44) => (
-  <span className="shrink-0 rounded-full p-[2px] shadow-[0_6px_16px_rgba(27,24,21,.1)]" style={{ background: "var(--button-gradient)" }} aria-hidden="true">
+  <span className="inline-flex shrink-0 rounded-full p-[2px] shadow-[0_6px_16px_rgba(27,24,21,.1)]" style={{ background: "var(--button-gradient)" }} aria-hidden="true">
     <span className="grid place-items-center rounded-full bg-surface" style={{ width: size, height: size, ...accentInk }}>
       <Icon width={size / 2} height={size / 2} />
     </span>
@@ -249,21 +250,28 @@ function TrackingForm() {
 }
 
 function ContactCards() {
-  const cards: { Icon: IconType; title: string; lines: string[] }[] = [
-    { Icon: MailIcon, title: "Email", lines: [COMPANY.email, "Replies within one business day"] },
-    { Icon: WhatsAppIcon, title: "Phone & WhatsApp", lines: [COMPANY.phone, COMPANY.hours] },
+  // The first line links out where it can be acted on (mail app / WhatsApp).
+  const cards: { Icon: IconType; title: string; lines: string[]; href?: string; external?: boolean }[] = [
+    { Icon: MailIcon, title: "Email", lines: [COMPANY.email, "Replies within one business day"], href: MAILTO_URL },
+    { Icon: WhatsAppIcon, title: "Phone & WhatsApp", lines: [COMPANY.phone, COMPANY.hours], href: WHATSAPP_URL, external: true },
     { Icon: PinIcon, title: "Registered office", lines: [COMPANY.legalName, COMPANY.address] },
     { Icon: UserIcon, title: "Grievance Officer", lines: [COMPANY.grievanceOfficer, COMPANY.grievanceEmail] },
   ];
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map(({ Icon, title, lines }) => (
+      {cards.map(({ Icon, title, lines, href, external }) => (
         <li key={title} className="rounded-[20px] border border-line bg-surface p-6">
           {iconRing(Icon)}
           <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.16em]">{title}</p>
           {lines.map((line, i) => (
             <p key={line} className={`break-words text-[15px] leading-relaxed ${i === 0 ? "mt-2 font-semibold" : "mt-1"}`}>
-              {line}
+              {i === 0 && href ? (
+                <a href={href} className="text-link" {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}>
+                  {line}
+                </a>
+              ) : (
+                line
+              )}
             </p>
           ))}
         </li>

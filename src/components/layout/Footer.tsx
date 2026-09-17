@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Bottle } from "@/components/ui/Bottle";
-import { CameraIcon, FacebookIcon, WhatsAppIcon } from "@/components/ui/Icons";
+import { CameraIcon, MailIcon, WhatsAppIcon } from "@/components/ui/Icons";
 import { Logo } from "@/components/ui/Logo";
+import { CONTACT, MAILTO_URL, WHATSAPP_URL } from "@/lib/contact";
 import { linkState, NAV_SECTIONS } from "@/lib/navigation";
 import { Ornament } from "@/components/ui/Ornament";
 import { useAuth } from "@/providers/AuthProvider";
@@ -10,9 +11,9 @@ import { useAuth } from "@/providers/AuthProvider";
 const COLUMNS = NAV_SECTIONS;
 
 const SOCIAL = [
-  { label: "Instagram", Icon: CameraIcon },
-  { label: "Facebook", Icon: FacebookIcon },
-  { label: "WhatsApp", Icon: WhatsAppIcon },
+  { label: "Instagram", Icon: CameraIcon, href: CONTACT.instagram, external: true },
+  { label: "WhatsApp", Icon: WhatsAppIcon, href: WHATSAPP_URL, external: true },
+  { label: "Email", Icon: MailIcon, href: MAILTO_URL, external: false },
 ];
 
 // Column heading followed by the same line — ✦ — line rule used under section titles.
@@ -104,12 +105,17 @@ export function Footer({ flush = false }: { flush?: boolean }) {
             <ColumnHeading small>Follow us on</ColumnHeading>
           </div>
           <ul className="mt-5 flex gap-3">
-            {SOCIAL.map(({ label, Icon }) => (
+            {SOCIAL.map(({ label, Icon, href, external }) => (
               <li key={label}>
-                <span className="social" title={`${label} — coming soon`}>
+                <a
+                  href={href}
+                  className="social"
+                  title={label}
+                  {...(external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
+                >
                   <Icon />
-                  <span className="sr-only">{label} (coming soon)</span>
-                </span>
+                  <span className="sr-only">{label}</span>
+                </a>
               </li>
             ))}
           </ul>

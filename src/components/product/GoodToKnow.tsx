@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   BottleSmallIcon,
   CheckCircleIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
   ClockIcon,
   DropletIcon,
@@ -111,7 +112,7 @@ const PROMISES: { Icon: IconType; title: string; text: string }[] = [
 ];
 
 const iconRing = (Icon: IconType, size = 40) => (
-  <span className="shrink-0 rounded-full p-[2px] shadow-[0_6px_16px_rgba(27,24,21,.1)]" style={{ background: "var(--button-gradient)" }} aria-hidden="true">
+  <span className="inline-flex shrink-0 rounded-full p-[2px] shadow-[0_6px_16px_rgba(27,24,21,.1)]" style={{ background: "var(--button-gradient)" }} aria-hidden="true">
     <span
       className="grid place-items-center rounded-full bg-surface"
       style={{ width: size, height: size, color: "color-mix(in oklab, var(--accent) 70%, var(--ink))" }}
@@ -120,6 +121,44 @@ const iconRing = (Icon: IconType, size = 40) => (
     </span>
   </span>
 );
+
+// The text under a topic's header — shared by the desktop panel and the mobile accordion.
+function TopicDetail({ topic }: { topic: Topic }) {
+  return (
+    <>
+      <p className="text-[15.5px] leading-[1.8]">{topic.body}</p>
+      <ul className="mt-3 space-y-2">
+        {topic.points.map((point) => (
+          <li key={point} className="flex gap-3 text-[15px] leading-[1.7]">
+            <span className="mt-[0.75em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--accent)" }} aria-hidden="true" />
+            {point}
+          </li>
+        ))}
+      </ul>
+      {topic.link && (
+        <Link to={topic.link.to} className="text-link mt-4 text-sm font-semibold uppercase tracking-[0.14em]">
+          {topic.link.label} →
+        </Link>
+      )}
+    </>
+  );
+}
+
+function Promises({ className = "" }: { className?: string }) {
+  return (
+    <ul className={`grid grid-cols-1 gap-4 border-t border-line pt-4 sm:grid-cols-3 ${className}`}>
+      {PROMISES.map(({ Icon, title, text }) => (
+        <li key={title} className="flex items-center gap-3">
+          {iconRing(Icon, 34)}
+          <span>
+            <span className="block text-[11px] font-semibold uppercase tracking-[0.12em]">{title}</span>
+            <span className="mt-0.5 block text-[13px] leading-snug">{text}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 // Both rows share one column template so their edges line up.
 const rowGrid = "grid items-stretch gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-10";
@@ -131,11 +170,16 @@ const rowGrid = "grid items-stretch gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0
 export function GoodToKnow({ product }: { product: Product }) {
   const topics = topicsFor(product);
   const [active, setActive] = useState(0);
+  // Phones and tablets: which accordion row is open (-1 = all closed).
+  const [openRow, setOpenRow] = useState(0);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const topic = topics[active];
 
-  useEffect(() => setActive(0), [product.id]);
+  useEffect(() => {
+    setActive(0);
+    setOpenRow(0);
+  }, [product.id]);
 
   // Arrow keys / Home / End move between tabs (roving focus).
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -189,7 +233,8 @@ export function GoodToKnow({ product }: { product: Product }) {
         </div>
 
         {/* Row 2 — topic tabs + details panel */}
-        <div className={`mt-6 ${rowGrid}`}>
+        {/* Row 2 (desktop) — topic tabs on the left, details panel on the right */}
+        <div className="mt-6 hidden items-stretch gap-6 lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-10">
           <div role="tablist" aria-orientation="vertical" aria-label="Good to know topics" onKeyDown={onKeyDown} className="flex flex-col gap-2.5">
             {topics.map((t, i) => {
               const on = i === active;
@@ -247,34 +292,63 @@ export function GoodToKnow({ product }: { product: Product }) {
                 </div>
               </div>
               <Ornament align="left" className="my-4" />
-              <p className="text-[15.5px] leading-[1.8]">{topic.body}</p>
-              <ul className="mt-3 space-y-2">
-                {topic.points.map((point) => (
-                  <li key={point} className="flex gap-3 text-[15px] leading-[1.7]">
-                    <span className="mt-[0.75em] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "var(--accent)" }} aria-hidden="true" />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-              {topic.link && (
-                <Link to={topic.link.to} className="text-link mt-4 text-sm font-semibold uppercase tracking-[0.14em]">
-                  {topic.link.label} →
-                </Link>
-              )}
+              <TopicDetail topic={topic} />
             </div>
 
             {/* Brand promises, pinned to the bottom of the panel */}
-            <ul className="mt-auto grid grid-cols-1 gap-4 border-t border-line pt-4 sm:grid-cols-3">
-              {PROMISES.map(({ Icon, title, text }) => (
-                <li key={title} className="flex items-center gap-3">
-                  {iconRing(Icon, 34)}
-                  <span>
-                    <span className="block text-[11px] font-semibold uppercase tracking-[0.12em]">{title}</span>
-                    <span className="mt-0.5 block text-[13px] leading-snug">{text}</span>
+            <Promises className="mt-auto" />
+          </div>
+        </div>
+
+        {/* Row 2 (phones and tablets) — the same topics as an accordion, so the details a visitor
+            taps open inside that card instead of in a panel below the whole list. */}
+        <div className="mt-6 flex flex-col gap-2.5 lg:hidden">
+          {topics.map((t, i) => {
+            const open = i === openRow;
+            return (
+              <div
+                key={t.title}
+                className={`overflow-hidden rounded-[16px] border transition-[border-color,box-shadow] duration-500 ${
+                  open ? "border-white/70 shadow-[0_14px_30px_rgba(27,24,21,.14)]" : "border-line bg-bg"
+                }`}
+                style={open ? { background: "var(--brand-gradient)" } : undefined}
+              >
+                <button
+                  type="button"
+                  id={`${uid}-acc-tab-${i}`}
+                  aria-expanded={open}
+                  aria-controls={`${uid}-acc-panel-${i}`}
+                  onClick={() => setOpenRow(open ? -1 : i)}
+                  className="flex w-full items-center gap-4 px-5 py-3 text-left"
+                >
+                  {iconRing(t.Icon)}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-semibold uppercase tracking-[0.16em]">{t.title}</span>
+                    <span className="mt-1 block text-[14px]">{t.hint}</span>
                   </span>
-                </li>
-              ))}
-            </ul>
+                  <ChevronDownIcon
+                    width={18}
+                    height={18}
+                    aria-hidden="true"
+                    className={`shrink-0 transition-transform duration-500 ${open ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {open && (
+                  <div
+                    id={`${uid}-acc-panel-${i}`}
+                    role="region"
+                    aria-labelledby={`${uid}-acc-tab-${i}`}
+                    className="animate-[fadeIn_0.35s_ease-out] border-t border-white/50 bg-bg px-5 py-5"
+                  >
+                    <TopicDetail topic={t} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <div className="mt-2 rounded-[16px] border border-line bg-bg px-5 py-4">
+            <Promises className="border-t-0 pt-0" />
           </div>
         </div>
       </div>

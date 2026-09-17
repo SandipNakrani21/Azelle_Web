@@ -6,13 +6,15 @@
 //  3. Have the legal pages (Terms, Privacy, Refund & Return, Shipping, GST) reviewed by a lawyer / CA.
 //     They follow current Indian law in good faith but are not legal advice.
 
+import { CONTACT } from "@/lib/contact";
+
 export const COMPANY = {
   brand: "Azelle Fragrances",
   legalName: "[Registered business name]",
   address: "[Registered office address, City, State – PIN code]",
   gstin: "[GSTIN]",
-  email: "[customer care email]",
-  phone: "[customer care phone / WhatsApp number]",
+  email: CONTACT.email,
+  phone: CONTACT.phone,
   hours: "Monday to Saturday, 10:00 am – 7:00 pm IST",
   grievanceOfficer: "[Grievance Officer name]",
   grievanceEmail: "[grievance officer email]",

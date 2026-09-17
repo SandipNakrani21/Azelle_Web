@@ -101,7 +101,7 @@ export default function ProductPage() {
             </ol>
           </nav>
 
-          <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-8">
+          <div className="mt-6 grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-8">
             {/* Gallery — on desktop it stretches to the details card so both columns share one height */}
             <div data-reveal="fade" className="mx-auto w-full max-w-[680px] lg:max-w-none lg:self-stretch">
               <ProductGallery product={product} />

@@ -23,16 +23,17 @@ const TAGLINE = "Fragrance Beyond Words";
 const HERO_STATS = { ordersDelivered: 10000, citiesServed: 250 };
 
 // Counts from 0 up to `target` with an ease-out curve (jumps straight there with reduced motion).
-function useCountUp(target: number, duration = 1800, delay = 700) {
+// `start` holds the count at 0 until every figure is known, so all three animate as one.
+function useCountUp(target: number, start: boolean, duration = 1800, delay = 700) {
   const [value, setValue] = useState(0);
   useEffect(() => {
-    if (target <= 0) return;
+    if (!start || target <= 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setValue(target);
       return;
     }
     let interval: number | undefined;
-    const start = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       const startedAt = performance.now();
       interval = window.setInterval(() => {
         const progress = Math.min(1, (performance.now() - startedAt) / duration);
@@ -41,10 +42,10 @@ function useCountUp(target: number, duration = 1800, delay = 700) {
       }, 30);
     }, delay);
     return () => {
-      window.clearTimeout(start);
+      window.clearTimeout(timer);
       window.clearInterval(interval);
     };
-  }, [target, duration, delay]);
+  }, [target, start, duration, delay]);
   return value;
 }
 
@@ -75,16 +76,18 @@ function useTypewriter(text: string, delay = 450, speed = 85) {
 }
 
 export function Hero() {
-  const { products } = useProducts();
+  const { products, status } = useProducts();
   const front = products[0] ?? { name: "White Oud", tint: "#c8b9a3" };
   const back = products[2] ?? products[1] ?? { name: "Urban Voyage", tint: "#b5553f" };
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoState, setVideoState] = useState<VideoState>("loading");
   const [playing, setPlaying] = useState(false);
   const typed = useTypewriter(TAGLINE);
-  const orders = useCountUp(HERO_STATS.ordersDelivered);
-  const cities = useCountUp(HERO_STATS.citiesServed);
-  const fragrances = useCountUp(products.length);
+  // Every figure counts from the same moment — once the catalogue has loaded (or failed to).
+  const statsReady = products.length > 0 || status === "error";
+  const orders = useCountUp(HERO_STATS.ordersDelivered, statsReady);
+  const cities = useCountUp(HERO_STATS.citiesServed, statsReady);
+  const fragrances = useCountUp(products.length, statsReady);
   const stats = [
     { value: fragrances, target: products.length, suffix: "", label: "Products" },
     { value: cities, target: HERO_STATS.citiesServed, suffix: "+", label: "Cities Delivered" },

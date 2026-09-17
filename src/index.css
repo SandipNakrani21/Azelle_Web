@@ -16,7 +16,9 @@
   --line: rgba(27, 24, 21, 0.14);
   --accent: oklch(0.62 0.11 32);
   --accent-ink: #fffdf8;
-  --font-display: "Marcellus", serif;
+  /* The sans is second in the stack: it supplies glyphs Marcellus lacks (₹), so prices look
+     identical on every device. Latin text still renders in Marcellus. */
+  --font-display: "Marcellus", "Manrope", serif;
   --font-sans: "Manrope", sans-serif;
   color-scheme: light;
 }
@@ -30,7 +32,7 @@
   --line: rgba(243, 236, 225, 0.14);
   --accent: oklch(0.78 0.11 78);
   --accent-ink: #0b0a09;
-  --font-display: "Cormorant Garamond", serif;
+  --font-display: "Cormorant Garamond", "Jost", serif;
   --font-sans: "Jost", sans-serif;
   color-scheme: dark;
 }
@@ -44,7 +46,7 @@
   --line: rgba(233, 241, 236, 0.15);
   --accent: oklch(0.78 0.11 168);
   --accent-ink: #0a1512;
-  --font-display: "Bodoni Moda", serif;
+  --font-display: "Bodoni Moda", "Space Grotesk", serif;
   --font-sans: "Space Grotesk", sans-serif;
   color-scheme: dark;
 }
