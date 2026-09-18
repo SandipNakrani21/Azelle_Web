@@ -194,10 +194,21 @@ export function Hero() {
                   style={{ left: p.x, top: p.y, width: p.s, height: p.s * 0.62, animationDelay: `${p.d}s`, "--r": `${p.r}deg` } as CSSProperties}
                 />
               ))}
-              <div className="absolute left-[13%] top-[9%] w-[36%] -rotate-[9deg]">
+              {/* Phones and tablets: bottles sized from the frame's height and standing on its floor, so the
+                  shorter frame never cuts them off at the bottom. */}
+              <div className="absolute inset-0 flex items-end justify-center gap-[6%] pb-[7%] lg:hidden">
+                <div className="h-[70%] -rotate-[9deg]">
+                  <Bottle tint={front.tint} name={front.name} decorative className="float-a h-full w-auto" />
+                </div>
+                <div className="h-[58%] rotate-[11deg]">
+                  <Bottle tint={back.tint} name={back.name} decorative className="float-b h-full w-auto" />
+                </div>
+              </div>
+              {/* Desktop: the original composition. */}
+              <div className="absolute left-[13%] top-[9%] hidden w-[36%] -rotate-[9deg] lg:block">
                 <Bottle tint={front.tint} name={front.name} decorative className="float-a w-full" />
               </div>
-              <div className="absolute right-[13%] top-[20%] w-[32%] rotate-[11deg]">
+              <div className="absolute right-[13%] top-[20%] hidden w-[32%] rotate-[11deg] lg:block">
                 <Bottle tint={back.tint} name={back.name} decorative className="float-b w-full" />
               </div>
             </div>

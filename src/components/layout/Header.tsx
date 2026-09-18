@@ -131,7 +131,17 @@ export function Header() {
     setMobileOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
+  // Mobile drawer accordion: which section, and which group inside it, is open.
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
+
   const closeMobile = useCallback(() => setMobileOpen(false), []);
+  useEffect(() => {
+    if (!mobileOpen) {
+      setOpenSection(null);
+      setOpenGroup(null);
+    }
+  }, [mobileOpen]);
 
   // Shop menu preview: hovering or focusing a link shows its top product's first image.
   const [preview, setPreview] = useState<Product | null>(null);
@@ -241,30 +251,85 @@ export function Header() {
               <CloseIcon />
             </button>
           </div>
-          <nav aria-label="Mobile" className="space-y-8 px-6 py-8">
-            {MENU.map((item) => (
-              <div key={item.label}>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-soft">{item.label}</p>
-                {item.columns.map((col) => (
-                  <div key={col.heading} className="mt-4">
-                    {item.columns.length > 1 && <p className="text-[10px] font-semibold uppercase tracking-[0.2em]">{col.heading}</p>}
-                    <ul className="mt-2 space-y-2.5">
-                      {col.links.map((l) => (
-                        <li key={l.label}>
-                          {/* py-1.5 keeps mobile menu links at a comfortable ~44px tap height. */}
-                          <MenuEntryLink entry={l} className="menu-link block py-1.5 font-display text-2xl" onAuth={startAuth} />
-                        </li>
-                      ))}
-                    </ul>
-                    {col.more && (
-                      <Link to={col.more.to} state={linkState(col.more.to)} className="link-underline mt-3 text-[12px] font-semibold uppercase tracking-[0.16em]">
-                        {col.more.label} →
-                      </Link>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ))}
+          {/* Everything starts collapsed: tapping a section opens it (and closes the others), so the
+              drawer stays short instead of listing every link at once. */}
+          <nav aria-label="Mobile" className="px-6 py-4">
+            {MENU.map((item) => {
+              const sectionOpen = item.label === openSection;
+              const single = item.columns.length === 1;
+              return (
+                <div key={item.label} className="border-b border-line">
+                  <button
+                    type="button"
+                    aria-expanded={sectionOpen}
+                    onClick={() => {
+                      setOpenSection(sectionOpen ? null : item.label);
+                      setOpenGroup(null);
+                    }}
+                    className="flex w-full items-center justify-between gap-4 py-4 text-left font-display text-2xl"
+                  >
+                    {item.label}
+                    <ChevronDownIcon
+                      width={20}
+                      height={20}
+                      aria-hidden="true"
+                      className={`shrink-0 transition-transform duration-500 ${sectionOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {sectionOpen && (
+                    <div className="animate-[fadeIn_0.3s_ease-out] pb-4">
+                      {item.columns.map((col) => {
+                        // A section with one column (Information) lists its links straight away;
+                        // Shop and Our House nest their groups one level deeper.
+                        const groupOpen = single || `${item.label}/${col.heading}` === openGroup;
+                        return (
+                          <div key={col.heading} className={single ? undefined : "border-t border-line/70"}>
+                            {!single && (
+                              <button
+                                type="button"
+                                aria-expanded={groupOpen}
+                                onClick={() => setOpenGroup(groupOpen ? null : `${item.label}/${col.heading}`)}
+                                className="flex w-full items-center justify-between gap-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.2em]"
+                              >
+                                {col.heading}
+                                <ChevronDownIcon
+                                  width={16}
+                                  height={16}
+                                  aria-hidden="true"
+                                  className={`shrink-0 transition-transform duration-500 ${groupOpen ? "rotate-180" : ""}`}
+                                />
+                              </button>
+                            )}
+                            {groupOpen && (
+                              <>
+                                <ul className={`animate-[fadeIn_0.3s_ease-out] space-y-1 ${single ? "pt-1" : "pb-2"}`}>
+                                  {col.links.map((l) => (
+                                    <li key={l.label}>
+                                      {/* py-2 keeps mobile menu links at a comfortable tap height. */}
+                                      <MenuEntryLink entry={l} className="menu-link block py-2 font-display text-xl" onAuth={startAuth} />
+                                    </li>
+                                  ))}
+                                </ul>
+                                {col.more && (
+                                  <Link
+                                    to={col.more.to}
+                                    state={linkState(col.more.to)}
+                                    className="link-underline mb-2 text-[12px] font-semibold uppercase tracking-[0.16em]"
+                                  >
+                                    {col.more.label} →
+                                  </Link>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
       </Drawer>

@@ -57,9 +57,9 @@ export function Footer({ flush = false }: { flush?: boolean }) {
       </div>
 
       {/* Full width: the logo column sits at the left edge, "Others" at the right edge, the rest spaced evenly. */}
-      <div className="relative grid gap-x-10 gap-y-12 px-6 pb-14 pt-24 sm:grid-cols-2 md:grid-cols-3 md:px-12 lg:flex lg:justify-between lg:gap-x-12 xl:px-16">
-        {/* 1. Logo, tagline, description */}
-        <div>
+      <div className="relative grid gap-x-10 gap-y-12 px-6 pb-14 pt-24 sm:grid-cols-2 md:px-12 lg:flex lg:justify-between lg:gap-x-12 xl:px-16">
+        {/* 1. Logo, tagline, description — full width while the navs are in two columns. */}
+        <div className="sm:col-span-2 lg:col-span-1">
           <Logo imgClassName="h-16" taglineClassName="text-[11px] tracking-[0.5em]" />
           <p className="mt-8 font-display text-xl font-bold">Fragrance Beyond Words</p>
           <p className="mt-5 max-w-[260px] text-[15.5px] leading-[2]">Niche perfume extracts, composed slowly in small batches.</p>
