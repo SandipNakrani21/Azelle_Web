@@ -1,5 +1,5 @@
-// Coupon codes for the cart.
-// ⚠ Demo offers — replace with Azelle's real coupons (or load them from the admin / API) before launch.
+// Coupon rules for the cart. The coupons themselves are managed in the admin (Coupons) and
+// loaded from /api/store; the server applies the same rule again when an order is placed.
 
 export type Coupon = {
   code: string;
@@ -10,18 +10,12 @@ export type Coupon = {
   kind: "percent" | "flat" | "shipping";
   /** Percentage for "percent", rupees for "flat", unused for "shipping". */
   value: number;
-  maxDiscount?: number;
+  maxDiscount?: number | null;
 };
 
-export const COUPONS: Coupon[] = [
-  { code: "WELCOME10", label: "10% off (up to ₹300)", minSubtotal: 399, kind: "percent", value: 10, maxDiscount: 300 },
-  { code: "AZELLE100", label: "₹100 off on ₹999+", minSubtotal: 999, kind: "flat", value: 100 },
-  { code: "FREESHIP", label: "Free shipping on ₹599+", minSubtotal: 599, kind: "shipping", value: 0 },
-];
-
-export function findCoupon(code: string): Coupon | undefined {
-  const normalised = code.trim().toUpperCase();
-  return COUPONS.find((c) => c.code === normalised);
+export function isCoupon(value: unknown): value is Coupon {
+  const c = value as Coupon | null;
+  return Boolean(c) && typeof c?.code === "string" && typeof c.minSubtotal === "number" && ["percent", "flat", "shipping"].includes(c.kind);
 }
 
 export type CouponResult = {

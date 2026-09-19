@@ -7,8 +7,22 @@ import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
 import { requireAdmin } from "./middleware/requireAdmin.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
+import { seedCouponsIfEmpty } from "./models/Coupon.js";
+import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
+import { adminCouponsRouter } from "./routes/adminCoupons.js";
+import { adminCustomersRouter } from "./routes/adminCustomers.js";
+import { adminDashboardRouter } from "./routes/adminDashboard.js";
+import { adminOrdersRouter } from "./routes/adminOrders.js";
 import { adminProductsRouter } from "./routes/adminProducts.js";
+import { adminReviewsRouter } from "./routes/adminReviews.js";
+import { adminSettingsRouter } from "./routes/adminSettings.js";
+import { hasMockGateway } from "./integrations/payments/index.js";
+import { mockPaymentsRouter } from "./routes/mockPayments.js";
+import { ordersRouter } from "./routes/orders.js";
 import { publicProductsRouter } from "./routes/products.js";
+import { reviewsRouter } from "./routes/reviews.js";
+import { storeRouter } from "./routes/store.js";
+import { webhooksRouter } from "./routes/webhooks.js";
 import { seedProductsIfEmpty } from "./seed/seed.js";
 import { ON_VERCEL, UPLOADS_DIR } from "./uploads.js";
 
@@ -25,8 +39,16 @@ function createApp() {
   // Local uploads folder. On Vercel the bundled photos are static files and new uploads live in Vercel Blob.
   if (!ON_VERCEL) app.use("/uploads", express.static(UPLOADS_DIR, { dotfiles: "deny", maxAge: "7d" }));
 
+  // Payment webhooks read the raw body (signature checks), so they come before any JSON parser.
+  app.use("/api/webhooks", webhooksRouter);
+
   // Public storefront API.
   app.use("/api/products", publicProductsRouter);
+  app.use("/api/store", express.json({ limit: "20kb" }), storeRouter);
+  app.use("/api/orders", express.json({ limit: "50kb" }), ordersRouter);
+  app.use("/api/reviews", express.json({ limit: "20kb" }), reviewsRouter);
+  // Local test-mode payment page (only when a gateway uses dummy keys; never in production).
+  if (hasMockGateway()) app.use("/api/mock-payments", express.json({ limit: "5kb" }), mockPaymentsRouter);
 
   // Admin API: session cookie scoped to /api/admin; rolling 10-minute inactivity window stored in MongoDB.
   app.use(
@@ -50,6 +72,13 @@ function createApp() {
   );
   app.use("/api/admin", adminAuthRouter);
   app.use("/api/admin/products", requireAdmin, adminProductsRouter);
+  app.use("/api/admin/dashboard", requireAdmin, adminDashboardRouter);
+  app.use("/api/admin/orders", requireAdmin, adminOrdersRouter);
+  app.use("/api/admin/customers", requireAdmin, adminCustomersRouter);
+  app.use("/api/admin/coupons", requireAdmin, adminCouponsRouter);
+  app.use("/api/admin/settings", requireAdmin, adminSettingsRouter);
+  app.use("/api/admin/reviews", requireAdmin, adminReviewsRouter);
+  app.use("/api/admin/analytics", requireAdmin, adminAnalyticsRouter);
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
@@ -61,7 +90,11 @@ function createApp() {
     }
     if (err?.type === "entity.parse.failed") return res.status(400).json({ error: "Invalid JSON body." });
     if (err?.status && err.status < 500) return res.status(err.status).json({ error: err.message });
-    if (err?.status === 503) return res.status(503).json({ error: err.message });
+    // Partner (payment / shipping) failures and "not available" errors carry a readable message.
+    if (err?.status === 502 || err?.status === 503) {
+      if (err.status === 502) console.error(err.cause ?? err);
+      return res.status(err.status).json({ error: err.message });
+    }
     console.error(err);
     res.status(500).json({ error: "Something went wrong on the server." });
   });
@@ -79,6 +112,7 @@ export function getApp() {
   appPromise ??= (async () => {
     await connectDatabase();
     await seedProductsIfEmpty();
+    await seedCouponsIfEmpty();
     return createApp();
   })().catch((err) => {
     appPromise = null; // let the next request retry (e.g. after a database hiccup)

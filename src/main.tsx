@@ -5,17 +5,20 @@ import App from "./App";
 import { AuthProvider } from "./providers/AuthProvider";
 import { CartProvider } from "./providers/CartProvider";
 import { ProductsProvider } from "./providers/ProductsProvider";
+import { StoreProvider } from "./providers/StoreProvider";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <ProductsProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
-        </ProductsProvider>
+        <StoreProvider>
+          <ProductsProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </ProductsProvider>
+        </StoreProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

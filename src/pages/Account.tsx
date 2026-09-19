@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ornament } from "@/components/ui/Ornament";
+import { fetchOrder, rememberedOrders, STATUS_LABELS, type Order } from "@/lib/orders";
+import { formatPrice } from "@/lib/products";
 import { useAuth } from "@/providers/AuthProvider";
 
 // Customer account: profile + quick actions when signed in, otherwise a prompt to log in or sign up.
@@ -39,7 +41,11 @@ export default function AccountPage() {
               </button>
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {user && <YourOrders />}
+
+        {user ? null : (
           <div className="mt-10 rounded-[20px] border border-line bg-surface p-7 md:p-9">
             <p className="font-display text-3xl">Welcome to Azelle</p>
             <p className="mt-3 leading-relaxed">Log in or create an account for a faster checkout and easy order tracking.</p>
@@ -49,6 +55,58 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+    </section>
+  );
+}
+
+// Orders placed (or looked up) on this device, with their live status.
+function YourOrders() {
+  const [orders, setOrders] = useState<Order[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const entries = rememberedOrders().slice(0, 10);
+    Promise.all(entries.map((e) => fetchOrder(e.number, e.key).then((d) => d.order).catch(() => null))).then((list) => {
+      if (!cancelled) setOrders(list.filter((o): o is Order => o !== null));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <section aria-labelledby="orders-h" className="mt-8 rounded-[20px] border border-line bg-surface p-7 md:p-9">
+      <h2 id="orders-h" className="font-display text-3xl">
+        Your orders
+      </h2>
+      {orders === null ? (
+        <p className="mt-4 text-sm" role="status">
+          Loading…
+        </p>
+      ) : orders.length === 0 ? (
+        <p className="mt-4 leading-relaxed">
+          No orders on this device yet. Placed an order elsewhere? Find it with <Link to="/pages/order-tracking" className="text-link font-semibold">Order Tracking</Link>.
+        </p>
+      ) : (
+        <ul className="mt-5 divide-y divide-line">
+          {orders.map((o) => (
+            <li key={o.number}>
+              <Link to={`/order/${o.number}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-4">
+                <span>
+                  <span className="block font-semibold">{o.number}</span>
+                  <span className="text-sm">
+                    {new Date(o.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} · {o.lines.reduce((n, l) => n + l.qty, 0)} item(s)
+                  </span>
+                </span>
+                <span className="flex items-center gap-3">
+                  <span className="rounded-full border border-line px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]">{STATUS_LABELS[o.status]}</span>
+                  <span className="tabular-nums font-semibold">{formatPrice(o.total)}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

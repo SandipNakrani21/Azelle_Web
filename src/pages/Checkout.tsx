@@ -1,21 +1,51 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MiniBottle } from "@/components/ui/Bottle";
-import { Field, fieldClass, labelClass } from "@/components/ui/Field";
-import { placeOrder } from "@/lib/orders";
-import { TAX_RATE, formatPrice } from "@/lib/products";
+import { Field, fieldClass, fieldErrorClass, labelClass } from "@/components/ui/Field";
+import { setTag, trackEvent } from "@/lib/analytics";
+import { ApiError } from "@/lib/api";
+import { placeOrder, verifyPayment } from "@/lib/orders";
+import { openPayment } from "@/lib/payments";
+import { formatPrice } from "@/lib/products";
 import { revealOrder } from "@/lib/reveal";
-import { useAuth } from "@/providers/AuthProvider";
+import { EMAIL_RE, INDIAN_MOBILE_RE, useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
+import { useStore } from "@/providers/StoreProvider";
 
-const COUNTRIES = ["India", "United Arab Emirates", "United States", "United Kingdom", "Canada", "Australia", "Singapore"];
+// Shipping partners deliver within India only.
+const STATES = [
+  "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir",
+  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
+  "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+  "Uttar Pradesh", "Uttarakhand", "West Bengal",
+];
+const PINCODE_RE = /^[1-9]\d{5}$/;
+
+type Method = "online" | "cod";
+type Errors = Partial<Record<"email" | "phone" | "name" | "line1" | "city" | "state" | "pincode" | "payment", string>>;
 
 export default function Checkout() {
   const { user, openAuth } = useAuth();
-  const { lines, subtotal, discount, coupon, freeShipping, tax, shipping, total, clear } = useCart();
+  const { lines, subtotal, discount, coupon, freeShipping, tax, shipping, total, gstRate, clear } = useCart();
+  const store = useStore();
   const navigate = useNavigate();
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Errors>({});
+
+  const { online, cod } = store.payments;
+  const codAvailable = cod.enabled && total + cod.fee <= cod.maxOrderValue;
+  const [method, setMethod] = useState<Method | null>(null);
+  // Online first when it's available; otherwise cash on delivery.
+  const chosen: Method | null = method ?? (online ? "online" : codAvailable ? "cod" : null);
+  const codFee = chosen === "cod" ? cod.fee : 0;
+  const grandTotal = total + codFee;
+
+  useEffect(() => {
+    if (user && lines.length > 0) trackEvent("begin_checkout");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!user) {
     return (
@@ -41,42 +71,57 @@ export default function Checkout() {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const get = (key: string) => String(data.get(key) ?? "").trim();
+    const input = {
+      customer: { name: get("name"), email: get("email"), phone: get("phone").replace(/\D/g, "") },
+      address: { line1: get("line1"), line2: get("line2"), city: get("city"), state: get("state"), pincode: get("pincode") },
+    };
+
+    const found: Errors = {};
+    if (!EMAIL_RE.test(input.customer.email)) found.email = "Enter a valid email address.";
+    if (!INDIAN_MOBILE_RE.test(input.customer.phone)) found.phone = "Enter a 10-digit mobile number starting with 6–9.";
+    if (input.customer.name.length < 2) found.name = "Enter your full name.";
+    if (input.address.line1.length < 3) found.line1 = "Enter your street address.";
+    if (!input.address.city) found.city = "Enter your city.";
+    if (!input.address.state) found.state = "Choose your state.";
+    if (!PINCODE_RE.test(input.address.pincode)) found.pincode = "Enter a 6-digit PIN code.";
+    if (!chosen) found.payment = "Choose a payment method.";
+    setErrors(found);
+    if (Object.keys(found).length) {
+      setError("Please check the highlighted fields.");
+      return;
+    }
 
     setPlacing(true);
     setError("");
     try {
-      const order = await placeOrder({
-        email: get("email"),
-        phone: get("phone"),
-        name: get("name"),
-        address: {
-          line1: get("line1"),
-          line2: get("line2"),
-          city: get("city"),
-          region: get("region"),
-          postal: get("postal"),
-          country: get("country"),
-        },
-        lines: lines.map((l) => ({
-          key: l.key,
-          productId: l.productId,
-          name: l.product.name,
-          sizeLabel: l.size.label,
-          qty: l.qty,
-          unit: l.unit,
-          total: l.total,
-        })),
-        subtotal,
-        discount,
+      const { order, accessKey, payment, paymentError } = await placeOrder({
+        ...input,
+        items: lines.map((l) => ({ productId: l.productId, sizeId: l.sizeId, qty: l.qty })),
         couponCode: coupon && (discount > 0 || freeShipping) ? coupon.code : undefined,
-        tax,
-        shipping,
-        total,
+        paymentMethod: chosen!,
       });
       clear();
-      navigate(`/order/${order.id}`, { replace: true });
-    } catch {
-      setError("We couldn't place your order. Please try again.");
+      trackEvent(chosen === "cod" ? "purchase_cod" : "purchase_started");
+      setTag("order_value", String(order.total));
+      const orderUrl = `/order/${order.number}`;
+
+      if (!payment) {
+        // Cash on delivery — or no gateway answered; the order page offers "Pay now" again.
+        navigate(orderUrl, { replace: true, state: paymentError ? { notice: paymentError } : undefined });
+        return;
+      }
+
+      const outcome = await openPayment(payment);
+      if (outcome.kind === "redirected") return; // Cashfree brings the customer back to the order page.
+      if (outcome.kind === "razorpay_success") {
+        await verifyPayment(order.number, accessKey, outcome.response).catch(() => null);
+        navigate(orderUrl, { replace: true });
+        return;
+      }
+      navigate(orderUrl, { replace: true, state: { notice: "Payment was not completed. You can pay now from this page." } });
+    } catch (err) {
+      if (err instanceof ApiError && Object.keys(err.fields).length) setErrors(err.fields as Errors);
+      setError(err instanceof Error ? err.message : "We couldn't place your order. Please try again.");
       setPlacing(false);
     }
   };
@@ -91,40 +136,105 @@ export default function Checkout() {
           Checkout
         </h1>
 
-        <form onSubmit={onSubmit} className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_400px] lg:gap-14">
+        <form onSubmit={onSubmit} noValidate data-clarity-mask="True" className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_400px] lg:gap-14">
           <div className="space-y-6">
             <Step n={1} title="Contact" order={2}>
-              <Field label="Email" name="email" type="email" autoComplete="email" defaultValue={user.email} required />
-              <Field label="Phone" name="phone" type="tel" autoComplete="tel" />
-            </Step>
-
-            <Step n={2} title="Delivery" order={3}>
-              <Field label="Full name" name="name" autoComplete="name" defaultValue={user.name} required className="sm:col-span-2" />
-              <Field label="Address" name="line1" autoComplete="address-line1" required className="sm:col-span-2" />
-              <Field label="Apartment, suite" name="line2" autoComplete="address-line2" className="sm:col-span-2" />
-              <Field label="City" name="city" autoComplete="address-level2" required />
-              <Field label="State" name="region" autoComplete="address-level1" required />
-              <Field label="PIN / postal code" name="postal" autoComplete="postal-code" required />
+              <Field label="Email" name="email" type="email" autoComplete="email" defaultValue={user.email} required error={errors.email} />
               <div>
-                <label htmlFor="country" className={labelClass}>
-                  Country
+                <label htmlFor="checkout-phone" className={labelClass}>
+                  Mobile number
                 </label>
-                <select id="country" name="country" autoComplete="country-name" defaultValue={COUNTRIES[0]} className={fieldClass}>
-                  {COUNTRIES.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </select>
+                <div className="mt-2 flex">
+                  <span className="grid h-12 place-items-center rounded-l-[10px] border border-r-0 border-line bg-surface2 px-3 text-base text-soft" aria-hidden="true">
+                    +91
+                  </span>
+                  <input
+                    id="checkout-phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    maxLength={10}
+                    defaultValue={user.phone ?? ""}
+                    required
+                    aria-invalid={errors.phone ? true : undefined}
+                    aria-describedby={errors.phone ? "checkout-phone-error" : "checkout-phone-hint"}
+                    className={`${fieldClass} !mt-0 rounded-l-none ${errors.phone ? "!border-[#b3261e]" : ""}`}
+                  />
+                </div>
+                {errors.phone ? (
+                  <p id="checkout-phone-error" className={fieldErrorClass}>
+                    {errors.phone}
+                  </p>
+                ) : (
+                  <p id="checkout-phone-hint" className="mt-1.5 text-[13px] text-soft">
+                    For delivery updates from the courier.
+                  </p>
+                )}
               </div>
             </Step>
 
-            {/* Demo payment UI: these inputs have no `name`, so they are never read, sent or stored.
-                Replace with the payment provider's hosted fields. */}
+            <Step n={2} title="Delivery" order={3}>
+              <Field label="Full name" name="name" autoComplete="name" defaultValue={user.name} required error={errors.name} className="sm:col-span-2" />
+              <Field label="Address" name="line1" autoComplete="address-line1" required error={errors.line1} className="sm:col-span-2" placeholder="House no., building, street" />
+              <Field label="Area, landmark" name="line2" autoComplete="address-line2" className="sm:col-span-2" />
+              <Field label="City" name="city" autoComplete="address-level2" required error={errors.city} />
+              <div>
+                <label htmlFor="checkout-state" className={labelClass}>
+                  State
+                </label>
+                <select
+                  id="checkout-state"
+                  name="state"
+                  autoComplete="address-level1"
+                  defaultValue=""
+                  required
+                  aria-invalid={errors.state ? true : undefined}
+                  className={`${fieldClass} ${errors.state ? "!border-[#b3261e]" : ""}`}
+                >
+                  <option value="" disabled>
+                    Choose a state
+                  </option>
+                  {STATES.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+                {errors.state && <p className={fieldErrorClass}>{errors.state}</p>}
+              </div>
+              <Field label="PIN code" name="pincode" inputMode="numeric" maxLength={6} autoComplete="postal-code" required error={errors.pincode} />
+              <div>
+                <p className={labelClass}>Country</p>
+                <p className={`${fieldClass} flex items-center bg-surface2 text-soft`}>India</p>
+              </div>
+            </Step>
+
             <Step n={3} title="Payment" order={4}>
-              <p className="rounded-[10px] bg-surface2 px-4 py-3 text-sm sm:col-span-2">Demo checkout — no payment is taken.</p>
-              <Field label="Name on card" autoComplete="cc-name" required className="sm:col-span-2" />
-              <Field label="Card number" autoComplete="cc-number" inputMode="numeric" placeholder="1234 1234 1234 1234" required className="sm:col-span-2" />
-              <Field label="Expiry" autoComplete="cc-exp" placeholder="MM / YY" required />
-              <Field label="Security code" autoComplete="cc-csc" inputMode="numeric" placeholder="CVC" required />
+              <fieldset className="sm:col-span-2">
+                <legend className="sr-only">Payment method</legend>
+                <div className="grid gap-3">
+                  {online && (
+                    <PaymentOption
+                      checked={chosen === "online"}
+                      onSelect={() => setMethod("online")}
+                      title="Pay online"
+                      text="UPI, cards, net banking and wallets — on a secure payment page."
+                    />
+                  )}
+                  {cod.enabled && (
+                    <PaymentOption
+                      checked={chosen === "cod"}
+                      onSelect={() => setMethod("cod")}
+                      disabled={!codAvailable}
+                      title={cod.fee > 0 ? `Cash on delivery (+${formatPrice(cod.fee)})` : "Cash on delivery"}
+                      text={codAvailable ? "Pay in cash or UPI when your order arrives." : `Available on orders up to ${formatPrice(cod.maxOrderValue)}.`}
+                    />
+                  )}
+                  {!online && !cod.enabled && (
+                    <p className="rounded-[10px] bg-surface2 px-4 py-3 text-sm">{store.status === "loading" ? "Loading payment options…" : "Payments are temporarily unavailable. Please try again soon."}</p>
+                  )}
+                </div>
+                {errors.payment && <p className={fieldErrorClass}>{errors.payment}</p>}
+              </fieldset>
             </Step>
           </div>
 
@@ -158,12 +268,13 @@ export default function Checkout() {
               <SummaryRow label="Subtotal" value={formatPrice(subtotal)} />
               {discount > 0 && coupon && <SummaryRow label={`Discount (${coupon.code})`} value={`−${formatPrice(discount)}`} />}
               <SummaryRow label="Shipping" value={freeShipping ? "Free" : formatPrice(shipping)} />
-              <SummaryRow label={`GST (${Math.round(TAX_RATE * 100)}%)`} value={formatPrice(tax)} />
+              <SummaryRow label={`GST (${Math.round(gstRate * 100)}%)`} value={formatPrice(tax)} />
+              {codFee > 0 && <SummaryRow label="Cash on delivery fee" value={formatPrice(codFee)} />}
             </dl>
             <div className="mt-3 flex items-baseline justify-between border-t border-line pt-3">
               <span className="text-[12px] font-semibold uppercase tracking-[0.2em]">Total</span>
               <span className="font-sans text-[1.9rem] font-bold leading-none tracking-tight tabular-nums" style={{ color: "color-mix(in oklab, var(--accent) 70%, var(--ink))" }}>
-                {formatPrice(total)}
+                {formatPrice(grandTotal)}
               </span>
             </div>
             {error && (
@@ -171,13 +282,30 @@ export default function Checkout() {
                 {error}
               </p>
             )}
-            <button type="submit" className="btn btn-primary mt-6 w-full" disabled={placing}>
-              {placing ? "Placing order…" : `Place order — ${formatPrice(total)}`}
+            <button type="submit" className="btn btn-primary mt-6 w-full" disabled={placing || !chosen}>
+              {placing ? "Placing order…" : chosen === "cod" ? `Place order — ${formatPrice(grandTotal)}` : `Pay ${formatPrice(grandTotal)}`}
             </button>
+            <p className="mt-3 text-center text-[12.5px] text-soft">Your order is confirmed by our team before it ships.</p>
           </aside>
         </form>
       </div>
     </div>
+  );
+}
+
+function PaymentOption({ checked, onSelect, title, text, disabled = false }: { checked: boolean; onSelect: () => void; title: string; text: string; disabled?: boolean }) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start gap-3 rounded-[14px] border p-4 transition-colors duration-300 ${
+        checked ? "border-ink bg-[color-mix(in_oklab,var(--accent)_7%,var(--surface))]" : "border-line"
+      } ${disabled ? "cursor-not-allowed opacity-55" : ""}`}
+    >
+      <input type="radio" name="payment" checked={checked} onChange={onSelect} disabled={disabled} className="mt-1 h-4 w-4 accent-[var(--ink)]" />
+      <span>
+        <span className="block font-semibold">{title}</span>
+        <span className="mt-0.5 block text-sm">{text}</span>
+      </span>
+    </label>
   );
 }
 

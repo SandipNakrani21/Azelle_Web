@@ -5,9 +5,10 @@ import { Drawer } from "@/components/ui/Drawer";
 import { ChevronDownIcon, CloseIcon, GiftSmallIcon, SearchIcon } from "@/components/ui/Icons";
 import { Modal } from "@/components/ui/Modal";
 import { QtyStepper } from "@/components/ui/QtyStepper";
-import { COUPONS, evaluateCoupon } from "@/lib/coupons";
+import { evaluateCoupon, type Coupon } from "@/lib/coupons";
 import { sized } from "@/lib/images";
-import { SHIPPING, TAX_RATE, formatPrice } from "@/lib/products";
+import { formatPrice } from "@/lib/products";
+import { useStore } from "@/providers/StoreProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart, type CouponFeedback } from "@/providers/CartProvider";
 
@@ -18,8 +19,9 @@ const successInk = "#2f7d4f";
 
 // Shopping cart: full screen on phones, 35% of the window on larger screens (never narrower than 420px).
 export function CartDrawer() {
-  const { isOpen, closeCart, lines, count, subtotal, discount, tax, shipping, total, coupon, couponShortfall, freeShipping, inc, dec, remove, applyCoupon, removeCoupon } =
+  const { isOpen, closeCart, lines, count, subtotal, discount, tax, shipping, total, coupon, couponShortfall, freeShipping, gstRate, shippingFee, inc, dec, remove, applyCoupon, removeCoupon } =
     useCart();
+  const { coupons } = useStore();
   const { isAuthenticated, openAuth } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -55,9 +57,9 @@ export function CartDrawer() {
     setFeedback(null);
   }, [subtotal]);
 
-  const submitCoupon = (e?: FormEvent, value = code) => {
+  const submitCoupon = async (e?: FormEvent, value = code) => {
     e?.preventDefault();
-    const result = applyCoupon(value);
+    const result = await applyCoupon(value);
     setFeedback(result);
     if (result.ok) setCode("");
     return result;
@@ -234,7 +236,7 @@ export function CartDrawer() {
                   <Row label="Subtotal" value={formatPrice(subtotal)} />
                   {discount > 0 && coupon && <Row label={`Discount (${coupon.code})`} value={`−${formatPrice(discount)}`} color={successInk} />}
                   <Row label="Shipping" value={freeShipping ? "Free" : formatPrice(shipping)} color={freeShipping ? successInk : undefined} />
-                  <Row label={`GST (${Math.round(TAX_RATE * 100)}%)`} value={formatPrice(tax)} />
+                  <Row label={`GST (${Math.round(gstRate * 100)}%)`} value={formatPrice(tax)} />
                   <div className="flex items-baseline justify-between border-t border-line pt-2.5">
                     <dt className="text-[11px] font-semibold uppercase tracking-[0.2em]">Total</dt>
                     <dd className={`${priceFont} text-[1.4rem] leading-none`} style={accentInk}>
@@ -265,10 +267,12 @@ export function CartDrawer() {
       <CouponsDialog
         open={couponsListOpen}
         onClose={closeCouponsList}
+        coupons={coupons}
         subtotal={subtotal}
+        shippingFee={shippingFee}
         appliedCode={coupon?.code ?? null}
-        onApply={(value) => {
-          const result = submitCoupon(undefined, value);
+        onApply={async (value) => {
+          const result = await submitCoupon(undefined, value);
           if (result.ok) {
             setCouponOpen(true);
             setCouponsListOpen(false);
@@ -284,15 +288,19 @@ export function CartDrawer() {
 function CouponsDialog({
   open,
   onClose,
+  coupons,
   subtotal,
+  shippingFee,
   appliedCode,
   onApply,
 }: {
   open: boolean;
   onClose: () => void;
+  coupons: Coupon[];
   subtotal: number;
+  shippingFee: number;
   appliedCode: string | null;
-  onApply: (code: string) => CouponFeedback;
+  onApply: (code: string) => Promise<CouponFeedback>;
 }) {
   const [query, setQuery] = useState("");
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
@@ -305,7 +313,7 @@ function CouponsDialog({
   }, [open]);
 
   const q = query.trim().toLowerCase();
-  const list = COUPONS.filter((c) => !q || c.code.toLowerCase().includes(q) || c.label.toLowerCase().includes(q));
+  const list = coupons.filter((c) => !q || c.code.toLowerCase().includes(q) || c.label.toLowerCase().includes(q));
 
   return (
     <Modal open={open} onClose={onClose} label="Available coupons" panelClassName="max-w-[520px] overflow-hidden">
@@ -343,7 +351,7 @@ function CouponsDialog({
             const result = evaluateCoupon(c, subtotal);
             const locked = result.shortfall > 0;
             const applied = appliedCode === c.code;
-            const saving = c.kind === "shipping" ? SHIPPING : result.discount;
+            const saving = c.kind === "shipping" ? shippingFee : result.discount;
             return (
               <li key={c.code} className={`rounded-[14px] border border-dashed p-4 ${applied ? "bg-[rgba(47,125,79,.06)]" : "bg-surface"}`} style={{ borderColor: applied ? successInk : undefined }}>
                 <div className="flex items-start justify-between gap-3">
@@ -355,8 +363,8 @@ function CouponsDialog({
                   <button
                     type="button"
                     disabled={locked || applied}
-                    onClick={() => {
-                      const res = onApply(c.code);
+                    onClick={async () => {
+                      const res = await onApply(c.code);
                       setError(res.ok ? null : { code: c.code, message: res.message });
                     }}
                     className="btn btn-primary !h-10 !min-w-0 shrink-0 !px-4 !text-[11.5px] lg:!h-9"

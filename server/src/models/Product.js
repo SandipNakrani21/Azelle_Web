@@ -37,6 +37,9 @@ const productSchema = new mongoose.Schema(
     },
     tint: { type: String, default: "#c9a27e", match: /^#[0-9a-f]{6}$/i },
     inStock: { type: Boolean, default: true },
+    // Kept in sync from approved reviews (models/Review.js → refreshProductRating).
+    ratingAvg: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
     sortOrder: { type: Number, default: 0 },
     // Soft delete: records are kept but hidden everywhere.

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Bottle } from "@/components/ui/Bottle";
+import { Stars } from "@/components/ui/Stars";
 import { sized } from "@/lib/images";
 import { DEFAULT_SIZE_ID, formatPrice, unitPrice, type Product } from "@/lib/products";
 import { revealOrder } from "@/lib/reveal";
@@ -35,6 +36,19 @@ export function ProductCard({ product, order = 0 }: { product: Product; order?: 
         </Link>
       </h3>
       <p className="mt-1 text-[13px]">{product.family}</p>
+      {/* Rating from approved reviews */}
+      {product.ratingCount ? (
+        <Link to={`${href}#reviews`} className="mt-1.5 flex items-center gap-1.5 text-[12.5px]" aria-label={`Rated ${product.ratingAvg} out of 5 from ${product.ratingCount} reviews`}>
+          <span className="font-semibold">{product.ratingAvg?.toFixed(1)}</span>
+          <span className="text-soft">({product.ratingCount})</span>
+          <Stars value={product.ratingAvg ?? 0} size={14} />
+        </Link>
+      ) : (
+        <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-soft">
+          <Stars value={0} size={14} />
+          No reviews yet
+        </p>
+      )}
       <p className="mt-2 font-display text-xl">{formatPrice(unitPrice(product, DEFAULT_SIZE_ID))}</p>
       <button
         type="button"

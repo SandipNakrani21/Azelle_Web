@@ -4,6 +4,9 @@ import { CatalogueStatus } from "@/components/product/CatalogueStatus";
 import { NotesPyramid } from "@/components/product/NotesPyramid";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ProductGallery } from "@/components/product/ProductGallery";
+import { ProductReviews, scrollToReviews } from "@/components/product/ProductReviews";
+import { Stars } from "@/components/ui/Stars";
+import { reviewCountLabel } from "@/lib/reviews";
 import { GoodToKnow } from "@/components/product/GoodToKnow";
 import { AwardIcon, ClockIcon, DropletIcon, FlagIcon, RabbitIcon } from "@/components/ui/Icons";
 import { Ornament } from "@/components/ui/Ornament";
@@ -134,6 +137,28 @@ export default function ProductPage() {
               <p data-reveal="slide" style={revealOrder(1)} className={`mt-3 leading-relaxed ${microLabel}`}>
                 {metaLine}
               </p>
+              {/* Rating — jumps to the reviews at the bottom of the page */}
+              <button
+                type="button"
+                data-reveal="slide"
+                style={revealOrder(1)}
+                onClick={scrollToReviews}
+                className="mt-3 flex items-center gap-2 py-1 text-sm"
+              >
+                {/* Rating first, then (review count), then the stars */}
+                {product.ratingCount ? (
+                  <>
+                    <span className="font-semibold">{product.ratingAvg?.toFixed(1)}</span>
+                    <span className="text-link">({reviewCountLabel(product.ratingCount)})</span>
+                    <Stars value={product.ratingAvg ?? 0} size={17} />
+                  </>
+                ) : (
+                  <>
+                    <Stars value={0} size={17} />
+                    <span className="text-link">No reviews yet — write the first</span>
+                  </>
+                )}
+              </button>
               <div data-reveal="slide" style={revealOrder(2)}>
                 <Ornament align="left" className="my-6" />
               </div>
@@ -251,6 +276,9 @@ export default function ProductPage() {
           </ul>
         </section>
       )}
+
+      {/* ── Customer reviews (last section, just above the footer) ── */}
+      <ProductReviews product={product} />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/Icons";
 import { Ornament } from "@/components/ui/Ornament";
 import { MAILTO_URL, WHATSAPP_URL } from "@/lib/contact";
+import { lookupOrder } from "@/lib/orders";
 import { COMPANY, INFO_PAGES, LAST_UPDATED, RELATED_PAGES, type IconKey, type InfoBlock, type InfoFormKind } from "@/content/infoPages";
 import NotFound from "./NotFound";
 
@@ -227,24 +228,49 @@ function RequestForm({ kind }: { kind: Exclude<InfoFormKind, "tracking"> }) {
 function TrackingForm() {
   const navigate = useNavigate();
   const [orderId, setOrderId] = useState("");
+  const [contact, setContact] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const id = orderId.trim().toUpperCase();
-    if (id) navigate(`/order/${encodeURIComponent(id)}`);
+    if (!id || !contact.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { order } = await lookupOrder(id, contact.trim());
+      navigate(`/order/${encodeURIComponent(order.number)}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't find that order.");
+      setBusy(false);
+    }
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 rounded-[24px] border border-line bg-surface p-6 shadow-[0_18px_40px_rgba(27,24,21,.06)] sm:flex-row sm:items-end md:p-9">
-      <div className="flex-1">
-        <label htmlFor="track-id" className={labelClass}>
-          Order number
-        </label>
-        <input id="track-id" value={orderId} onChange={(e) => setOrderId(e.target.value)} required className={`${fieldClass} uppercase`} placeholder="AZ-XXXXXX" />
+    <form onSubmit={onSubmit} className="rounded-[24px] border border-line bg-surface p-6 shadow-[0_18px_40px_rgba(27,24,21,.06)] md:p-9">
+      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <div>
+          <label htmlFor="track-id" className={labelClass}>
+            Order number
+          </label>
+          <input id="track-id" value={orderId} onChange={(e) => setOrderId(e.target.value)} required className={`${fieldClass} uppercase`} placeholder="AZ-XXXXXX" />
+        </div>
+        <div>
+          <label htmlFor="track-contact" className={labelClass}>
+            Email or mobile
+          </label>
+          <input id="track-contact" value={contact} onChange={(e) => setContact(e.target.value)} required className={fieldClass} placeholder="Used at checkout" />
+        </div>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? "Finding…" : "Track order"}
+        </button>
       </div>
-      <button type="submit" className="btn btn-primary">
-        Track order
-      </button>
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-[#b3261e]">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

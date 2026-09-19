@@ -41,6 +41,54 @@ git push -u origin main
    automatically, so admin uploads are stored in Blob.
 4. **Deploy** (or redeploy after adding variables).
 
+## Payments & shipping (Cashfree, Razorpay, Shiprocket, Delhivery)
+
+All partner settings live in `server/src/commerce.config.js` (GST, shipping fee, COD limit, gateway order,
+parcel sizes, pickup location). Keys go in environment variables only. A partner without keys is simply
+switched off — checkout offers cash on delivery, and the admin can ship with "Manual".
+**Admin → Settings** shows which partners are connected and which variables are still missing.
+
+| Name | Where to get it |
+| --- | --- |
+| `PUBLIC_SITE_URL` | Your live URL, e.g. `https://azelle-web.vercel.app` (used for payment return links) |
+| `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY` | Cashfree dashboard → Developers → API keys |
+| `CASHFREE_ENV` | `sandbox` for testing, `production` for real payments |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Razorpay dashboard → Account & Settings → API keys (`rzp_test_…` = test mode) |
+| `RAZORPAY_WEBHOOK_SECRET` | The secret you type when creating the Razorpay webhook |
+| `SHIPROCKET_EMAIL`, `SHIPROCKET_PASSWORD` | Shiprocket → Settings → API → create an **API user** (not your login) |
+| `DELHIVERY_API_TOKEN` | Delhivery One → Settings → API setup |
+| `DELHIVERY_ENV` | `staging` for testing, `production` for live shipments |
+| `PICKUP_LOCATION_NAME` | Pickup location / warehouse name exactly as registered in Shiprocket and Delhivery |
+| `PICKUP_PINCODE` | 6-digit PIN code of that pickup address (needed for courier rates) |
+
+**Webhooks** (so payments confirm even if the customer closes the page):
+- Cashfree → Developers → Webhooks → `https://<your-domain>/api/webhooks/cashfree` (payment events).
+- Razorpay → Settings → Webhooks → `https://<your-domain>/api/webhooks/razorpay`, events
+  `payment.captured` and `payment.failed`, with the same secret as `RAZORPAY_WEBHOOK_SECRET`.
+
+**Order flow:** a paid (or COD) order shows as **Pending** to the customer. In **Admin → Orders** open it,
+click **Accept order**, pick Shiprocket, Delhivery or Manual (with live courier rates), and the shipment is
+booked — the customer then sees **Accepted**, and later **Shipped** / **Delivered** with the tracking link.
+
+Test with sandbox / test keys first: a Cashfree sandbox or Razorpay test payment, and a Delhivery staging
+shipment. Shiprocket has no sandbox — book one real test shipment and cancel it from the order page.
+
+## Website analytics (Microsoft Clarity)
+
+1. Sign in at <https://clarity.microsoft.com> → **New project** → your site URL.
+2. **Settings → Overview**: copy the Project ID → `CLARITY_PROJECT_ID`.
+3. **Settings → Data Export → Generate new API token** → `CLARITY_API_TOKEN`.
+4. Redeploy. The store loads Clarity's script (never on /admin, and admin screens are masked).
+   **Admin → Dashboard → Website analytics** shows visits, visitors, time on site, scroll depth,
+   top pages, traffic sources, devices, countries, visitor-experience issues and your conversion
+   rate (orders ÷ visits). Clarity allows 10 data exports a day, so the figures refresh every 3 hours;
+   heatmaps and recordings open in Clarity itself.
+5. Custom events sent to Clarity: `add_to_cart`, `begin_checkout`, `purchase_started`,
+   `purchase_cod`, `purchase` (payment confirmed) and `review_submitted`.
+
+Clarity records how visitors use the site (it masks typed text by default). Mention it in the
+Privacy Policy (analytics cookies, Microsoft as processor).
+
 ## 4. Check
 
 - `https://<your-domain>/` — storefront loads with products.

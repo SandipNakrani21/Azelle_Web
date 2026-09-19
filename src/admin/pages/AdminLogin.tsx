@@ -15,7 +15,7 @@ const NOTICES: Record<string, string> = {
 function safeNext(value: string | null) {
   return value && value.startsWith("/admin/") && !value.startsWith("//") && !value.startsWith("/admin/login")
     ? value
-    : "/admin/products";
+    : "/admin/dashboard";
 }
 
 export default function AdminLogin() {

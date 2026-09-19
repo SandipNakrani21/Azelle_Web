@@ -28,6 +28,9 @@ export type Product = {
   tint: string; // bottle colour for illustrations
   inStock: boolean;
   status?: "active" | "inactive";
+  /** Average of approved reviews (0 when there are none) and how many there are. */
+  ratingAvg?: number;
+  ratingCount?: number;
 };
 
 export type CartLine = { key: string; productId: string; sizeId: Size["id"]; qty: number };
