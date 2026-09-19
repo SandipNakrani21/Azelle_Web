@@ -89,6 +89,15 @@ shipment. Shiprocket has no sandbox — book one real test shipment and cancel i
 Clarity records how visitors use the site (it masks typed text by default). Mention it in the
 Privacy Policy (analytics cookies, Microsoft as processor).
 
+## Admin users & roles (RBAC)
+
+The `ADMIN_EMAIL` / `ADMIN_PASSWORD` account is the **Owner** — it always has full access and is the
+only account that can't be locked out. In **Admin → Users & roles** the owner (or anyone with the
+"Manage admin users and roles" permission) can add team members with their own email and password,
+and choose their role. Four roles are created on first start — Manager, Order staff, Content editor
+and Viewer — and can be edited, or new roles added with any mix of permissions. Every admin API route
+checks the role on the server, and role changes or deactivation apply on the user's next click.
+
 ## 4. Check
 
 - `https://<your-domain>/` — storefront loads with products.

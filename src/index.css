@@ -864,6 +864,211 @@
   }
 }
 
+/* ── Admin theme ─────────────────────────────────────────────────
+   Light workspace with soft brand glows, a deep gradient sidebar, gradient page titles and
+   animated action buttons. Everything is scoped to .admin-* classes. */
+
+.admin-shell {
+  background:
+    radial-gradient(900px 500px at 100% -10%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 70%),
+    radial-gradient(700px 420px at 0% 110%, color-mix(in oklab, #6f9c86 12%, transparent), transparent 70%),
+    var(--bg);
+}
+
+.admin-title {
+  background-image: var(--name-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-bottom: 0.08em;
+}
+
+/* Sidebar: deep brand gradient with soft light blooms. */
+.admin-sidebar {
+  background:
+    radial-gradient(280px 220px at 0% 0%, rgba(217, 164, 65, 0.22), transparent 70%),
+    radial-gradient(260px 260px at 100% 100%, rgba(111, 156, 134, 0.28), transparent 70%),
+    linear-gradient(170deg, #241b18 0%, #3a2421 40%, #5a2e35 72%, #2d463e 100%);
+  color: #f7f1ea;
+}
+.admin-nav-link {
+  position: relative;
+  color: rgba(247, 241, 234, 0.82);
+  transition: background-color 0.3s, color 0.3s, transform 0.3s var(--ease-out-slow);
+}
+.admin-nav-link svg {
+  transition: transform 0.35s var(--ease-out-slow);
+}
+.admin-nav-link.is-active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+/* Gradient marker on the active item */
+.admin-nav-link.is-active::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #e6b45a, #e9a58f, #9fc2ad);
+}
+.admin-sidebar-width {
+  transition: width 0.45s var(--ease-out-slow);
+}
+
+/* Buttons: Add (gradient), Edit (outline → filled), Delete (red outline → filled). */
+.abtn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 40px;
+  padding: 0 1rem;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: transform 0.25s var(--ease-out-slow), box-shadow 0.25s, background-color 0.25s, color 0.25s, border-color 0.25s;
+}
+.abtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.abtn svg {
+  transition: transform 0.35s var(--ease-out-slow);
+}
+.abtn-add {
+  color: #1b1815;
+  background: linear-gradient(110deg, #e6b45a 0%, #e9a58f 45%, #cf8f9c 75%, #9fc2ad 100%);
+  background-size: 180% 100%;
+  box-shadow: 0 6px 16px rgba(201, 119, 43, 0.25);
+}
+/* Light sweep across the Add button on hover */
+.abtn-add::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.abtn-edit {
+  color: #1f4f8f;
+  border: 1px solid #b9cde8;
+  background: #f3f7fd;
+}
+.abtn-delete {
+  color: #b3261e;
+  border: 1px solid #efc0bb;
+  background: #fdf4f3;
+}
+.abtn-ghost {
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+/* KPI / chart cards */
+.admin-card {
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  box-shadow: 0 10px 30px rgba(27, 24, 21, 0.06);
+  transition: transform 0.35s var(--ease-out-slow), box-shadow 0.35s;
+}
+
+/* Entrance + motion */
+@keyframes admin-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes admin-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes admin-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes admin-draw {
+  from { stroke-dashoffset: var(--len, 1000); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes admin-shine {
+  to { transform: translateX(120%); }
+}
+@keyframes admin-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.admin-rise {
+  animation: admin-rise 0.6s var(--ease-out-slow) both;
+}
+.admin-float {
+  animation: admin-float 4.5s ease-in-out infinite;
+}
+.admin-grow {
+  transform-origin: bottom;
+  animation: admin-grow 0.9s var(--ease-out-slow) both;
+}
+.admin-draw {
+  stroke-dasharray: var(--len, 1000);
+  animation: admin-draw 1.4s var(--ease-out-slow) both;
+}
+.admin-fade {
+  animation: admin-fade 0.8s ease-out both;
+}
+
+@media (any-hover: hover) {
+  .admin-nav-link:not(.is-active):hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    transform: translateX(3px);
+  }
+  .admin-nav-link:hover svg {
+    transform: scale(1.12);
+  }
+  .abtn:not(:disabled):hover {
+    transform: translateY(-2px);
+  }
+  .abtn:not(:disabled):hover svg {
+    transform: rotate(-8deg) scale(1.12);
+  }
+  .abtn-add:not(:disabled):hover {
+    background-position: 100% 50%;
+    box-shadow: 0 12px 24px rgba(201, 119, 43, 0.35);
+  }
+  .abtn-add:not(:disabled):hover::after {
+    animation: admin-shine 0.8s var(--ease-out-slow);
+  }
+  .abtn-edit:not(:disabled):hover {
+    color: #fff;
+    background: #1f4f8f;
+    border-color: #1f4f8f;
+    box-shadow: 0 10px 20px rgba(31, 79, 143, 0.25);
+  }
+  .abtn-delete:not(:disabled):hover {
+    color: #fff;
+    background: #b3261e;
+    border-color: #b3261e;
+    box-shadow: 0 10px 20px rgba(179, 38, 30, 0.25);
+  }
+  .abtn-ghost:not(:disabled):hover {
+    border-color: var(--ink);
+    box-shadow: 0 8px 18px rgba(27, 24, 21, 0.1);
+  }
+  .admin-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(27, 24, 21, 0.1);
+  }
+}
+
 /* ── Reduced motion: no hiding, no looping ─────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

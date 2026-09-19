@@ -27,7 +27,20 @@ export type ProductInput = {
   status: ProductStatus;
 };
 
-export type AdminSession = { email: string; idleTimeoutMs: number };
+export type Permission =
+  | "dashboard.view"
+  | "analytics.view"
+  | "orders.view"
+  | "orders.manage"
+  | "customers.view"
+  | "products.view"
+  | "products.manage"
+  | "reviews.manage"
+  | "coupons.manage"
+  | "settings.view"
+  | "users.manage";
+
+export type AdminSession = { email: string; name: string; role: string; owner: boolean; permissions: Permission[]; idleTimeoutMs: number };
 
 const productPath = (id: string) => `/api/admin/products/${encodeURIComponent(id)}`;
 
@@ -290,4 +303,23 @@ export type Analytics = {
 
 export const adminAnalyticsApi = {
   get: (refresh = false) => api<Analytics>(`/api/admin/analytics${refresh ? "?refresh=1" : ""}`),
+};
+
+// ── Users & roles (RBAC) ────────────────────────────────────────────────────
+export type PermissionInfo = { key: Permission; group: string; label: string };
+export type AdminRole = { id: string; name: string; description: string; permissions: Permission[]; userCount: number };
+export type AdminUserRow = { id: string; name: string; email: string; role: { _id: string; name: string } | null; active: boolean; lastLoginAt: string | null; createdAt: string };
+export type UserInput = { name: string; email: string; role: string; active: boolean; password: string };
+export type RoleInput = { name: string; description: string; permissions: Permission[] };
+
+export const adminUsersApi = {
+  list: () => api<{ owner: { name: string; email: string }; users: AdminUserRow[] }>("/api/admin/users"),
+  create: (input: UserInput) => api<{ user: AdminUserRow }>("/api/admin/users", { method: "POST", json: input }),
+  update: (id: string, input: UserInput) => api<{ user: AdminUserRow }>(`/api/admin/users/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
+  remove: (id: string) => api<{ ok: true }>(`/api/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  permissions: () => api<{ permissions: PermissionInfo[] }>("/api/admin/users/permissions"),
+  roles: () => api<{ roles: AdminRole[] }>("/api/admin/users/roles"),
+  createRole: (input: RoleInput) => api<{ role: AdminRole }>("/api/admin/users/roles", { method: "POST", json: input }),
+  updateRole: (id: string, input: RoleInput) => api<{ role: AdminRole }>(`/api/admin/users/roles/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
+  removeRole: (id: string) => api<{ ok: true }>(`/api/admin/users/roles/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };

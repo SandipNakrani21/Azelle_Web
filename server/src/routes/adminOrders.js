@@ -29,7 +29,7 @@ async function loadOrder(req) {
   return order;
 }
 
-const by = (req) => req.session.admin.email;
+const by = (req) => req.admin.email;
 
 // ── List ────────────────────────────────────────────────────────────────────
 adminOrdersRouter.get("/", async (req, res, next) => {

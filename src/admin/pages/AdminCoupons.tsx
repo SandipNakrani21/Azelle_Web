@@ -3,6 +3,7 @@ import { fieldClass, fieldErrorClass, labelClass } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api";
 import { formatPrice } from "@/lib/products";
+import { IconEdit, IconPlus, IconTrash } from "../icons";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminCommerceApi, type AdminCoupon, type CouponInput } from "../adminApi";
 import { EmptyState, formatDate, isUnauthorized, messageOf, NoticeBanner, PageHeader, useNotice } from "../ui";
@@ -82,8 +83,8 @@ export default function AdminCoupons() {
         title="Coupons"
         subtitle="Live, public coupons appear in the cart's “View all coupons” list. Hidden ones work when typed."
         actions={
-          <button type="button" className="btn btn-primary" onClick={() => setEditing("new")}>
-            + New coupon
+          <button type="button" className="abtn abtn-add" onClick={() => setEditing("new")}>
+            <IconPlus size={16} /> New coupon
           </button>
         }
       />
@@ -101,7 +102,7 @@ export default function AdminCoupons() {
             {coupons.map((c) => {
               const state = couponState(c);
               return (
-                <li key={c.id} className="flex flex-col rounded-[18px] border border-line bg-surface p-5">
+                <li key={c.id} className="admin-card admin-rise flex flex-col rounded-[20px] p-5">
                   <div className="flex items-start justify-between gap-3">
                     <p className="rounded-[6px] border border-dashed border-ink/40 px-2 py-0.5 font-bold tracking-[0.1em]">{c.code}</p>
                     <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${state.tone}`}>{state.text}</span>
@@ -130,11 +131,11 @@ export default function AdminCoupons() {
                     </div>
                   </dl>
                   <div className="mt-auto flex gap-2 pt-4">
-                    <button type="button" className="btn btn-secondary !h-10 flex-1 !min-w-0 !text-[12px]" onClick={() => setEditing(c)}>
-                      Edit
+                    <button type="button" className="abtn abtn-edit flex-1" onClick={() => setEditing(c)}>
+                      <IconEdit size={16} /> Edit
                     </button>
-                    <button type="button" className="btn btn-secondary !h-10 flex-1 !min-w-0 !border-[#b3261e] !text-[12px] !text-[#b3261e]" onClick={() => setDeleting(c)}>
-                      Delete
+                    <button type="button" className="abtn abtn-delete flex-1" onClick={() => setDeleting(c)}>
+                      <IconTrash size={16} /> Delete
                     </button>
                   </div>
                 </li>
@@ -162,13 +163,13 @@ export default function AdminCoupons() {
 
       <Modal open={deleting !== null} onClose={closeDelete} label="Delete coupon">
         <div className="p-7 md:p-8">
-          <h2 className="font-display text-3xl">Delete {deleting?.code}?</h2>
+          <h2 className="admin-title font-display text-3xl">Delete {deleting?.code}?</h2>
           <p className="mt-3 text-sm">Customers will no longer be able to use it. Past orders keep their discount. To pause a coupon instead, edit it and switch it off.</p>
           <div className="mt-7 flex justify-end gap-3">
-            <button type="button" className="btn btn-secondary" onClick={closeDelete}>
+            <button type="button" className="abtn abtn-ghost" onClick={closeDelete}>
               Keep it
             </button>
-            <button type="button" className="btn btn-primary !border-[#b3261e] !bg-[#b3261e]" disabled={busy} onClick={() => void confirmDelete()}>
+            <button type="button" className="abtn abtn-delete" disabled={busy} onClick={() => void confirmDelete()}>
               {busy ? "Deleting…" : "Delete"}
             </button>
           </div>
@@ -213,7 +214,7 @@ function CouponEditor({ open, coupon, onClose, onSave }: { open: boolean; coupon
   return (
     <Modal open={open} onClose={onClose} label={coupon ? "Edit coupon" : "New coupon"} panelClassName="max-w-[560px]">
       <form onSubmit={submit} className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8" noValidate>
-        <h2 className="font-display text-3xl">{coupon ? `Edit ${coupon.code}` : "New coupon"}</h2>
+        <h2 className="admin-title font-display text-3xl">{coupon ? `Edit ${coupon.code}` : "New coupon"}</h2>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
@@ -297,10 +298,10 @@ function CouponEditor({ open, coupon, onClose, onSave }: { open: boolean; coupon
           </p>
         )}
         <div className="mt-7 flex justify-end gap-3">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="abtn abtn-ghost" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-primary" disabled={saving}>
+          <button type="submit" className="abtn abtn-add" disabled={saving}>
             {saving ? "Saving…" : "Save coupon"}
           </button>
         </div>

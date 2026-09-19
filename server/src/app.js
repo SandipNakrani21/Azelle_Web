@@ -5,7 +5,9 @@ import mongoose from "mongoose";
 import multer from "multer";
 import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
-import { requireAdmin } from "./middleware/requireAdmin.js";
+import { can, requireAdmin, viewOrManage } from "./middleware/requireAdmin.js";
+import { seedRolesIfEmpty } from "./models/AdminUser.js";
+import { adminUsersRouter } from "./routes/adminUsers.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
 import { seedCouponsIfEmpty } from "./models/Coupon.js";
 import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
@@ -71,14 +73,16 @@ function createApp() {
     express.json({ limit: "1mb" }),
   );
   app.use("/api/admin", adminAuthRouter);
-  app.use("/api/admin/products", requireAdmin, adminProductsRouter);
-  app.use("/api/admin/dashboard", requireAdmin, adminDashboardRouter);
-  app.use("/api/admin/orders", requireAdmin, adminOrdersRouter);
-  app.use("/api/admin/customers", requireAdmin, adminCustomersRouter);
-  app.use("/api/admin/coupons", requireAdmin, adminCouponsRouter);
-  app.use("/api/admin/settings", requireAdmin, adminSettingsRouter);
-  app.use("/api/admin/reviews", requireAdmin, adminReviewsRouter);
-  app.use("/api/admin/analytics", requireAdmin, adminAnalyticsRouter);
+  // Every admin route checks the signed-in admin's role (RBAC, see rbac.js).
+  app.use("/api/admin/products", requireAdmin, viewOrManage("products.view", "products.manage"), adminProductsRouter);
+  app.use("/api/admin/dashboard", requireAdmin, can("dashboard.view"), adminDashboardRouter);
+  app.use("/api/admin/orders", requireAdmin, viewOrManage("orders.view", "orders.manage"), adminOrdersRouter);
+  app.use("/api/admin/customers", requireAdmin, can("customers.view"), adminCustomersRouter);
+  app.use("/api/admin/coupons", requireAdmin, can("coupons.manage"), adminCouponsRouter);
+  app.use("/api/admin/settings", requireAdmin, can("settings.view"), adminSettingsRouter);
+  app.use("/api/admin/reviews", requireAdmin, can("reviews.manage"), adminReviewsRouter);
+  app.use("/api/admin/analytics", requireAdmin, can("analytics.view"), adminAnalyticsRouter);
+  app.use("/api/admin/users", requireAdmin, can("users.manage"), adminUsersRouter);
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
@@ -113,6 +117,7 @@ export function getApp() {
     await connectDatabase();
     await seedProductsIfEmpty();
     await seedCouponsIfEmpty();
+    await seedRolesIfEmpty();
     return createApp();
   })().catch((err) => {
     appPromise = null; // let the next request retry (e.g. after a database hiccup)

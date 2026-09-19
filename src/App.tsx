@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { AdminRoot, RequireAdmin } from "@/admin/AdminLayout";
+import { AdminHome, AdminRoot, RequireAdmin, RequirePermission as Can } from "@/admin/AdminLayout";
 import { Layout } from "@/components/layout/Layout";
 import AccountPage from "@/pages/Account";
 import Checkout from "@/pages/Checkout";
@@ -22,27 +22,32 @@ const AdminCustomers = lazy(() => import("@/admin/pages/AdminCustomers"));
 const AdminCoupons = lazy(() => import("@/admin/pages/AdminCoupons"));
 const AdminSettings = lazy(() => import("@/admin/pages/AdminSettings"));
 const AdminReviews = lazy(() => import("@/admin/pages/AdminReviews"));
+const AdminClarityDashboard = lazy(() => import("@/admin/pages/AdminClarityDashboard"));
+const AdminUsers = lazy(() => import("@/admin/pages/AdminUsers"));
 const MockPayment = lazy(() => import("@/pages/MockPayment"));
 
 export default function App() {
   return (
     <Routes>
       <Route path="admin" element={<AdminRoot />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="login" element={<AdminLogin />} />
+        {/* Every page checks the signed-in admin's role (RBAC); the server checks again. */}
         <Route element={<RequireAdmin />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="orders/:id" element={<AdminOrderDetail />} />
-          <Route path="customers" element={<AdminCustomers />} />
-          <Route path="coupons" element={<AdminCoupons />} />
-          <Route path="reviews" element={<AdminReviews />} />
-          <Route path="settings" element={<AdminSettings />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="products/new" element={<AdminProductForm key="new" />} />
-          <Route path="products/:id/edit" element={<AdminProductForm />} />
+          <Route index element={<AdminHome />} />
+          <Route path="dashboard" element={<Can perm="dashboard.view"><AdminDashboard /></Can>} />
+          <Route path="dashboard/clarity" element={<Can perm="analytics.view"><AdminClarityDashboard /></Can>} />
+          <Route path="orders" element={<Can perm="orders.view"><AdminOrders /></Can>} />
+          <Route path="orders/:id" element={<Can perm="orders.view"><AdminOrderDetail /></Can>} />
+          <Route path="customers" element={<Can perm="customers.view"><AdminCustomers /></Can>} />
+          <Route path="coupons" element={<Can perm="coupons.manage"><AdminCoupons /></Can>} />
+          <Route path="reviews" element={<Can perm="reviews.manage"><AdminReviews /></Can>} />
+          <Route path="settings" element={<Can perm="settings.view"><AdminSettings /></Can>} />
+          <Route path="users" element={<Can perm="users.manage"><AdminUsers /></Can>} />
+          <Route path="products" element={<Can perm="products.view"><AdminProducts /></Can>} />
+          <Route path="products/new" element={<Can perm="products.manage"><AdminProductForm key="new" /></Can>} />
+          <Route path="products/:id/edit" element={<Can perm="products.manage"><AdminProductForm /></Can>} />
         </Route>
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
 
       {/* Local test-mode payment page (dummy gateway keys only). */}

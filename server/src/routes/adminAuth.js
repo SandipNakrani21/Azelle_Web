@@ -1,6 +1,9 @@
 import crypto from "node:crypto";
 import { Router } from "express";
 import { config } from "../config.js";
+import { loadAdmin } from "../middleware/requireAdmin.js";
+import { AdminUser } from "../models/AdminUser.js";
+import { verifyPassword } from "../rbac.js";
 
 export const adminAuthRouter = Router();
 
@@ -28,35 +31,69 @@ function recordFailure(ip) {
   else entry.count += 1;
 }
 
-const sessionPayload = (req) => ({ email: req.session.admin.email, idleTimeoutMs: config.sessionIdleMs });
+// What the admin UI needs: who is signed in and what they may do.
+const sessionPayload = (admin) => ({
+  email: admin.email,
+  name: admin.name,
+  role: admin.roleName,
+  owner: admin.owner,
+  permissions: admin.permissions,
+  idleTimeoutMs: config.sessionIdleMs,
+});
 
-adminAuthRouter.post("/login", (req, res, next) => {
+adminAuthRouter.post("/login", async (req, res, next) => {
   const ip = req.ip ?? "unknown";
   if (isLockedOut(ip)) {
     return res.status(429).json({ error: "Too many sign-in attempts. Please try again in 15 minutes." });
   }
 
   const { email, password } = req.body ?? {};
-  const emailOk = safeEqual(String(email ?? "").trim().toLowerCase(), config.admin.email.toLowerCase());
-  const passwordOk = safeEqual(String(password ?? ""), config.admin.password);
-  if (!(emailOk && passwordOk)) {
+  const cleanEmail = String(email ?? "").trim().toLowerCase();
+
+  // 1. The owner (environment credentials). 2. Admin users created in Admin → Users & roles.
+  let identity = null;
+  try {
+    if (safeEqual(cleanEmail, config.admin.email.toLowerCase()) && safeEqual(String(password ?? ""), config.admin.password)) {
+      identity = { owner: true };
+    } else {
+      const user = await AdminUser.findOne({ email: cleanEmail, active: true }).select("+passwordHash");
+      if (user && verifyPassword(password, user.passwordHash)) {
+        identity = { owner: false, id: String(user._id) };
+        await AdminUser.updateOne({ _id: user._id }, { lastLoginAt: new Date() });
+      }
+    }
+  } catch (err) {
+    return next(err);
+  }
+
+  if (!identity) {
     recordFailure(ip);
     return res.status(401).json({ error: "Incorrect email or password." });
   }
 
   failures.delete(ip);
   // New session id on sign-in (prevents session fixation).
-  req.session.regenerate((err) => {
+  req.session.regenerate(async (err) => {
     if (err) return next(err);
-    req.session.admin = { email: config.admin.email, signedInAt: Date.now() };
-    req.session.save((saveErr) => (saveErr ? next(saveErr) : res.json(sessionPayload(req))));
+    req.session.admin = { ...identity, signedInAt: Date.now() };
+    try {
+      const admin = await loadAdmin(req.session);
+      req.session.save((saveErr) => (saveErr ? next(saveErr) : res.json(sessionPayload(admin))));
+    } catch (loadErr) {
+      next(loadErr);
+    }
   });
 });
 
 // Also acts as a keep-alive: the session is rolling, so any authenticated request resets the idle timer.
-adminAuthRouter.get("/session", (req, res) => {
-  if (!req.session.admin) return res.status(401).json({ error: "Not signed in." });
-  res.json(sessionPayload(req));
+adminAuthRouter.get("/session", async (req, res, next) => {
+  try {
+    const admin = await loadAdmin(req.session);
+    if (!admin) return res.status(401).json({ error: "Not signed in." });
+    res.json(sessionPayload(admin));
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminAuthRouter.post("/logout", (req, res, next) => {

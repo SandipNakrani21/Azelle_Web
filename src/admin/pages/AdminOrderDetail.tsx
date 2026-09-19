@@ -20,7 +20,8 @@ type Detail = { order: AdminOrder; partners: PartnerChoice[]; defaultPartner: Sh
 
 export default function AdminOrderDetail() {
   const { id = "" } = useParams();
-  const { guard } = useAdminAuth();
+  const { guard, can } = useAdminAuth();
+  const canManage = can("orders.manage");
   const [detail, setDetail] = useState<Detail | null>(null);
   const [loadError, setLoadError] = useState("");
   const [notice, setNotice] = useNotice();
@@ -66,7 +67,7 @@ export default function AdminOrderDetail() {
     return (
       <div className="py-20 text-center">
         <p>{loadError}</p>
-        <Link to="/admin/orders" className="btn btn-primary mt-6">
+        <Link to="/admin/orders" className="abtn abtn-add mt-6">
           Back to orders
         </Link>
       </div>
@@ -82,56 +83,56 @@ export default function AdminOrderDetail() {
   const actions: ReactNode[] = [];
   if (order.status === "pending") {
     actions.push(
-      <button key="accept" type="button" className="btn btn-primary" onClick={() => setDialog("accept")}>
+      <button key="accept" type="button" className="abtn abtn-add !h-11 !px-5" onClick={() => setDialog("accept")}>
         Accept order
       </button>,
     );
   }
   if (order.status === "awaiting_payment" || order.status === "payment_failed") {
     actions.push(
-      <button key="sync" type="button" className="btn btn-secondary" disabled={busy === "sync"} onClick={() => void run("sync", () => adminCommerceApi.syncPayment(order.id), "Payment status checked with the gateway.")}>
+      <button key="sync" type="button" className="abtn abtn-ghost !h-11" disabled={busy === "sync"} onClick={() => void run("sync", () => adminCommerceApi.syncPayment(order.id), "Payment status checked with the gateway.")}>
         {busy === "sync" ? "Checking…" : "Check payment status"}
       </button>,
     );
   }
   if (order.status === "accepted") {
     actions.push(
-      <button key="ship" type="button" className="btn btn-primary" onClick={() => setDialog("ship")}>
+      <button key="ship" type="button" className="abtn abtn-add !h-11 !px-5" onClick={() => setDialog("ship")}>
         Mark as shipped
       </button>,
     );
   }
   if (order.status === "shipped") {
     actions.push(
-      <button key="deliver" type="button" className="btn btn-primary" disabled={busy === "deliver"} onClick={() => void run("deliver", () => adminCommerceApi.setStatus(order.id, "delivered"), "Marked as delivered.")}>
+      <button key="deliver" type="button" className="abtn abtn-add !h-11 !px-5" disabled={busy === "deliver"} onClick={() => void run("deliver", () => adminCommerceApi.setStatus(order.id, "delivered"), "Marked as delivered.")}>
         Mark as delivered
       </button>,
     );
   }
   if (hasPartnerShipment && ["accepted", "shipped"].includes(order.status)) {
     actions.push(
-      <button key="track" type="button" className="btn btn-secondary" disabled={busy === "track"} onClick={() => void run("track", () => adminCommerceApi.track(order.id), "Tracking refreshed.")}>
+      <button key="track" type="button" className="abtn abtn-edit !h-11" disabled={busy === "track"} onClick={() => void run("track", () => adminCommerceApi.track(order.id), "Tracking refreshed.")}>
         {busy === "track" ? "Refreshing…" : "Refresh tracking"}
       </button>,
     );
   }
   if (["shipped", "delivered"].includes(order.status)) {
     actions.push(
-      <button key="return" type="button" className="btn btn-secondary" disabled={busy === "return"} onClick={() => void run("return", () => adminCommerceApi.setStatus(order.id, "returned"), "Marked as returned.")}>
+      <button key="return" type="button" className="abtn abtn-ghost !h-11" disabled={busy === "return"} onClick={() => void run("return", () => adminCommerceApi.setStatus(order.id, "returned"), "Marked as returned.")}>
         Mark as returned
       </button>,
     );
   }
   if (paidOnline && ["cancelled", "returned"].includes(order.status)) {
     actions.push(
-      <button key="refund" type="button" className="btn btn-primary" disabled={busy === "refund"} onClick={() => void run("refund", () => adminCommerceApi.refund(order.id), "Refund started.")}>
+      <button key="refund" type="button" className="abtn abtn-add !h-11" disabled={busy === "refund"} onClick={() => void run("refund", () => adminCommerceApi.refund(order.id), "Refund started.")}>
         {busy === "refund" ? "Refunding…" : `Refund ${formatPrice(order.total)}`}
       </button>,
     );
   }
   if (canCancel) {
     actions.push(
-      <button key="cancel" type="button" className="btn btn-secondary !border-[#b3261e] !text-[#b3261e]" onClick={() => setDialog("cancel")}>
+      <button key="cancel" type="button" className="abtn abtn-delete !h-11" onClick={() => setDialog("cancel")}>
         Cancel order
       </button>,
     );
@@ -143,7 +144,7 @@ export default function AdminOrderDetail() {
         ← All orders
       </Link>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="font-display text-[2.4rem] leading-none md:text-[2.75rem]">{order.number}</h1>
+        <h1 className="admin-title font-display text-[2.4rem] leading-none md:text-[2.9rem]">{order.number}</h1>
         <StatusBadge status={order.status} />
       </div>
       <p className="mt-2 text-sm">
@@ -152,7 +153,7 @@ export default function AdminOrderDetail() {
 
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
-      {actions.length > 0 && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
+      {canManage && actions.length > 0 && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
       {order.status === "pending" && (
         <p className="mt-3 text-sm text-soft">The customer sees this order as “Pending” until you accept it and choose a shipping partner.</p>
       )}
@@ -332,7 +333,7 @@ function NoteCard({ order, onSave, saving }: { order: AdminOrder; onSave: (note:
         Internal note (not shown to the customer)
       </label>
       <textarea id="admin-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={`${fieldClass} !mt-0 h-auto py-3`} placeholder="Only visible to admins" />
-      <button type="button" className="btn btn-secondary mt-3 !h-10 !min-w-0 !px-4 !text-[12px]" disabled={saving || note === order.adminNote} onClick={() => void onSave(note)}>
+      <button type="button" className="abtn abtn-edit mt-3" disabled={saving || note === order.adminNote} onClick={() => void onSave(note)}>
         {saving ? "Saving…" : "Save note"}
       </button>
     </Card>
@@ -536,10 +537,10 @@ function AcceptDialog({
         )}
 
         <div className="mt-7 flex flex-wrap justify-end gap-3">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="abtn abtn-ghost" onClick={onClose}>
             Close
           </button>
-          <button type="button" className="btn btn-primary" onClick={() => void submit()} disabled={busy || (partner !== "manual" && current?.serviceable === false)}>
+          <button type="button" className="abtn abtn-add" onClick={() => void submit()} disabled={busy || (partner !== "manual" && current?.serviceable === false)}>
             {busy ? "Booking…" : partner === "manual" ? "Accept order" : "Accept & book shipment"}
           </button>
         </div>
@@ -598,10 +599,10 @@ function CancelDialog({
           </label>
         )}
         <div className="mt-7 flex flex-wrap justify-end gap-3">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="abtn abtn-ghost" onClick={onClose}>
             Keep order
           </button>
-          <button type="button" className="btn btn-primary !bg-[#b3261e] !border-[#b3261e]" disabled={busy || !reason.trim()} onClick={() => void onConfirm(reason.trim(), canRefund && refund)}>
+          <button type="button" className="abtn abtn-delete" disabled={busy || !reason.trim()} onClick={() => void onConfirm(reason.trim(), canRefund && refund)}>
             {busy ? "Cancelling…" : "Cancel order"}
           </button>
         </div>
@@ -629,10 +630,10 @@ function ShipDialog({ open, onClose, busy, needsAwb, onConfirm }: { open: boolea
           </>
         )}
         <div className="mt-7 flex flex-wrap justify-end gap-3">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="abtn abtn-ghost" onClick={onClose}>
             Close
           </button>
-          <button type="button" className="btn btn-primary" disabled={busy || (needsAwb && !awb.trim())} onClick={() => void onConfirm(awb.trim())}>
+          <button type="button" className="abtn abtn-add" disabled={busy || (needsAwb && !awb.trim())} onClick={() => void onConfirm(awb.trim())}>
             {busy ? "Saving…" : "Mark as shipped"}
           </button>
         </div>

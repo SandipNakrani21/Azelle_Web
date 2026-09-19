@@ -71,7 +71,7 @@ export default function AdminOrders() {
         title="Orders"
         subtitle={email ? <>Showing orders from <span className="font-semibold">{email}</span> · <button type="button" className="text-link" onClick={() => update({ email: "" })}>Show all</button></> : "Accept pending orders and choose how they ship."}
         actions={
-          <button type="button" className="btn btn-secondary !h-10 !min-w-0 !px-4 !text-[12px]" onClick={() => void load()}>
+          <button type="button" className="abtn abtn-ghost" onClick={() => void load()}>
             Refresh
           </button>
         }
@@ -142,7 +142,7 @@ export default function AdminOrders() {
             <ul className="space-y-3 lg:hidden">
               {data.orders.map((o) => (
                 <li key={o.id}>
-                  <Link to={`/admin/orders/${o.id}`} className="block rounded-[16px] border border-line bg-surface p-4">
+                  <Link to={`/admin/orders/${o.id}`} className="admin-card block rounded-[18px] p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold">{o.number}</p>
@@ -165,7 +165,7 @@ export default function AdminOrders() {
             </ul>
 
             {/* Table on desktop */}
-            <div className="hidden overflow-hidden rounded-[18px] border border-line bg-surface lg:block">
+            <div className="admin-card admin-rise hidden overflow-hidden rounded-[20px] lg:block">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-line bg-surface2 text-[11px] uppercase tracking-[0.14em]">
                   <tr>

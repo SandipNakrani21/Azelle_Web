@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "@/lib/api";
-import { adminApi } from "./adminApi";
+import { adminApi, type AdminSession, type Permission } from "./adminApi";
 
 export type SignOutReason = "manual" | "idle" | "expired";
 type AuthStatus = "checking" | "authenticated" | "anonymous";
@@ -9,6 +9,10 @@ type AuthStatus = "checking" | "authenticated" | "anonymous";
 type AdminAuthValue = {
   status: AuthStatus;
   email: string;
+  /** Signed-in admin (name, role, permissions) — null until known. */
+  admin: AdminSession | null;
+  /** RBAC check, e.g. can("orders.manage"). */
+  can: (...permissions: Permission[]) => boolean;
   idleTimeoutMs: number;
   login: (email: string, password: string) => Promise<void>;
   logout: (reason?: SignOutReason) => Promise<void>;
@@ -31,6 +35,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [status, setStatus] = useState<AuthStatus>("checking");
   const [email, setEmail] = useState("");
+  const [admin, setAdmin] = useState<AdminSession | null>(null);
   const [idleTimeoutMs, setIdleTimeoutMs] = useState(DEFAULT_IDLE_MS);
   const lastActivityAt = useRef(Date.now());
   const lastKeepAliveAt = useRef(Date.now());
@@ -44,6 +49,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         lastActivityAt.current = Date.now();
         setEmail(session.email);
+        setAdmin(session);
         setIdleTimeoutMs(session.idleTimeoutMs);
         setStatus("authenticated");
       },
@@ -60,6 +66,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     (reason: SignOutReason) => {
       navigate(reason === "manual" ? "/admin/login" : `/admin/login?reason=${reason}`, { replace: true });
       setEmail("");
+      setAdmin(null);
       setStatus("anonymous");
     },
     [navigate],
@@ -86,6 +93,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     lastActivityAt.current = now;
     lastKeepAliveAt.current = now;
     setEmail(session.email);
+    setAdmin(session);
     setIdleTimeoutMs(session.idleTimeoutMs);
     setStatus("authenticated");
   }, []);
@@ -113,7 +121,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       lastActivityAt.current = now;
       if (now - lastKeepAliveAt.current < KEEPALIVE_EVERY_MS) return;
       lastKeepAliveAt.current = now;
-      adminApi.session().catch((err) => {
+      // Keep-alive also refreshes the role, so permission changes apply without signing out.
+      adminApi.session().then(setAdmin, (err) => {
         if (err instanceof ApiError && err.status === 401) signOutLocally("expired");
       });
     };
@@ -129,9 +138,11 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     };
   }, [status, idleTimeoutMs, logout, signOutLocally]);
 
+  const can = useCallback((...permissions: Permission[]) => Boolean(admin && permissions.some((p) => admin.permissions.includes(p))), [admin]);
+
   const value = useMemo<AdminAuthValue>(
-    () => ({ status, email, idleTimeoutMs, login, logout, guard }),
-    [status, email, idleTimeoutMs, login, logout, guard],
+    () => ({ status, email, admin, can, idleTimeoutMs, login, logout, guard }),
+    [status, email, admin, can, idleTimeoutMs, login, logout, guard],
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

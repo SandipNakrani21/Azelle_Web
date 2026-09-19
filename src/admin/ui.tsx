@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { IconEdit, IconPlus, IconRefresh, IconTrash } from "./icons";
 import { CloseIcon } from "@/components/ui/Icons";
 import { ApiError } from "@/lib/api";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/orders";
@@ -40,12 +41,13 @@ export function NoticeBanner({ notice, onDismiss }: { notice: Notice | null; onD
   );
 }
 
+// Page header: small eyebrow, gradient title, optional actions on the right.
 export function PageHeader({ eyebrow, title, subtitle, actions }: { eyebrow: string; title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="admin-rise flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">{eyebrow}</p>
-        <h1 className="mt-1 font-display text-[2.4rem] leading-none md:text-[2.75rem]">{title}</h1>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-soft">{eyebrow}</p>
+        <h1 className="admin-title mt-1 font-display text-[2.4rem] leading-none md:text-[2.9rem]">{title}</h1>
         {subtitle && <p className="mt-2 text-sm">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
@@ -53,9 +55,9 @@ export function PageHeader({ eyebrow, title, subtitle, actions }: { eyebrow: str
   );
 }
 
-export function Card({ title, actions, children, className = "" }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string }) {
+export function Card({ title, actions, children, className = "", delay = 0 }: { title?: string; actions?: ReactNode; children: ReactNode; className?: string; delay?: number }) {
   return (
-    <section className={`rounded-[18px] border border-line bg-surface p-5 md:p-6 ${className}`}>
+    <section className={`admin-card admin-rise rounded-[20px] p-5 md:p-6 ${className}`} style={delay ? { animationDelay: `${delay}ms` } : undefined}>
       {(title || actions) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           {title && <h2 className="text-[12px] font-bold uppercase tracking-[0.18em]">{title}</h2>}
@@ -116,13 +118,13 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
   if (pages <= 1) return null;
   return (
     <nav aria-label="Pages" className="mt-6 flex items-center justify-center gap-3 text-sm">
-      <button type="button" className="btn btn-secondary !h-10 !min-w-0 !px-4 !text-[12px]" disabled={page <= 1} onClick={() => onChange(page - 1)}>
+      <button type="button" className="abtn abtn-ghost" disabled={page <= 1} onClick={() => onChange(page - 1)}>
         ← Previous
       </button>
       <span className="tabular-nums">
         Page {page} of {pages}
       </span>
-      <button type="button" className="btn btn-secondary !h-10 !min-w-0 !px-4 !text-[12px]" disabled={page >= pages} onClick={() => onChange(page + 1)}>
+      <button type="button" className="abtn abtn-ghost" disabled={page >= pages} onClick={() => onChange(page + 1)}>
         Next →
       </button>
     </nav>
@@ -137,4 +139,44 @@ export function EmptyState({ title, body, action }: { title: string; body: strin
       {action && <div className="mt-6">{action}</div>}
     </div>
   );
+}
+
+type ActionKind = "add" | "edit" | "delete" | "ghost" | "refresh";
+const ACTION_ICON = { add: IconPlus, edit: IconEdit, delete: IconTrash, refresh: IconRefresh, ghost: null } as const;
+
+/** Admin action button: Add (gradient + shine), Edit (blue), Delete (red), Ghost / Refresh (outline). */
+export function ActionButton({ kind, children, className = "", ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { kind: ActionKind }) {
+  const Icon = ACTION_ICON[kind];
+  const style = kind === "refresh" ? "ghost" : kind;
+  return (
+    <button type="button" {...props} className={`abtn abtn-${style} ${className}`}>
+      {Icon && <Icon size={16} />}
+      {children}
+    </button>
+  );
+}
+
+/** Counts up to `value` (from the previous value) — instant with reduced motion. */
+export function useCountUp(value: number, duration = 1100) {
+  const [shown, setShown] = useState(0);
+  const from = useRef(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(value);
+      from.current = value;
+      return;
+    }
+    const start = performance.now();
+    const origin = from.current;
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      setShown(origin + (value - origin) * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) frame = requestAnimationFrame(tick);
+      else from.current = value;
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, duration]);
+  return shown;
 }

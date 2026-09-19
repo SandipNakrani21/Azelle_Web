@@ -3,14 +3,31 @@ import { Link } from "react-router-dom";
 import { sized } from "@/lib/images";
 import { formatPrice } from "@/lib/products";
 import { useAdminAuth } from "../AdminAuthProvider";
-import { WebsiteAnalytics } from "../WebsiteAnalytics";
 import { adminCommerceApi, type Dashboard } from "../adminApi";
-import { Card, EmptyState, formatDateTime, isUnauthorized, messageOf, PageHeader, paymentSummary, StatusBadge } from "../ui";
+import { AreaChart, BarChart, DonutChart, KpiCard } from "../charts";
+import { IconBox, IconClock, IconCustomers, IconOrders, IconRupee, IconTrend } from "../icons";
+import { ActionButton, Card, EmptyState, formatDateTime, isUnauthorized, messageOf, paymentSummary, StatusBadge } from "../ui";
 
-const compact = (n: number) => (n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : n >= 1000 ? `₹${(n / 1000).toFixed(1)}k` : formatPrice(n));
+const rupees = (v: number) => formatPrice(Math.round(v));
+const whole = (v: number) => Math.round(v).toLocaleString("en-IN");
+const compact = (n: number) => (n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : n >= 1000 ? `₹${(n / 1000).toFixed(1)}k` : `₹${Math.round(n)}`);
+const day = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
+const GRADIENTS = {
+  gold: "linear-gradient(135deg,#e6b45a,#c9772b)",
+  rose: "linear-gradient(135deg,#e9a58f,#b46a7a)",
+  sage: "linear-gradient(135deg,#9fc2ad,#3f6b58)",
+  plum: "linear-gradient(135deg,#b46a7a,#5a2e35)",
+};
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+}
+
+// Azelle dashboard: store sales, orders and products (the visitor side lives on the Clarity dashboard).
 export default function AdminDashboard() {
-  const { guard } = useAdminAuth();
+  const { guard, admin } = useAdminAuth();
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState("");
 
@@ -24,7 +41,7 @@ export default function AdminDashboard() {
   }, [guard]);
 
   useEffect(() => {
-    document.title = "Dashboard — Azelle admin";
+    document.title = "Azelle dashboard — Azelle admin";
     void load();
   }, [load]);
 
@@ -32,64 +49,104 @@ export default function AdminDashboard() {
     return (
       <div className="py-20 text-center">
         <p>{error}</p>
-        <button type="button" className="btn btn-primary mt-6" onClick={() => void load()}>
+        <ActionButton kind="refresh" className="mt-6" onClick={() => void load()}>
           Try again
-        </button>
+        </ActionButton>
       </div>
     );
   }
   if (!data) return <p className="py-20 text-center text-sm" role="status">Loading dashboard…</p>;
 
-  const { needsAction } = data;
+  const { needsAction, counts } = data;
+  const revenueSeries = data.chart.map((c) => ({ label: day(c.date), value: c.revenue, sub: `${c.orders} orders` }));
+  const ordersSeries = data.chart.map((c) => ({ label: day(c.date), value: c.orders, sub: rupees(c.revenue) }));
+  // Order status as five slices (the rest fold into "Other").
+  const statusSlices = [
+    { label: "Pending", value: counts.pending ?? 0 },
+    { label: "Accepted", value: counts.accepted ?? 0 },
+    { label: "Shipped", value: counts.shipped ?? 0 },
+    { label: "Delivered", value: counts.delivered ?? 0 },
+    { label: "Other", value: (counts.cancelled ?? 0) + (counts.returned ?? 0) + (counts.awaiting_payment ?? 0) + (counts.payment_failed ?? 0) },
+  ];
+  const maxTop = Math.max(...data.topProducts.map((p) => p.revenue), 1);
 
   return (
     <div>
-      <PageHeader
-        eyebrow="Overview"
-        title="Dashboard"
-        subtitle="Sales count orders that are pending, accepted, shipped or delivered."
-        actions={
-          <button type="button" className="btn btn-secondary !h-10 !min-w-0 !px-4 !text-[12px]" onClick={() => void load()}>
-            Refresh
-          </button>
-        }
-      />
+      {/* Welcome banner with floating accents */}
+      <section className="admin-rise relative overflow-hidden rounded-[26px] p-7 text-ink shadow-[0_20px_50px_rgba(27,24,21,.12)] md:p-9" style={{ background: "var(--brand-gradient)" }}>
+        <span className="admin-float pointer-events-none absolute -right-6 top-6 h-36 w-36 rounded-full bg-white/25 blur-xl" aria-hidden="true" />
+        <span className="admin-float pointer-events-none absolute bottom-[-30px] right-40 h-24 w-24 rounded-full bg-[#9fc2ad]/40 blur-lg" style={{ animationDelay: "1.2s" }} aria-hidden="true" />
+        <div className="relative flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em]">Azelle dashboard</p>
+            <h1 className="admin-title mt-2 font-display text-[2.3rem] leading-none md:text-[3rem]">
+              {greeting()}, {admin?.name.split(" ")[0] ?? "there"}
+            </h1>
+            <p className="mt-3 max-w-xl text-[15px]">
+              Today: <strong>{rupees(data.today.revenue)}</strong> from <strong>{data.today.orders}</strong> orders ·{" "}
+              <strong>{needsAction.pending}</strong> waiting for you to accept.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <ActionButton kind="refresh" onClick={() => void load()}>
+              Refresh
+            </ActionButton>
+            <Link to="/admin/orders?status=pending" className="abtn abtn-add">
+              <IconOrders size={16} /> Accept orders
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* KPIs */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard label="Sales · 30 days" value={data.month.revenue} format={rupees} sub={`${data.week.orders} orders this week`} icon={IconRupee} gradient={GRADIENTS.gold} spark={data.chart.map((c) => c.revenue)} />
+        <KpiCard label="Orders · 30 days" value={data.month.orders} format={whole} sub={`${data.today.orders} today`} icon={IconOrders} gradient={GRADIENTS.rose} spark={data.chart.map((c) => c.orders)} delay={80} />
+        <KpiCard label="Average order" value={data.averageOrderValue} format={rupees} sub="Last 30 days" icon={IconTrend} gradient={GRADIENTS.sage} delay={160} />
+        <KpiCard label="Customers" value={data.customers} format={whole} sub={`${data.products.active} products live`} icon={IconCustomers} gradient={GRADIENTS.plum} delay={240} />
+      </div>
 
       {/* Needs action */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <ActionTile to="/admin/orders?status=pending" count={needsAction.pending} label="Pending — accept & ship" tone="#c9772b" />
-        <ActionTile to="/admin/orders?status=accepted" count={needsAction.toShip} label="Accepted — awaiting pickup" tone="#1f4f8f" />
-        <ActionTile to="/admin/orders?status=awaiting_payment" count={needsAction.awaitingPayment} label="Awaiting online payment" tone="#5b5249" />
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <ActionTile to="/admin/orders?status=pending" count={needsAction.pending} label="Pending — accept & ship" gradient={GRADIENTS.gold} icon={IconClock} />
+        <ActionTile to="/admin/orders?status=accepted" count={needsAction.toShip} label="Accepted — awaiting pickup" gradient={GRADIENTS.sage} icon={IconBox} />
+        <ActionTile to="/admin/orders?status=awaiting_payment" count={needsAction.awaitingPayment} label="Awaiting online payment" gradient={GRADIENTS.plum} icon={IconRupee} />
       </div>
 
-      {/* Sales figures */}
-      <div className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Today" value={formatPrice(data.today.revenue)} sub={`${data.today.orders} orders`} />
-        <Stat label="Last 7 days" value={formatPrice(data.week.revenue)} sub={`${data.week.orders} orders`} />
-        <Stat label="Last 30 days" value={formatPrice(data.month.revenue)} sub={`${data.month.orders} orders`} />
-        <Stat label="Avg. order (30 days)" value={formatPrice(data.averageOrderValue)} sub={`${data.customers} customers all time`} />
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Card title="Sales — last 14 days">
-          <SalesChart chart={data.chart} />
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Card title="Sales — last 14 days" delay={100}>
+          <AreaChart data={revenueSeries} format={compact} caption="Daily sales, last 14 days" />
         </Card>
-        <Card title="Top products — 30 days">
+        <Card title="Orders by status" delay={180}>
+          <DonutChart data={statusSlices} caption="Orders by status" center="Orders" />
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <Card title="Orders per day" delay={120}>
+          <BarChart data={ordersSeries} format={(v) => `${v} orders`} caption="Orders per day, last 14 days" />
+        </Card>
+        <Card title="Top products — 30 days" delay={200}>
           {data.topProducts.length === 0 ? (
             <p className="text-sm">No sales yet.</p>
           ) : (
-            <ol className="space-y-3">
+            <ol className="space-y-3.5">
               {data.topProducts.map((p, i) => (
                 <li key={p.productId} className="flex items-center gap-3">
-                  <span className="w-4 text-sm font-semibold text-soft">{i + 1}</span>
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface2 text-[12px] font-bold">{i + 1}</span>
                   <span className="h-11 w-11 shrink-0 overflow-hidden rounded-[10px] bg-surface2">
                     {p.image && <img src={sized(p.image, 120)} alt="" className="h-full w-full object-cover" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{p.name}</span>
-                    <span className="text-[13px] text-soft">{p.qty} sold</span>
+                    <span className="flex justify-between gap-2 text-sm">
+                      <span className="truncate font-semibold">{p.name}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">{rupees(p.revenue)}</span>
+                    </span>
+                    <span className="mt-1.5 block h-1.5 rounded-full bg-surface2" aria-hidden="true">
+                      <span className="admin-fade block h-full rounded-full" style={{ width: `${(p.revenue / maxTop) * 100}%`, background: "var(--menu-gradient)" }} />
+                    </span>
+                    <span className="text-[12px] text-soft">{p.qty} sold</span>
                   </span>
-                  <span className="tabular-nums text-sm font-semibold">{formatPrice(p.revenue)}</span>
                 </li>
               ))}
             </ol>
@@ -97,169 +154,51 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Card
-          title="Recent orders"
-          actions={
-            <Link to="/admin/orders" className="text-link text-sm font-semibold">
-              All orders →
-            </Link>
-          }
-        >
-          {data.recentOrders.length === 0 ? (
-            <EmptyState title="No orders yet" body="Orders placed on the store appear here." />
-          ) : (
-            <ul className="divide-y divide-line">
-              {data.recentOrders.map((o) => (
-                <li key={o.id}>
-                  <Link to={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 hover:bg-surface2/60">
-                    <span className="min-w-[110px] font-semibold">{o.number}</span>
-                    <span className="min-w-0 flex-1 truncate text-sm">
-                      {o.customer.name} · {formatDateTime(o.createdAt)}
-                    </span>
-                    <span className="hidden text-[13px] text-soft md:inline">{paymentSummary(o.payment)}</span>
-                    <StatusBadge status={o.status} />
-                    <span className="w-24 text-right tabular-nums font-semibold">{formatPrice(o.total)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-        <Card title="Store">
-          <dl className="space-y-3 text-sm">
-            <Row label="All-time sales" value={formatPrice(data.allTime.revenue)} />
-            <Row label="All-time orders" value={String(data.allTime.orders)} />
-            <Row label="Products live" value={`${data.products.active} of ${data.products.total}`} />
-            <Row label="Sold out" value={String(data.products.soldOut)} />
-            <Row label="Delivered" value={String(data.counts.delivered ?? 0)} />
-            <Row label="Cancelled" value={String(data.counts.cancelled ?? 0)} />
-            <Row label="Returned" value={String(data.counts.returned ?? 0)} />
-          </dl>
-        </Card>
-      </div>
-
-      {/* Microsoft Clarity visitors, joined with orders for the conversion rate */}
-      <WebsiteAnalytics />
+      <Card
+        className="mt-4"
+        title="Recent orders"
+        delay={140}
+        actions={
+          <Link to="/admin/orders" className="text-link text-sm font-semibold">
+            All orders →
+          </Link>
+        }
+      >
+        {data.recentOrders.length === 0 ? (
+          <EmptyState title="No orders yet" body="Orders placed on the store appear here." />
+        ) : (
+          <ul className="divide-y divide-line">
+            {data.recentOrders.map((o) => (
+              <li key={o.id}>
+                <Link to={`/admin/orders/${o.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-[10px] px-2 py-3 transition-colors duration-300 hover:bg-surface2/70">
+                  <span className="min-w-[110px] font-semibold">{o.number}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm">
+                    {o.customer.name} · {formatDateTime(o.createdAt)}
+                  </span>
+                  <span className="hidden text-[13px] text-soft md:inline">{paymentSummary(o.payment)}</span>
+                  <StatusBadge status={o.status} />
+                  <span className="w-24 text-right font-semibold tabular-nums">{formatPrice(o.total)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
     </div>
   );
 }
 
-function ActionTile({ to, count, label, tone }: { to: string; count: number; label: string; tone: string }) {
+function ActionTile({ to, count, label, gradient, icon: Icon }: { to: string; count: number; label: string; gradient: string; icon: typeof IconClock }) {
   return (
-    <Link to={to} className="flex items-center gap-4 rounded-[18px] border border-line bg-surface p-5 transition-colors duration-300 hover:border-ink">
-      <span className="grid h-12 min-w-[48px] place-items-center rounded-full px-2 font-sans text-xl font-bold text-white tabular-nums" style={{ background: count ? tone : "#b9b1a7" }}>
-        {count}
+    <Link to={to} className="admin-card admin-rise group flex items-center gap-4 rounded-[20px] p-5">
+      <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-[14px] text-white shadow-lg transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110" style={{ background: count ? gradient : "#b9b1a7" }}>
+        <Icon size={20} />
+        {count > 0 && <span className="absolute -right-1.5 -top-1.5 h-3 w-3 animate-ping rounded-full bg-[#e6b45a]" aria-hidden="true" />}
       </span>
-      <span className="text-sm font-semibold leading-snug">{label}</span>
+      <span className="min-w-0">
+        <span className="block font-sans text-2xl font-bold leading-none tabular-nums">{count}</span>
+        <span className="mt-1 block text-sm font-semibold leading-snug">{label}</span>
+      </span>
     </Link>
-  );
-}
-
-function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-[18px] border border-line bg-surface p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em]">{label}</p>
-      <p className="mt-2 font-sans text-[1.6rem] font-bold leading-none tracking-tight tabular-nums">{value}</p>
-      <p className="mt-1.5 text-[13px] text-soft">{sub}</p>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <dt>{label}</dt>
-      <dd className="font-semibold tabular-nums">{value}</dd>
-    </div>
-  );
-}
-
-// One series (daily sales), so no legend: the card title names it. Bars have a hover tooltip and
-// the same figures are in a screen-reader table.
-function SalesChart({ chart }: { chart: Dashboard["chart"] }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const max = Math.max(...chart.map((d) => d.revenue), 1);
-  const W = 560;
-  const H = 200;
-  const pad = { top: 12, bottom: 26, left: 44 };
-  const plotW = W - pad.left;
-  const plotH = H - pad.top - pad.bottom;
-  const slot = plotW / chart.length;
-  const barW = Math.max(6, slot - 8);
-  const r = (h: number) => Math.min(4, barW / 2, h);
-  const ticks = [0, 0.5, 1].map((f) => f * max);
-  const dayLabel = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-  const active = hover !== null ? chart[hover] : null;
-
-  return (
-    <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Daily sales for the last 14 days" onMouseLeave={() => setHover(null)}>
-        {ticks.map((t) => {
-          const y = pad.top + plotH - (t / max) * plotH;
-          return (
-            <g key={t}>
-              <line x1={pad.left} x2={W} y1={y} y2={y} stroke="var(--line)" strokeWidth="1" />
-              <text x={pad.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="var(--soft)">
-                {compact(Math.round(t))}
-              </text>
-            </g>
-          );
-        })}
-        {chart.map((d, i) => {
-          const h = (d.revenue / max) * plotH;
-          const x = pad.left + i * slot + (slot - barW) / 2;
-          const y = pad.top + plotH - h;
-          return (
-            <g key={d.date} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={`${dayLabel(d.date)}: ${formatPrice(d.revenue)}, ${d.orders} orders`}>
-              {/* Hit area larger than the bar */}
-              <rect x={pad.left + i * slot} y={pad.top} width={slot} height={plotH} fill="transparent" />
-              {d.revenue > 0 && (
-                // Rounded top (4px), square base on the axis.
-                <path
-                  d={`M${x},${y + h} V${y + r(h)} Q${x},${y} ${x + r(h)},${y} H${x + barW - r(h)} Q${x + barW},${y} ${x + barW},${y + r(h)} V${y + h} Z`}
-                  fill="var(--accent)"
-                  opacity={hover === null || hover === i ? 1 : 0.45}
-                />
-              )}
-              {(i % 2 === 0 || chart.length <= 7) && (
-                <text x={pad.left + i * slot + slot / 2} y={H - 8} textAnchor="middle" fontSize="10.5" fill="var(--soft)">
-                  {dayLabel(d.date)}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-      {active && hover !== null && (
-        <div
-          className="pointer-events-none absolute top-0 -translate-x-1/2 rounded-[10px] border border-line bg-surface px-3 py-2 text-[12.5px] shadow-md"
-          style={{ left: `${((pad.left + hover * slot + slot / 2) / W) * 100}%` }}
-        >
-          <p className="font-semibold">{dayLabel(active.date)}</p>
-          <p className="tabular-nums">{formatPrice(active.revenue)}</p>
-          <p className="text-soft">{active.orders} orders</p>
-        </div>
-      )}
-      <table className="sr-only">
-        <caption>Daily sales</caption>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Sales</th>
-            <th>Orders</th>
-          </tr>
-        </thead>
-        <tbody>
-          {chart.map((d) => (
-            <tr key={d.date}>
-              <td>{dayLabel(d.date)}</td>
-              <td>{formatPrice(d.revenue)}</td>
-              <td>{d.orders}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }

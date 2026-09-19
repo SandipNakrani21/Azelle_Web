@@ -3,6 +3,7 @@ import { fieldClass } from "@/components/ui/Field";
 import { SearchIcon } from "@/components/ui/Icons";
 import { Stars } from "@/components/ui/Stars";
 import { sized } from "@/lib/images";
+import { IconEye, IconReviews, IconTrash } from "../icons";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminReviewsApi, type AdminReview, type ReviewStatus } from "../adminApi";
 import { EmptyState, formatDateTime, isUnauthorized, messageOf, NoticeBanner, PageHeader, Pagination, useNotice } from "../ui";
@@ -119,7 +120,7 @@ export default function AdminReviews() {
         ) : (
           <ul className="space-y-4">
             {data.reviews.map((r) => (
-              <li key={r.id} className="rounded-[18px] border border-line bg-surface p-5">
+              <li key={r.id} className="admin-card admin-rise rounded-[20px] p-5">
                 <div className="flex flex-wrap items-start gap-4">
                   <span className="h-14 w-14 shrink-0 overflow-hidden rounded-[10px] bg-surface2">
                     {r.product?.images?.[0] && <img src={sized(r.product.images[0], 120)} alt="" className="h-full w-full object-cover" />}
@@ -144,17 +145,17 @@ export default function AdminReviews() {
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {r.status !== "approved" && (
-                    <button type="button" className="btn btn-primary !h-10 !min-w-0 !px-4 !text-[12px]" disabled={busyId === r.id} onClick={() => void act(r, "approved")}>
-                      Publish
+                    <button type="button" className="abtn abtn-add" disabled={busyId === r.id} onClick={() => void act(r, "approved")}>
+                      <IconReviews size={16} /> Publish
                     </button>
                   )}
                   {r.status !== "hidden" && (
-                    <button type="button" className="btn btn-secondary !h-10 !min-w-0 !px-4 !text-[12px]" disabled={busyId === r.id} onClick={() => void act(r, "hidden")}>
-                      Hide
+                    <button type="button" className="abtn abtn-edit" disabled={busyId === r.id} onClick={() => void act(r, "hidden")}>
+                      <IconEye size={16} /> Hide
                     </button>
                   )}
-                  <button type="button" className="btn btn-secondary !h-10 !min-w-0 !border-[#b3261e] !px-4 !text-[12px] !text-[#b3261e]" disabled={busyId === r.id} onClick={() => void act(r, "delete")}>
-                    Delete
+                  <button type="button" className="abtn abtn-delete" disabled={busyId === r.id} onClick={() => void act(r, "delete")}>
+                    <IconTrash size={16} /> Delete
                   </button>
                 </div>
               </li>

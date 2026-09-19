@@ -15,7 +15,7 @@ const NOTICES: Record<string, string> = {
 function safeNext(value: string | null) {
   return value && value.startsWith("/admin/") && !value.startsWith("//") && !value.startsWith("/admin/login")
     ? value
-    : "/admin/dashboard";
+    : "/admin";
 }
 
 export default function AdminLogin() {
@@ -56,17 +56,17 @@ export default function AdminLogin() {
           <Logo className="self-start" imgClassName="h-16" taglineClassName="text-[10px] tracking-[0.5em]" />
           <div>
             <p className="font-display text-[clamp(2.5rem,4vw,3.75rem)] leading-[1.05]">Fragrance Beyond Words</p>
-            <p className="mt-4 max-w-sm text-lg">Manage the collection — products, prices, notes and imagery.</p>
+            <p className="mt-4 max-w-sm text-lg">Orders, products, customers and analytics — each team member with their own role.</p>
           </div>
           <p className="text-sm">© {new Date().getFullYear()} Azelle Fragrances</p>
         </div>
       </aside>
 
-      <main className="grid place-items-center px-6 py-12">
+      <main className="admin-shell grid place-items-center px-6 py-12">
         <div className="w-full max-w-[400px]">
           <Logo className="lg:hidden" imgClassName="h-12" taglineClassName="text-[9px] tracking-[0.5em]" />
           <p className="mt-8 text-[11px] font-semibold uppercase tracking-[0.24em] lg:mt-0">Admin panel</p>
-          <h1 className="mt-2 font-display text-[2.75rem] leading-none">Sign in</h1>
+          <h1 className="admin-title mt-2 font-display text-[2.9rem] leading-none">Sign in</h1>
           <p className="mt-3 text-sm">Use your admin email and password.</p>
 
           {notice && (
@@ -122,7 +122,7 @@ export default function AdminLogin() {
               </p>
             )}
 
-            <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
+            <button type="submit" className="abtn abtn-add !h-12 w-full !text-[14px]" disabled={submitting}>
               {submitting ? "Signing in…" : "Sign in"}
             </button>
           </form>

@@ -117,7 +117,7 @@ export default function AdminCustomers() {
               ))}
             </ul>
 
-            <div className="hidden overflow-hidden rounded-[18px] border border-line bg-surface lg:block">
+            <div className="admin-card admin-rise hidden overflow-hidden rounded-[20px] lg:block">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-line bg-surface2 text-[11px] uppercase tracking-[0.14em]">
                   <tr>

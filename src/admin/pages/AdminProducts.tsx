@@ -10,6 +10,7 @@ import { sized } from "@/lib/images";
 import { formatPrice } from "@/lib/products";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminApi, type AdminProduct, type ProductStatus } from "../adminApi";
+import { IconEdit, IconPlus, IconTrash } from "../icons";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -18,7 +19,8 @@ const messageOf = (err: unknown, fallback: string) => (err instanceof Error ? er
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 export default function AdminProducts() {
-  const { guard } = useAdminAuth();
+  const { guard, can } = useAdminAuth();
+  const canManage = can("products.manage");
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -117,16 +119,18 @@ export default function AdminProducts() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em]">Catalogue</p>
-          <h1 className="mt-1 font-display text-[2.75rem] leading-none">Products</h1>
+          <h1 className="admin-title mt-1 font-display text-[2.4rem] leading-none md:text-[2.9rem]">Products</h1>
           {loadState === "ready" && (
             <p className="mt-2 text-sm">
               {products.length} {products.length === 1 ? "product" : "products"} · {activeCount} active
             </p>
           )}
         </div>
-        <Link to="/admin/products/new" className="btn btn-primary">
-          + Add product
-        </Link>
+        {canManage && (
+          <Link to="/admin/products/new" className="abtn abtn-add">
+            <IconPlus size={16} /> Add product
+          </Link>
+        )}
       </div>
 
       {notice && (
@@ -203,7 +207,7 @@ export default function AdminProducts() {
                       aria-checked={active}
                       aria-label={`Show ${p.name} on the store`}
                       onClick={() => void toggleStatus(p)}
-                      disabled={busyId === p.id}
+                      disabled={busyId === p.id || !canManage}
                       className="inline-flex items-center gap-2.5 py-1 disabled:opacity-60"
                     >
                       <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${active ? "bg-[#2f7d4f]" : "bg-[color-mix(in_oklab,var(--ink)_28%,transparent)]"}`}>
@@ -214,9 +218,9 @@ export default function AdminProducts() {
                     <span className="text-xs">Updated {formatDate(p.updatedAt)}</span>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Link to={`/admin/products/${p.id}/edit`} className="btn btn-secondary !h-11 !min-w-0 !px-3 !text-[11px]" aria-label={`Edit ${p.name}`}>
-                      Edit
+                  {canManage && <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Link to={`/admin/products/${p.id}/edit`} className="abtn abtn-edit !h-11" aria-label={`Edit ${p.name}`}>
+                      <IconEdit size={16} /> Edit
                     </Link>
                     <button
                       type="button"
@@ -224,12 +228,12 @@ export default function AdminProducts() {
                         setDeleteTarget(p);
                         setDeleteOpen(true);
                       }}
-                      className="btn !h-11 !min-w-0 border-[#b3261e] !px-3 !text-[11px] text-[#b3261e]"
+                      className="abtn abtn-delete !h-11"
                       aria-label={`Delete ${p.name}`}
                     >
-                      Delete
+                      <IconTrash size={16} /> Delete
                     </button>
-                  </div>
+                  </div>}
                 </li>
               );
             })}
@@ -293,7 +297,7 @@ export default function AdminProducts() {
                           aria-checked={active}
                           aria-label={`Show ${p.name} on the store`}
                           onClick={() => void toggleStatus(p)}
-                          disabled={busyId === p.id}
+                          disabled={busyId === p.id || !canManage}
                           className="inline-flex items-center gap-2.5 disabled:opacity-60"
                         >
                           <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${active ? "bg-[#2f7d4f]" : "bg-[color-mix(in_oklab,var(--ink)_28%,transparent)]"}`}>
@@ -304,9 +308,9 @@ export default function AdminProducts() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-xs">{formatDate(p.updatedAt)}</td>
                       <td className="px-5 py-3">
-                        <div className="flex justify-end gap-2">
-                          <Link to={`/admin/products/${p.id}/edit`} className="btn btn-secondary !h-9 !min-w-0 !px-4 !text-[11px]" aria-label={`Edit ${p.name}`}>
-                            Edit
+                        {canManage && <div className="flex justify-end gap-2">
+                          <Link to={`/admin/products/${p.id}/edit`} className="abtn abtn-edit !h-9" aria-label={`Edit ${p.name}`}>
+                            <IconEdit size={15} /> Edit
                           </Link>
                           <button
                             type="button"
@@ -314,12 +318,12 @@ export default function AdminProducts() {
                               setDeleteTarget(p);
                               setDeleteOpen(true);
                             }}
-                            className="btn !h-9 !min-w-0 border-[#b3261e] !px-4 !text-[11px] text-[#b3261e]"
+                            className="abtn abtn-delete !h-9"
                             aria-label={`Delete ${p.name}`}
                           >
-                            Delete
+                            <IconTrash size={15} /> Delete
                           </button>
-                        </div>
+                        </div>}
                       </td>
                     </tr>
                   );
@@ -354,12 +358,12 @@ export default function AdminProducts() {
             database (soft delete).
           </p>
           <div className="mt-7 flex justify-end gap-3">
-            <button type="button" className="btn btn-secondary !min-w-0" onClick={closeDelete}>
+            <button type="button" className="abtn abtn-ghost" onClick={closeDelete}>
               Cancel
             </button>
             <button
               type="button"
-              className="btn !min-w-0 border-[#b3261e] bg-[#b3261e] text-white"
+              className="abtn abtn-delete"
               onClick={() => void confirmDelete()}
               disabled={Boolean(deleteTarget && busyId === deleteTarget.id)}
             >
