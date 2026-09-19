@@ -24,6 +24,7 @@ const AdminSettings = lazy(() => import("@/admin/pages/AdminSettings"));
 const AdminReviews = lazy(() => import("@/admin/pages/AdminReviews"));
 const AdminClarityDashboard = lazy(() => import("@/admin/pages/AdminClarityDashboard"));
 const AdminUsers = lazy(() => import("@/admin/pages/AdminUsers"));
+const AdminAccess = lazy(() => import("@/admin/pages/AdminAccess"));
 const MockPayment = lazy(() => import("@/pages/MockPayment"));
 
 export default function App() {
@@ -39,13 +40,15 @@ export default function App() {
           <Route path="orders" element={<Can perm="orders.view"><AdminOrders /></Can>} />
           <Route path="orders/:id" element={<Can perm="orders.view"><AdminOrderDetail /></Can>} />
           <Route path="customers" element={<Can perm="customers.view"><AdminCustomers /></Can>} />
-          <Route path="coupons" element={<Can perm="coupons.manage"><AdminCoupons /></Can>} />
-          <Route path="reviews" element={<Can perm="reviews.manage"><AdminReviews /></Can>} />
+          <Route path="coupons" element={<Can perm="coupons.view"><AdminCoupons /></Can>} />
+          <Route path="reviews" element={<Can perm="reviews.view"><AdminReviews /></Can>} />
           <Route path="settings" element={<Can perm="settings.view"><AdminSettings /></Can>} />
-          <Route path="users" element={<Can perm="users.manage"><AdminUsers /></Can>} />
+          <Route path="users" element={<Can perm="users.view"><AdminUsers view="users" /></Can>} />
+          <Route path="roles" element={<Can perm="roles.view"><AdminUsers view="roles" /></Can>} />
+          <Route path="access" element={<Can perm={["users.view", "roles.view"]}><AdminAccess /></Can>} />
           <Route path="products" element={<Can perm="products.view"><AdminProducts /></Can>} />
-          <Route path="products/new" element={<Can perm="products.manage"><AdminProductForm key="new" /></Can>} />
-          <Route path="products/:id/edit" element={<Can perm="products.manage"><AdminProductForm /></Can>} />
+          <Route path="products/new" element={<Can perm="products.add"><AdminProductForm key="new" /></Can>} />
+          <Route path="products/:id/edit" element={<Can perm="products.update"><AdminProductForm /></Can>} />
         </Route>
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>

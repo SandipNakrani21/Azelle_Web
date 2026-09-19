@@ -1,11 +1,33 @@
 import mongoose from "mongoose";
 import { Router } from "express";
 import { refreshProductRating, Review, REVIEW_STATUSES } from "../models/Review.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 // Moderation: approve, hide or delete customer reviews. Every change refreshes the product's rating.
 export const adminReviewsRouter = Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+adminReviewsRouter.get("/export", async (_req, res, next) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 }).limit(20000).populate("product", "name").lean();
+    sendCsv(res, "reviews", reviews, [
+      { label: "Product", value: (r) => r.product?.name ?? "" },
+      { label: "Rating", value: (r) => r.rating },
+      { label: "Title", value: (r) => r.title },
+      { label: "Review", value: (r) => r.body },
+      { label: "Name", value: (r) => r.name },
+      { label: "Email", value: (r) => r.email },
+      { label: "City", value: (r) => r.city },
+      { label: "Verified purchase", value: (r) => (r.verifiedPurchase ? "Yes" : "No") },
+      { label: "Status", value: (r) => r.status },
+      { label: "Test data", value: (r) => (r.testData ? "Yes" : "") },
+      { label: "Date (IST)", value: (r) => istDate(r.createdAt) },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 adminReviewsRouter.get("/", async (req, res, next) => {
   try {

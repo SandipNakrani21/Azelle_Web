@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { IconEdit, IconPlus, IconRefresh, IconTrash } from "./icons";
+import { useAdminAuth } from "./AdminAuthProvider";
+import { downloadCsv, type Permission } from "./adminApi";
+import { IconDownload, IconEdit, IconPlus, IconRefresh, IconTrash } from "./icons";
 import { CloseIcon } from "@/components/ui/Icons";
 import { ApiError } from "@/lib/api";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/orders";
@@ -179,4 +181,36 @@ export function useCountUp(value: number, duration = 1100) {
     return () => cancelAnimationFrame(frame);
   }, [value, duration]);
   return shown;
+}
+
+/** "Export CSV" — shown only when the role has the module's export permission. */
+export function ExportButton({ path, perm, label = "Export CSV" }: { path: string; perm: Permission; label?: string }) {
+  const { can, guard } = useAdminAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!can(perm)) return null;
+  const run = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await guard(downloadCsv(path));
+    } catch (err) {
+      if (!isUnauthorized(err)) setError(messageOf(err, "Export failed."));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <span className="inline-flex flex-col items-end">
+      <button type="button" className="abtn abtn-ghost" onClick={() => void run()} disabled={busy}>
+        <IconDownload size={16} />
+        {busy ? "Preparing…" : label}
+      </button>
+      {error && (
+        <span role="alert" className="mt-1 text-[12px] text-[#b3261e]">
+          {error}
+        </span>
+      )}
+    </span>
+  );
 }

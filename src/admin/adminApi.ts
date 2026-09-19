@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import type { Address, OrderLine, OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/orders";
 import type { FragranceFamily, Product, SizePrices } from "@/lib/products";
 
@@ -27,18 +27,10 @@ export type ProductInput = {
   status: ProductStatus;
 };
 
-export type Permission =
-  | "dashboard.view"
-  | "analytics.view"
-  | "orders.view"
-  | "orders.manage"
-  | "customers.view"
-  | "products.view"
-  | "products.manage"
-  | "reviews.manage"
-  | "coupons.manage"
-  | "settings.view"
-  | "users.manage";
+/** RBAC is a module × action matrix, e.g. "orders.update" (see server/src/rbac.js). */
+export type ModuleKey = "dashboard" | "analytics" | "orders" | "customers" | "products" | "reviews" | "coupons" | "users" | "roles" | "settings";
+export type Action = "view" | "add" | "update" | "delete" | "export";
+export type Permission = `${ModuleKey}.${Action}`;
 
 export type AdminSession = { email: string; name: string; role: string; owner: boolean; permissions: Permission[]; idleTimeoutMs: number };
 
@@ -306,20 +298,43 @@ export const adminAnalyticsApi = {
 };
 
 // ── Users & roles (RBAC) ────────────────────────────────────────────────────
-export type PermissionInfo = { key: Permission; group: string; label: string };
-export type AdminRole = { id: string; name: string; description: string; permissions: Permission[]; userCount: number };
+export type ModuleInfo = { key: ModuleKey; label: string; group: string; actions: Action[]; notes?: Partial<Record<Action, string>> };
+export type AdminRole = { id: string; name: string; description: string; permissions: Permission[]; userCount: number; key?: string; system?: boolean };
 export type AdminUserRow = { id: string; name: string; email: string; role: { _id: string; name: string } | null; active: boolean; lastLoginAt: string | null; createdAt: string };
 export type UserInput = { name: string; email: string; role: string; active: boolean; password: string };
 export type RoleInput = { name: string; description: string; permissions: Permission[] };
 
 export const adminUsersApi = {
-  list: () => api<{ owner: { name: string; email: string }; users: AdminUserRow[] }>("/api/admin/users"),
+  list: () => api<{ owner: { name: string; email: string; role: string }; users: AdminUserRow[] }>("/api/admin/users"),
   create: (input: UserInput) => api<{ user: AdminUserRow }>("/api/admin/users", { method: "POST", json: input }),
   update: (id: string, input: UserInput) => api<{ user: AdminUserRow }>(`/api/admin/users/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
   remove: (id: string) => api<{ ok: true }>(`/api/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" }),
-  permissions: () => api<{ permissions: PermissionInfo[] }>("/api/admin/users/permissions"),
+  permissions: () => api<{ modules: ModuleInfo[]; actions: Action[] }>("/api/admin/users/permissions"),
   roles: () => api<{ roles: AdminRole[] }>("/api/admin/users/roles"),
   createRole: (input: RoleInput) => api<{ role: AdminRole }>("/api/admin/users/roles", { method: "POST", json: input }),
   updateRole: (id: string, input: RoleInput) => api<{ role: AdminRole }>(`/api/admin/users/roles/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
   removeRole: (id: string) => api<{ ok: true }>(`/api/admin/users/roles/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };
+
+/** Downloads a CSV export (the admin session cookie authorises it). */
+export async function downloadCsv(path: string) {
+  const response = await fetch(path, { credentials: "same-origin" });
+  if (!response.ok) {
+    let message = `Export failed (${response.status}).`;
+    try {
+      message = (await response.json()).error ?? message;
+    } catch {
+      // not JSON
+    }
+    throw new ApiError(message, response.status);
+  }
+  const name = /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") ?? "")?.[1] ?? "azelle-export.csv";
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

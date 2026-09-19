@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Product } from "../models/Product.js";
 import { imageUpload, saveUploadedImage } from "../uploads.js";
 import { parseProductInput } from "../validation.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 export const adminProductsRouter = Router();
 
@@ -21,6 +22,29 @@ function handleDuplicateSlug(err, res) {
 }
 
 // List (all statuses, never soft-deleted). ?status=active|inactive&q=search
+adminProductsRouter.get("/export", async (_req, res, next) => {
+  try {
+    const products = await Product.find({ isDeleted: false }).sort({ sortOrder: 1, createdAt: 1 }).lean();
+    sendCsv(res, "products", products, [
+      { label: "Name", value: (p) => p.name },
+      { label: "Slug", value: (p) => p.slug },
+      { label: "Family", value: (p) => p.family },
+      { label: "Families", value: (p) => p.families.join(" / ") },
+      { label: "Price 30 ml", value: (p) => p.prices?.[30] },
+      { label: "Price 50 ml", value: (p) => p.prices?.[50] },
+      { label: "Price 100 ml", value: (p) => p.prices?.[100] },
+      { label: "Concentration", value: (p) => p.concentration },
+      { label: "In stock", value: (p) => (p.inStock ? "Yes" : "No") },
+      { label: "Status", value: (p) => p.status },
+      { label: "Rating", value: (p) => p.ratingAvg ?? 0 },
+      { label: "Reviews", value: (p) => p.ratingCount ?? 0 },
+      { label: "Updated (IST)", value: (p) => istDate(p.updatedAt) },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 adminProductsRouter.get("/", async (req, res) => {
   const filter = { ...LIVE };
   if (req.query.status === "active" || req.query.status === "inactive") filter.status = req.query.status;

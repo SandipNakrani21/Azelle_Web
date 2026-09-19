@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
 import { SALE_STATUSES } from "../services/orders.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 export const adminDashboardRouter = Router();
 
@@ -19,6 +20,31 @@ const sum = (from) => [
   { $match: { status: { $in: SALE_STATUSES }, createdAt: { $gte: from } } },
   { $group: { _id: null, revenue: { $sum: "$total" }, orders: { $sum: 1 } } },
 ];
+
+// Daily sales for the last 90 days (IST).
+adminDashboardRouter.get("/export", async (_req, res, next) => {
+  try {
+    const from = istMidnight(89);
+    const daily = await Order.aggregate([
+      { $match: { status: { $in: SALE_STATUSES }, createdAt: { $gte: from } } },
+      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TZ } }, revenue: { $sum: "$total" }, orders: { $sum: 1 } } },
+    ]);
+    const byDay = new Map(daily.map((d) => [d._id, d]));
+    const rows = [];
+    for (let i = 89; i >= 0; i -= 1) {
+      const key = new Date(istMidnight(i).getTime() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      rows.push({ date: key, revenue: byDay.get(key)?.revenue ?? 0, orders: byDay.get(key)?.orders ?? 0 });
+    }
+    sendCsv(res, "daily-sales", rows, [
+      { label: "Date", value: (r) => r.date },
+      { label: "Orders", value: (r) => r.orders },
+      { label: "Sales (INR)", value: (r) => Math.round(r.revenue * 100) / 100 },
+      { label: "Average order (INR)", value: (r) => (r.orders ? Math.round((r.revenue / r.orders) * 100) / 100 : 0) },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 adminDashboardRouter.get("/", async (_req, res, next) => {
   try {

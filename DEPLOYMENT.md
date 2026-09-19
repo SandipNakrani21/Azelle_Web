@@ -91,12 +91,21 @@ Privacy Policy (analytics cookies, Microsoft as processor).
 
 ## Admin users & roles (RBAC)
 
-The `ADMIN_EMAIL` / `ADMIN_PASSWORD` account is the **Owner** — it always has full access and is the
-only account that can't be locked out. In **Admin → Users & roles** the owner (or anyone with the
-"Manage admin users and roles" permission) can add team members with their own email and password,
-and choose their role. Four roles are created on first start — Manager, Order staff, Content editor
-and Viewer — and can be edited, or new roles added with any mix of permissions. Every admin API route
-checks the role on the server, and role changes or deactivation apply on the user's next click.
+Five built-in roles, highest access first (created automatically on start; they can't be deleted):
+
+| Role | Access |
+| --- | --- |
+| **Super Admin** | Everything, including admin users and roles. Permissions are locked. |
+| **Admin** | Everything except admin users and roles. |
+| **Manager** | Dashboards, orders, customers, products, reviews and coupons. |
+| **User** | Sales dashboard, handling orders, viewing customers and products. |
+| **Viewer** | Read-only dashboards and lists. |
+
+The `ADMIN_EMAIL` / `ADMIN_PASSWORD` account is the main **Super Admin** and can never be locked out.
+In **Admin → Users & roles** add team members (own email + password) and pick their role. Only a
+Super Admin can add or change another Super Admin. Built-in roles (except Super Admin) can have their
+permissions adjusted, and custom roles can be added. Every admin API route checks the role on the
+server; changes apply on the user's next click.
 
 ## 4. Check
 

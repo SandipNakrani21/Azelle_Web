@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Router } from "express";
 import { Coupon, COUPON_KINDS } from "../models/Coupon.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 export const adminCouponsRouter = Router();
 
@@ -39,6 +40,27 @@ function parseCoupon(body = {}) {
 
 const invalid = (res, errors) => res.status(400).json({ error: "Please fix the highlighted fields.", fields: errors });
 const duplicate = (res) => res.status(409).json({ error: "A coupon with this code already exists.", fields: { code: "Already in use." } });
+
+adminCouponsRouter.get("/export", async (_req, res, next) => {
+  try {
+    const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+    sendCsv(res, "coupons", coupons, [
+      { label: "Code", value: (c) => c.code },
+      { label: "Offer", value: (c) => c.label },
+      { label: "Type", value: (c) => c.kind },
+      { label: "Value", value: (c) => c.value },
+      { label: "Max discount", value: (c) => c.maxDiscount ?? "" },
+      { label: "Min. order", value: (c) => c.minSubtotal },
+      { label: "Active", value: (c) => (c.active ? "Yes" : "No") },
+      { label: "Shown in cart", value: (c) => (c.public ? "Yes" : "No") },
+      { label: "Used", value: (c) => c.usedCount },
+      { label: "Usage limit", value: (c) => c.usageLimit ?? "" },
+      { label: "Expires (IST)", value: (c) => istDate(c.expiresAt) },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 adminCouponsRouter.get("/", async (_req, res, next) => {
   try {

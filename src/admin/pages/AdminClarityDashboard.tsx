@@ -4,7 +4,7 @@ import { useAdminAuth } from "../AdminAuthProvider";
 import { adminAnalyticsApi, type Analytics, type ClarityList } from "../adminApi";
 import { AreaChart, DonutChart, KpiCard } from "../charts";
 import { IconClarity, IconClock, IconCustomers, IconEye, IconTrend } from "../icons";
-import { ActionButton, Card, formatDateTime, isUnauthorized, messageOf, PageHeader } from "../ui";
+import { ActionButton, Card, ExportButton, formatDateTime, isUnauthorized, messageOf, PageHeader } from "../ui";
 
 const whole = (v: number) => Math.round(v).toLocaleString("en-IN");
 const oneDecimal = (v: number) => (Math.round(v * 10) / 10).toFixed(1);
@@ -80,6 +80,7 @@ export default function AdminClarityDashboard() {
             <ActionButton kind="refresh" disabled={refreshing} onClick={() => void load(true)}>
               {refreshing ? "Updating…" : "Update now"}
             </ActionButton>
+            <ExportButton path="/api/admin/analytics/export" perm="analytics.export" />
             <a href={clarity.dashboardUrl} target="_blank" rel="noreferrer noopener" className="abtn abtn-add">
               <IconClarity size={16} /> Heatmaps & recordings
             </a>

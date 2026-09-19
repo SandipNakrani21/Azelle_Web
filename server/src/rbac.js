@@ -4,44 +4,73 @@ import crypto from "node:crypto";
 // The owner (ADMIN_EMAIL / ADMIN_PASSWORD) always has every permission. Other admins are stored in
 // the database, each with one role; a role is a named set of the permissions below.
 
-export const PERMISSIONS = [
-  { key: "dashboard.view", group: "Dashboards", label: "View the Azelle (sales) dashboard" },
-  { key: "analytics.view", group: "Dashboards", label: "View the Clarity (visitors) dashboard" },
-  { key: "orders.view", group: "Sales", label: "View orders" },
-  { key: "orders.manage", group: "Sales", label: "Accept, ship, cancel and refund orders" },
-  { key: "customers.view", group: "Sales", label: "View customers" },
-  { key: "products.view", group: "Catalogue", label: "View products" },
-  { key: "products.manage", group: "Catalogue", label: "Add, edit and delete products" },
-  { key: "reviews.manage", group: "Catalogue", label: "Publish, hide and delete reviews" },
-  { key: "coupons.manage", group: "Catalogue", label: "Add, edit and delete coupons" },
-  { key: "settings.view", group: "System", label: "View settings and partner status" },
-  { key: "users.manage", group: "System", label: "Manage admin users and roles" },
+// Permissions are a matrix: module × action. Each module lists the actions that apply to it.
+export const ACTIONS = ["view", "add", "update", "delete", "export"];
+export const MODULES = [
+  { key: "dashboard", label: "Azelle dashboard", group: "Dashboards", actions: ["view", "export"] },
+  { key: "analytics", label: "Clarity dashboard", group: "Dashboards", actions: ["view", "export"] },
+  { key: "orders", label: "Orders", group: "Sales", actions: ["view", "update", "delete", "export"], notes: { update: "Accept, ship, track", delete: "Cancel, refund" } },
+  { key: "customers", label: "Customers", group: "Sales", actions: ["view", "export"] },
+  { key: "products", label: "Products", group: "Catalogue", actions: ["view", "add", "update", "delete", "export"] },
+  { key: "reviews", label: "Reviews", group: "Catalogue", actions: ["view", "update", "delete", "export"], notes: { update: "Publish, hide" } },
+  { key: "coupons", label: "Coupons", group: "Catalogue", actions: ["view", "add", "update", "delete", "export"] },
+  { key: "users", label: "Admin users", group: "System", actions: ["view", "add", "update", "delete"] },
+  { key: "roles", label: "Roles", group: "System", actions: ["view", "add", "update", "delete"] },
+  { key: "settings", label: "Settings", group: "System", actions: ["view"] },
 ];
-export const PERMISSION_KEYS = PERMISSIONS.map((p) => p.key);
+export const PERMISSION_KEYS = MODULES.flatMap((m) => m.actions.map((a) => `${m.key}.${a}`));
+/** Every action of the given modules, e.g. all("orders", "customers"). */
+const all = (...modules) => PERMISSION_KEYS.filter((k) => modules.includes(k.split(".")[0]));
+const only = (action, ...modules) => modules.map((m) => `${m}.${action}`).filter((k) => PERMISSION_KEYS.includes(k));
 
-/** Starter roles, created once on an empty database (editable afterwards, except their names). */
+/** Older permission names (before the module × action matrix) and what they become. */
+export const LEGACY_PERMISSIONS = {
+  "orders.manage": ["orders.update", "orders.delete"],
+  "products.manage": ["products.add", "products.update", "products.delete"],
+  "reviews.manage": ["reviews.view", "reviews.update", "reviews.delete"],
+  "coupons.manage": ["coupons.view", "coupons.add", "coupons.update", "coupons.delete"],
+  "users.manage": all("users", "roles"),
+};
+export function upgradePermissions(list = []) {
+  return [...new Set(list.flatMap((p) => LEGACY_PERMISSIONS[p] ?? (PERMISSION_KEYS.includes(p) ? [p] : [])))];
+}
+
+/** Built-in roles, highest access first. Created (or brought up to date) on every start; they can't be
+    deleted, and Super Admin's permissions are locked. Custom roles can be added alongside them. */
+export const SUPER_ADMIN_KEY = "super_admin";
 export const DEFAULT_ROLES = [
   {
+    key: SUPER_ADMIN_KEY,
+    name: "Super Admin",
+    description: "Full access, including admin users and roles.",
+    permissions: PERMISSION_KEYS,
+  },
+  {
+    key: "admin",
+    name: "Admin",
+    description: "Everything except managing admin users and roles.",
+    permissions: all("dashboard", "analytics", "orders", "customers", "products", "reviews", "coupons", "settings"),
+  },
+  {
+    key: "manager",
     name: "Manager",
-    description: "Runs the store day to day — everything except admin users.",
-    permissions: PERMISSION_KEYS.filter((k) => k !== "users.manage"),
+    description: "Runs the store day to day — orders, customers, products, reviews and coupons.",
+    permissions: [...all("dashboard", "analytics", "orders", "products", "reviews", "coupons"), ...only("view", "customers")],
   },
   {
-    name: "Order staff",
-    description: "Packs and ships orders, answers customers.",
-    permissions: ["dashboard.view", "orders.view", "orders.manage", "customers.view", "products.view"],
+    key: "user",
+    name: "User",
+    description: "Handles orders — packs, ships and answers customers.",
+    permissions: ["dashboard.view", "orders.view", "orders.update", "customers.view", "products.view"],
   },
   {
-    name: "Content editor",
-    description: "Looks after products, reviews and coupons.",
-    permissions: ["dashboard.view", "products.view", "products.manage", "reviews.manage", "coupons.manage"],
-  },
-  {
+    key: "viewer",
     name: "Viewer",
     description: "Read-only access to dashboards and lists.",
-    permissions: ["dashboard.view", "analytics.view", "orders.view", "customers.view", "products.view"],
+    permissions: only("view", "dashboard", "analytics", "orders", "customers", "products", "reviews", "coupons"),
   },
 ];
+export const ROLE_ORDER = DEFAULT_ROLES.map((r) => r.key);
 
 // ── Passwords (scrypt, per-user salt) ──────────────────────────────────────
 export function hashPassword(password) {

@@ -6,7 +6,7 @@ import type { OrderStatus } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminCommerceApi, type OrderList } from "../adminApi";
-import { EmptyState, formatDateTime, isUnauthorized, messageOf, ORDER_STATUS_LABELS, PageHeader, Pagination, paymentSummary, StatusBadge } from "../ui";
+import { EmptyState, ExportButton, formatDateTime, isUnauthorized, messageOf, ORDER_STATUS_LABELS, PageHeader, Pagination, paymentSummary, StatusBadge } from "../ui";
 
 const TABS: (OrderStatus | "")[] = ["", "pending", "accepted", "shipped", "delivered", "awaiting_payment", "payment_failed", "cancelled", "returned"];
 
@@ -71,9 +71,12 @@ export default function AdminOrders() {
         title="Orders"
         subtitle={email ? <>Showing orders from <span className="font-semibold">{email}</span> · <button type="button" className="text-link" onClick={() => update({ email: "" })}>Show all</button></> : "Accept pending orders and choose how they ship."}
         actions={
-          <button type="button" className="abtn abtn-ghost" onClick={() => void load()}>
-            Refresh
-          </button>
+          <>
+            <ExportButton path={"/api/admin/orders/export" + (status ? "?status=" + status : "")} perm="orders.export" />
+            <button type="button" className="abtn abtn-ghost" onClick={() => void load()}>
+              Refresh
+            </button>
+          </>
         }
       />
 

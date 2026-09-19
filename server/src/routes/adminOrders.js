@@ -5,6 +5,7 @@ import { Order, ORDER_STATUSES } from "../models/Order.js";
 import { GATEWAYS } from "../integrations/payments/index.js";
 import { defaultParcel, parseParcel, SHIPPERS } from "../integrations/shipping/index.js";
 import { addEvent, syncPayment } from "../services/orders.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 export const adminOrdersRouter = Router();
 
@@ -30,6 +31,41 @@ async function loadOrder(req) {
 }
 
 const by = (req) => req.admin.email;
+
+// ── Export (CSV) ────────────────────────────────────────────────────────────
+adminOrdersRouter.get("/export", async (req, res, next) => {
+  try {
+    const filter = {};
+    const status = text(req.query.status, 30);
+    if (ORDER_STATUSES.includes(status)) filter.status = status;
+    const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(20000).lean();
+    sendCsv(res, "orders", orders, [
+      { label: "Order", value: (o) => o.number },
+      { label: "Placed (IST)", value: (o) => istDate(o.createdAt) },
+      { label: "Status", value: (o) => o.status },
+      { label: "Customer", value: (o) => o.customer.name },
+      { label: "Email", value: (o) => o.customer.email },
+      { label: "Mobile", value: (o) => o.customer.phone },
+      { label: "Address", value: (o) => [o.address.line1, o.address.line2].filter(Boolean).join(", ") },
+      { label: "City", value: (o) => o.address.city },
+      { label: "State", value: (o) => o.address.state },
+      { label: "PIN", value: (o) => o.address.pincode },
+      { label: "Items", value: (o) => o.lines.map((l) => `${l.name} ${l.sizeLabel} x${l.qty}`).join("; ") },
+      { label: "Subtotal", value: (o) => o.subtotal },
+      { label: "Discount", value: (o) => o.discount },
+      { label: "Coupon", value: (o) => o.couponCode },
+      { label: "GST", value: (o) => o.tax },
+      { label: "Shipping", value: (o) => o.shipping },
+      { label: "Total", value: (o) => o.total },
+      { label: "Payment method", value: (o) => o.payment.method },
+      { label: "Payment status", value: (o) => o.payment.status },
+      { label: "Courier", value: (o) => o.shipment?.courierName },
+      { label: "AWB", value: (o) => o.shipment?.awb },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ── List ────────────────────────────────────────────────────────────────────
 adminOrdersRouter.get("/", async (req, res, next) => {

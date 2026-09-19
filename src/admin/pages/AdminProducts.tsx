@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/products";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminApi, type AdminProduct, type ProductStatus } from "../adminApi";
 import { IconEdit, IconPlus, IconTrash } from "../icons";
+import { ExportButton } from "../ui";
 
 type Notice = { tone: "success" | "error"; text: string };
 
@@ -20,7 +21,10 @@ const formatDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { 
 
 export default function AdminProducts() {
   const { guard, can } = useAdminAuth();
-  const canManage = can("products.manage");
+  const canAdd = can("products.add");
+  const canUpdate = can("products.update");
+  const canDelete = can("products.delete");
+  const canManage = canUpdate || canDelete;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -126,11 +130,14 @@ export default function AdminProducts() {
             </p>
           )}
         </div>
-        {canManage && (
-          <Link to="/admin/products/new" className="abtn abtn-add">
-            <IconPlus size={16} /> Add product
-          </Link>
-        )}
+        <div className="flex flex-wrap items-start gap-3">
+          <ExportButton path="/api/admin/products/export" perm="products.export" />
+          {canAdd && (
+            <Link to="/admin/products/new" className="abtn abtn-add">
+              <IconPlus size={16} /> Add product
+            </Link>
+          )}
+        </div>
       </div>
 
       {notice && (
@@ -207,7 +214,7 @@ export default function AdminProducts() {
                       aria-checked={active}
                       aria-label={`Show ${p.name} on the store`}
                       onClick={() => void toggleStatus(p)}
-                      disabled={busyId === p.id || !canManage}
+                      disabled={busyId === p.id || !canUpdate}
                       className="inline-flex items-center gap-2.5 py-1 disabled:opacity-60"
                     >
                       <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${active ? "bg-[#2f7d4f]" : "bg-[color-mix(in_oklab,var(--ink)_28%,transparent)]"}`}>
@@ -219,9 +226,12 @@ export default function AdminProducts() {
                   </div>
 
                   {canManage && <div className="mt-3 grid grid-cols-2 gap-2">
+                    {canUpdate && (
                     <Link to={`/admin/products/${p.id}/edit`} className="abtn abtn-edit !h-11" aria-label={`Edit ${p.name}`}>
                       <IconEdit size={16} /> Edit
                     </Link>
+                    )}
+                    {canDelete && (
                     <button
                       type="button"
                       onClick={() => {
@@ -233,6 +243,7 @@ export default function AdminProducts() {
                     >
                       <IconTrash size={16} /> Delete
                     </button>
+                    )}
                   </div>}
                 </li>
               );
@@ -297,7 +308,7 @@ export default function AdminProducts() {
                           aria-checked={active}
                           aria-label={`Show ${p.name} on the store`}
                           onClick={() => void toggleStatus(p)}
-                          disabled={busyId === p.id || !canManage}
+                          disabled={busyId === p.id || !canUpdate}
                           className="inline-flex items-center gap-2.5 disabled:opacity-60"
                         >
                           <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${active ? "bg-[#2f7d4f]" : "bg-[color-mix(in_oklab,var(--ink)_28%,transparent)]"}`}>
@@ -309,9 +320,12 @@ export default function AdminProducts() {
                       <td className="whitespace-nowrap px-4 py-3 text-xs">{formatDate(p.updatedAt)}</td>
                       <td className="px-5 py-3">
                         {canManage && <div className="flex justify-end gap-2">
+                          {canUpdate && (
                           <Link to={`/admin/products/${p.id}/edit`} className="abtn abtn-edit !h-9" aria-label={`Edit ${p.name}`}>
                             <IconEdit size={15} /> Edit
                           </Link>
+                          )}
+                          {canDelete && (
                           <button
                             type="button"
                             onClick={() => {
@@ -323,6 +337,7 @@ export default function AdminProducts() {
                           >
                             <IconTrash size={15} /> Delete
                           </button>
+                          )}
                         </div>}
                       </td>
                     </tr>

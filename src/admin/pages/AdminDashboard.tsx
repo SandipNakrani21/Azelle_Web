@@ -6,7 +6,7 @@ import { useAdminAuth } from "../AdminAuthProvider";
 import { adminCommerceApi, type Dashboard } from "../adminApi";
 import { AreaChart, BarChart, DonutChart, KpiCard } from "../charts";
 import { IconBox, IconClock, IconCustomers, IconOrders, IconRupee, IconTrend } from "../icons";
-import { ActionButton, Card, EmptyState, formatDateTime, isUnauthorized, messageOf, paymentSummary, StatusBadge } from "../ui";
+import { ActionButton, Card, EmptyState, ExportButton, formatDateTime, isUnauthorized, messageOf, paymentSummary, StatusBadge } from "../ui";
 
 const rupees = (v: number) => formatPrice(Math.round(v));
 const whole = (v: number) => Math.round(v).toLocaleString("en-IN");
@@ -91,6 +91,7 @@ export default function AdminDashboard() {
             <ActionButton kind="refresh" onClick={() => void load()}>
               Refresh
             </ActionButton>
+            <ExportButton path="/api/admin/dashboard/export" perm="dashboard.export" label="Export sales" />
             <Link to="/admin/orders?status=pending" className="abtn abtn-add">
               <IconOrders size={16} /> Accept orders
             </Link>

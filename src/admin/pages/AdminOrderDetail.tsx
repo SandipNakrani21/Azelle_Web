@@ -21,7 +21,8 @@ type Detail = { order: AdminOrder; partners: PartnerChoice[]; defaultPartner: Sh
 export default function AdminOrderDetail() {
   const { id = "" } = useParams();
   const { guard, can } = useAdminAuth();
-  const canManage = can("orders.manage");
+  const canUpdate = can("orders.update");
+  const canDelete = can("orders.delete");
   const [detail, setDetail] = useState<Detail | null>(null);
   const [loadError, setLoadError] = useState("");
   const [notice, setNotice] = useNotice();
@@ -81,56 +82,56 @@ export default function AdminOrderDetail() {
   const canCancel = !["cancelled", "delivered", "returned"].includes(order.status);
 
   const actions: ReactNode[] = [];
-  if (order.status === "pending") {
+  if (canUpdate && order.status === "pending") {
     actions.push(
       <button key="accept" type="button" className="abtn abtn-add !h-11 !px-5" onClick={() => setDialog("accept")}>
         Accept order
       </button>,
     );
   }
-  if (order.status === "awaiting_payment" || order.status === "payment_failed") {
+  if (canUpdate && order.status === "awaiting_payment" || order.status === "payment_failed") {
     actions.push(
       <button key="sync" type="button" className="abtn abtn-ghost !h-11" disabled={busy === "sync"} onClick={() => void run("sync", () => adminCommerceApi.syncPayment(order.id), "Payment status checked with the gateway.")}>
         {busy === "sync" ? "Checking…" : "Check payment status"}
       </button>,
     );
   }
-  if (order.status === "accepted") {
+  if (canUpdate && order.status === "accepted") {
     actions.push(
       <button key="ship" type="button" className="abtn abtn-add !h-11 !px-5" onClick={() => setDialog("ship")}>
         Mark as shipped
       </button>,
     );
   }
-  if (order.status === "shipped") {
+  if (canUpdate && order.status === "shipped") {
     actions.push(
       <button key="deliver" type="button" className="abtn abtn-add !h-11 !px-5" disabled={busy === "deliver"} onClick={() => void run("deliver", () => adminCommerceApi.setStatus(order.id, "delivered"), "Marked as delivered.")}>
         Mark as delivered
       </button>,
     );
   }
-  if (hasPartnerShipment && ["accepted", "shipped"].includes(order.status)) {
+  if (canUpdate && hasPartnerShipment && ["accepted", "shipped"].includes(order.status)) {
     actions.push(
       <button key="track" type="button" className="abtn abtn-edit !h-11" disabled={busy === "track"} onClick={() => void run("track", () => adminCommerceApi.track(order.id), "Tracking refreshed.")}>
         {busy === "track" ? "Refreshing…" : "Refresh tracking"}
       </button>,
     );
   }
-  if (["shipped", "delivered"].includes(order.status)) {
+  if (canUpdate && ["shipped", "delivered"].includes(order.status)) {
     actions.push(
       <button key="return" type="button" className="abtn abtn-ghost !h-11" disabled={busy === "return"} onClick={() => void run("return", () => adminCommerceApi.setStatus(order.id, "returned"), "Marked as returned.")}>
         Mark as returned
       </button>,
     );
   }
-  if (paidOnline && ["cancelled", "returned"].includes(order.status)) {
+  if (canDelete && paidOnline && ["cancelled", "returned"].includes(order.status)) {
     actions.push(
       <button key="refund" type="button" className="abtn abtn-add !h-11" disabled={busy === "refund"} onClick={() => void run("refund", () => adminCommerceApi.refund(order.id), "Refund started.")}>
         {busy === "refund" ? "Refunding…" : `Refund ${formatPrice(order.total)}`}
       </button>,
     );
   }
-  if (canCancel) {
+  if (canDelete && canCancel) {
     actions.push(
       <button key="cancel" type="button" className="abtn abtn-delete !h-11" onClick={() => setDialog("cancel")}>
         Cancel order
@@ -153,7 +154,7 @@ export default function AdminOrderDetail() {
 
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
-      {canManage && actions.length > 0 && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
+      {actions.length > 0 && <div className="mt-6 flex flex-wrap gap-3">{actions}</div>}
       {order.status === "pending" && (
         <p className="mt-3 text-sm text-soft">The customer sees this order as “Pending” until you accept it and choose a shipping partner.</p>
       )}
@@ -207,7 +208,7 @@ export default function AdminOrderDetail() {
             </ol>
           </Card>
 
-          <NoteCard order={order} onSave={(note) => run("note", () => adminCommerceApi.saveNote(order.id, note), "Note saved.")} saving={busy === "note"} />
+          <NoteCard order={order} readOnly={!canUpdate} onSave={(note) => run("note", () => adminCommerceApi.saveNote(order.id, note), "Note saved.")} saving={busy === "note"} />
         </div>
 
         <div className="space-y-4">
@@ -324,7 +325,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function NoteCard({ order, onSave, saving }: { order: AdminOrder; onSave: (note: string) => Promise<boolean>; saving: boolean }) {
+function NoteCard({ order, onSave, saving, readOnly }: { order: AdminOrder; onSave: (note: string) => Promise<boolean>; saving: boolean; readOnly: boolean }) {
   const [note, setNote] = useState(order.adminNote);
   useEffect(() => setNote(order.adminNote), [order.adminNote]);
   return (
@@ -332,8 +333,8 @@ function NoteCard({ order, onSave, saving }: { order: AdminOrder; onSave: (note:
       <label htmlFor="admin-note" className="sr-only">
         Internal note (not shown to the customer)
       </label>
-      <textarea id="admin-note" value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={`${fieldClass} !mt-0 h-auto py-3`} placeholder="Only visible to admins" />
-      <button type="button" className="abtn abtn-edit mt-3" disabled={saving || note === order.adminNote} onClick={() => void onSave(note)}>
+      <textarea id="admin-note" readOnly={readOnly} value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={`${fieldClass} !mt-0 h-auto py-3`} placeholder="Only visible to admins" />
+      <button type="button" className="abtn abtn-edit mt-3" disabled={readOnly || saving || note === order.adminNote} onClick={() => void onSave(note)}>
         {saving ? "Saving…" : "Save note"}
       </button>
     </Card>

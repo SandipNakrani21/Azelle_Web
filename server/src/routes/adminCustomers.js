@@ -1,11 +1,47 @@
 import { Router } from "express";
 import { Order } from "../models/Order.js";
 import { SALE_STATUSES } from "../services/orders.js";
+import { istDate, sendCsv } from "../services/csv.js";
 
 // Customers are built from orders (the storefront has no server-side customer accounts yet).
 export const adminCustomersRouter = Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+adminCustomersRouter.get("/export", async (_req, res, next) => {
+  try {
+    const rows = await Order.aggregate([
+      { $sort: { createdAt: 1 } },
+      {
+        $group: {
+          _id: "$customer.email",
+          name: { $last: "$customer.name" },
+          phone: { $last: "$customer.phone" },
+          city: { $last: "$address.city" },
+          state: { $last: "$address.state" },
+          orders: { $sum: 1 },
+          spent: { $sum: { $cond: [{ $in: ["$status", SALE_STATUSES] }, "$total", 0] } },
+          firstOrderAt: { $first: "$createdAt" },
+          lastOrderAt: { $last: "$createdAt" },
+        },
+      },
+      { $sort: { lastOrderAt: -1 } },
+    ]);
+    sendCsv(res, "customers", rows, [
+      { label: "Name", value: (c) => c.name },
+      { label: "Email", value: (c) => c._id },
+      { label: "Mobile", value: (c) => c.phone },
+      { label: "City", value: (c) => c.city },
+      { label: "State", value: (c) => c.state },
+      { label: "Orders", value: (c) => c.orders },
+      { label: "Spent", value: (c) => Math.round(c.spent * 100) / 100 },
+      { label: "First order (IST)", value: (c) => istDate(c.firstOrderAt) },
+      { label: "Last order (IST)", value: (c) => istDate(c.lastOrderAt) },
+    ]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 adminCustomersRouter.get("/", async (req, res, next) => {
   try {

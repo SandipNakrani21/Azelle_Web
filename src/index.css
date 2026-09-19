@@ -883,24 +883,25 @@
   padding-bottom: 0.08em;
 }
 
-/* Sidebar: deep brand gradient with soft light blooms. */
+/* Sidebar: lighter brand gradient (rose-copper → sage) with soft blooms. White text stays at
+   ≥4.5:1 contrast on every stop. */
 .admin-sidebar {
   background:
-    radial-gradient(280px 220px at 0% 0%, rgba(217, 164, 65, 0.22), transparent 70%),
-    radial-gradient(260px 260px at 100% 100%, rgba(111, 156, 134, 0.28), transparent 70%),
-    linear-gradient(170deg, #241b18 0%, #3a2421 40%, #5a2e35 72%, #2d463e 100%);
-  color: #f7f1ea;
+    radial-gradient(300px 240px at 0% 0%, rgba(245, 213, 140, 0.28), transparent 70%),
+    radial-gradient(280px 280px at 100% 100%, rgba(159, 194, 173, 0.3), transparent 70%),
+    linear-gradient(170deg, #86574f 0%, #98635c 38%, #946660 66%, #5f7d6f 100%);
+  color: #fff;
 }
 .admin-nav-link {
   position: relative;
-  color: rgba(247, 241, 234, 0.82);
+  color: rgba(255, 255, 255, 0.94);
   transition: background-color 0.3s, color 0.3s, transform 0.3s var(--ease-out-slow);
 }
 .admin-nav-link svg {
   transition: transform 0.35s var(--ease-out-slow);
 }
 .admin-nav-link.is-active {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.2);
   color: #fff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 20px rgba(0, 0, 0, 0.18);
 }
@@ -913,7 +914,7 @@
   bottom: 8px;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #e6b45a, #e9a58f, #9fc2ad);
+  background: linear-gradient(180deg, #fbe3a6, #f6c9b8, #d6ecdf);
 }
 .admin-sidebar-width {
   transition: width 0.45s var(--ease-out-slow);
@@ -1027,7 +1028,7 @@
 
 @media (any-hover: hover) {
   .admin-nav-link:not(.is-active):hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.13);
     color: #fff;
     transform: translateX(3px);
   }

@@ -5,8 +5,8 @@ import mongoose from "mongoose";
 import multer from "multer";
 import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
-import { can, requireAdmin, viewOrManage } from "./middleware/requireAdmin.js";
-import { seedRolesIfEmpty } from "./models/AdminUser.js";
+import { crud, requireAdmin } from "./middleware/requireAdmin.js";
+import { syncDefaultRoles } from "./models/AdminUser.js";
 import { adminUsersRouter } from "./routes/adminUsers.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
 import { seedCouponsIfEmpty } from "./models/Coupon.js";
@@ -74,15 +74,19 @@ function createApp() {
   );
   app.use("/api/admin", adminAuthRouter);
   // Every admin route checks the signed-in admin's role (RBAC, see rbac.js).
-  app.use("/api/admin/products", requireAdmin, viewOrManage("products.view", "products.manage"), adminProductsRouter);
-  app.use("/api/admin/dashboard", requireAdmin, can("dashboard.view"), adminDashboardRouter);
-  app.use("/api/admin/orders", requireAdmin, viewOrManage("orders.view", "orders.manage"), adminOrdersRouter);
-  app.use("/api/admin/customers", requireAdmin, can("customers.view"), adminCustomersRouter);
-  app.use("/api/admin/coupons", requireAdmin, can("coupons.manage"), adminCouponsRouter);
-  app.use("/api/admin/settings", requireAdmin, can("settings.view"), adminSettingsRouter);
-  app.use("/api/admin/reviews", requireAdmin, can("reviews.manage"), adminReviewsRouter);
-  app.use("/api/admin/analytics", requireAdmin, can("analytics.view"), adminAnalyticsRouter);
-  app.use("/api/admin/users", requireAdmin, can("users.manage"), adminUsersRouter);
+  // Products: image uploads count as add or update (they happen inside the add / edit form).
+  app.use("/api/admin/products", requireAdmin, crud("products", (req) => (req.path.startsWith("/uploads") ? (req.admin.permissions.includes("products.add") ? "add" : "update") : undefined)), adminProductsRouter);
+  app.use("/api/admin/dashboard", requireAdmin, crud("dashboard"), adminDashboardRouter);
+  // Orders: cancel / refund are "delete"; every other change (accept, ship, track, notes) is "update".
+  app.use("/api/admin/orders", requireAdmin, crud("orders", (req) => (req.method === "GET" ? undefined : /\/(cancel|refund)$/.test(req.path) ? "delete" : "update")), adminOrdersRouter);
+  app.use("/api/admin/customers", requireAdmin, crud("customers"), adminCustomersRouter);
+  app.use("/api/admin/coupons", requireAdmin, crud("coupons"), adminCouponsRouter);
+  app.use("/api/admin/settings", requireAdmin, crud("settings"), adminSettingsRouter);
+  // Reviews: publish / hide is "update".
+  app.use("/api/admin/reviews", requireAdmin, crud("reviews"), adminReviewsRouter);
+  app.use("/api/admin/analytics", requireAdmin, crud("analytics"), adminAnalyticsRouter);
+  // Users and roles check their own actions inside the router.
+  app.use("/api/admin/users", requireAdmin, adminUsersRouter);
 
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
@@ -117,7 +121,7 @@ export function getApp() {
     await connectDatabase();
     await seedProductsIfEmpty();
     await seedCouponsIfEmpty();
-    await seedRolesIfEmpty();
+    await syncDefaultRoles();
     return createApp();
   })().catch((err) => {
     appPromise = null; // let the next request retry (e.g. after a database hiccup)

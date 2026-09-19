@@ -5,7 +5,7 @@ import { SearchIcon } from "@/components/ui/Icons";
 import { formatPrice } from "@/lib/products";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminCommerceApi, type AdminCustomer } from "../adminApi";
-import { EmptyState, formatDate, isUnauthorized, messageOf, PageHeader, Pagination } from "../ui";
+import { EmptyState, ExportButton, formatDate, isUnauthorized, messageOf, PageHeader, Pagination } from "../ui";
 
 type Data = { customers: AdminCustomer[]; total: number; page: number; pages: number };
 
@@ -44,7 +44,12 @@ export default function AdminCustomers() {
 
   return (
     <div>
-      <PageHeader eyebrow="People" title="Customers" subtitle={data ? `${data.total} ${data.total === 1 ? "customer" : "customers"} · grouped by email from their orders` : undefined} />
+      <PageHeader
+        eyebrow="People"
+        title="Customers"
+        subtitle={data ? `${data.total} ${data.total === 1 ? "customer" : "customers"} · grouped by email from their orders` : undefined}
+        actions={<ExportButton path="/api/admin/customers/export" perm="customers.export" />}
+      />
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">

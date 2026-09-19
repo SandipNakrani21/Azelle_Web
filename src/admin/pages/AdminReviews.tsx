@@ -6,7 +6,7 @@ import { sized } from "@/lib/images";
 import { IconEye, IconReviews, IconTrash } from "../icons";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminReviewsApi, type AdminReview, type ReviewStatus } from "../adminApi";
-import { EmptyState, formatDateTime, isUnauthorized, messageOf, NoticeBanner, PageHeader, Pagination, useNotice } from "../ui";
+import { EmptyState, ExportButton, formatDateTime, isUnauthorized, messageOf, NoticeBanner, PageHeader, Pagination, useNotice } from "../ui";
 
 const TABS: { id: ReviewStatus | ""; label: string }[] = [
   { id: "pending", label: "Waiting for approval" },
@@ -22,7 +22,7 @@ const STATUS_STYLE: Record<ReviewStatus, string> = {
 };
 
 export default function AdminReviews() {
-  const { guard } = useAdminAuth();
+  const { guard, can } = useAdminAuth();
   const [status, setStatus] = useState<ReviewStatus | "">("pending");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -66,7 +66,12 @@ export default function AdminReviews() {
 
   return (
     <div>
-      <PageHeader eyebrow="Customers" title="Reviews" subtitle="New reviews appear on the store only after you publish them. Ratings on product cards update straight away." />
+      <PageHeader
+        eyebrow="Customers"
+        title="Reviews"
+        subtitle="New reviews appear on the store only after you publish them. Ratings on product cards update straight away."
+        actions={<ExportButton path="/api/admin/reviews/export" perm="reviews.export" />}
+      />
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
       <div className="row-scroll -mx-5 mt-8 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0" role="tablist" aria-label="Review status">
@@ -144,19 +149,21 @@ export default function AdminReviews() {
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {r.status !== "approved" && (
+                  {can("reviews.update") && r.status !== "approved" && (
                     <button type="button" className="abtn abtn-add" disabled={busyId === r.id} onClick={() => void act(r, "approved")}>
                       <IconReviews size={16} /> Publish
                     </button>
                   )}
-                  {r.status !== "hidden" && (
+                  {can("reviews.update") && r.status !== "hidden" && (
                     <button type="button" className="abtn abtn-edit" disabled={busyId === r.id} onClick={() => void act(r, "hidden")}>
                       <IconEye size={16} /> Hide
                     </button>
                   )}
-                  <button type="button" className="abtn abtn-delete" disabled={busyId === r.id} onClick={() => void act(r, "delete")}>
-                    <IconTrash size={16} /> Delete
-                  </button>
+                  {can("reviews.delete") && (
+                    <button type="button" className="abtn abtn-delete" disabled={busyId === r.id} onClick={() => void act(r, "delete")}>
+                      <IconTrash size={16} /> Delete
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

@@ -6,7 +6,7 @@ import { formatPrice } from "@/lib/products";
 import { IconEdit, IconPlus, IconTrash } from "../icons";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminCommerceApi, type AdminCoupon, type CouponInput } from "../adminApi";
-import { EmptyState, formatDate, isUnauthorized, messageOf, NoticeBanner, PageHeader, useNotice } from "../ui";
+import { EmptyState, ExportButton, formatDate, isUnauthorized, messageOf, NoticeBanner, PageHeader, useNotice } from "../ui";
 
 const EMPTY: CouponInput = { code: "", label: "", kind: "percent", value: "", maxDiscount: "", minSubtotal: 0, active: true, public: true, usageLimit: "", expiresAt: "" };
 
@@ -39,7 +39,7 @@ function offerText(c: AdminCoupon) {
 }
 
 export default function AdminCoupons() {
-  const { guard } = useAdminAuth();
+  const { guard, can } = useAdminAuth();
   const [coupons, setCoupons] = useState<AdminCoupon[] | null>(null);
   const [notice, setNotice] = useNotice();
   const [editing, setEditing] = useState<AdminCoupon | "new" | null>(null);
@@ -83,9 +83,14 @@ export default function AdminCoupons() {
         title="Coupons"
         subtitle="Live, public coupons appear in the cart's “View all coupons” list. Hidden ones work when typed."
         actions={
-          <button type="button" className="abtn abtn-add" onClick={() => setEditing("new")}>
-            <IconPlus size={16} /> New coupon
-          </button>
+          <>
+            <ExportButton path="/api/admin/coupons/export" perm="coupons.export" />
+            {can("coupons.add") && (
+              <button type="button" className="abtn abtn-add" onClick={() => setEditing("new")}>
+                <IconPlus size={16} /> New coupon
+              </button>
+            )}
+          </>
         }
       />
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
@@ -131,12 +136,16 @@ export default function AdminCoupons() {
                     </div>
                   </dl>
                   <div className="mt-auto flex gap-2 pt-4">
-                    <button type="button" className="abtn abtn-edit flex-1" onClick={() => setEditing(c)}>
-                      <IconEdit size={16} /> Edit
-                    </button>
-                    <button type="button" className="abtn abtn-delete flex-1" onClick={() => setDeleting(c)}>
-                      <IconTrash size={16} /> Delete
-                    </button>
+                    {can("coupons.update") && (
+                      <button type="button" className="abtn abtn-edit flex-1" onClick={() => setEditing(c)}>
+                        <IconEdit size={16} /> Edit
+                      </button>
+                    )}
+                    {can("coupons.delete") && (
+                      <button type="button" className="abtn abtn-delete flex-1" onClick={() => setDeleting(c)}>
+                        <IconTrash size={16} /> Delete
+                      </button>
+                    )}
                   </div>
                 </li>
               );
