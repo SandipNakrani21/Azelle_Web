@@ -7,10 +7,12 @@ import { config } from "./config.js";
 import { connectDatabase } from "./db.js";
 import { crud, requireAdmin } from "./middleware/requireAdmin.js";
 import { syncDefaultRoles } from "./models/AdminUser.js";
+import { accountRouter } from "./routes/account.js";
 import { adminUsersRouter } from "./routes/adminUsers.js";
 import { adminAuthRouter } from "./routes/adminAuth.js";
 import { seedCouponsIfEmpty } from "./models/Coupon.js";
 import { adminAnalyticsRouter } from "./routes/adminAnalytics.js";
+import { adminAnnouncementsRouter } from "./routes/adminAnnouncements.js";
 import { adminCouponsRouter } from "./routes/adminCoupons.js";
 import { adminCustomersRouter } from "./routes/adminCustomers.js";
 import { adminDashboardRouter } from "./routes/adminDashboard.js";
@@ -18,6 +20,7 @@ import { adminOrdersRouter } from "./routes/adminOrders.js";
 import { adminProductsRouter } from "./routes/adminProducts.js";
 import { adminReviewsRouter } from "./routes/adminReviews.js";
 import { adminSettingsRouter } from "./routes/adminSettings.js";
+import { adminVisitorsRouter } from "./routes/adminVisitors.js";
 import { hasMockGateway } from "./integrations/payments/index.js";
 import { mockPaymentsRouter } from "./routes/mockPayments.js";
 import { ordersRouter } from "./routes/orders.js";
@@ -49,6 +52,28 @@ function createApp() {
   app.use("/api/store", express.json({ limit: "20kb" }), storeRouter);
   app.use("/api/orders", express.json({ limit: "50kb" }), ordersRouter);
   app.use("/api/reviews", express.json({ limit: "20kb" }), reviewsRouter);
+  // Storefront accounts: their own session cookie, scoped to /api/account and kept for 30 days.
+  app.use(
+    "/api/account",
+    session({
+      name: config.customerCookieName,
+      secret: config.sessionSecret,
+      resave: false,
+      saveUninitialized: false,
+      rolling: true,
+      proxy: true,
+      store: MongoStore.create({
+        client: mongoose.connection.getClient(),
+        collectionName: "customer_sessions",
+        ttl: config.customerSessionMs / 1000,
+        autoRemove: "native",
+      }),
+      cookie: { path: "/api/account", httpOnly: true, sameSite: "lax", secure: config.isProd, maxAge: config.customerSessionMs },
+    }),
+    express.json({ limit: "20kb" }),
+    accountRouter,
+  );
+
   // Local test-mode payment page (only when a gateway uses dummy keys; never in production).
   if (hasMockGateway()) app.use("/api/mock-payments", express.json({ limit: "5kb" }), mockPaymentsRouter);
 
@@ -85,6 +110,8 @@ function createApp() {
   // Reviews: publish / hide is "update".
   app.use("/api/admin/reviews", requireAdmin, crud("reviews"), adminReviewsRouter);
   app.use("/api/admin/analytics", requireAdmin, crud("analytics"), adminAnalyticsRouter);
+  app.use("/api/admin/visitors", requireAdmin, crud("visitors"), adminVisitorsRouter);
+  app.use("/api/admin/announcements", requireAdmin, crud("announcements"), adminAnnouncementsRouter);
   // Users and roles check their own actions inside the router.
   app.use("/api/admin/users", requireAdmin, adminUsersRouter);
 

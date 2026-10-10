@@ -1,13 +1,11 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { subscribeScroll } from "@/lib/scrollLoop";
 
 /**
  * Mounted once in the layout.
  * - Reveals every [data-reveal] element as it enters the viewport by setting
  *   [data-revealed] (an attribute, so React re-renders never strip it).
- * - An IntersectionObserver does the work; a getBoundingClientRect sweep on the
- *   shared scroll frame is the safety net so content never stays hidden.
+ * - IntersectionObserver handles visibility; no layout scans during scrolling.
  * - Scrolls to top (or to the #hash target) on navigation.
  */
 export function useScrollEffects() {
@@ -30,8 +28,10 @@ export function useScrollEffects() {
       { rootMargin: "0px 0px -8% 0px" },
     );
 
-    const collect = () => {
-      document.querySelectorAll("[data-reveal]:not([data-revealed])").forEach((el) => {
+    const collect = (scope: ParentNode = document) => {
+      const elements = Array.from(scope.querySelectorAll("[data-reveal]:not([data-revealed])"));
+      if (scope instanceof Element && scope.matches("[data-reveal]:not([data-revealed])")) elements.push(scope);
+      elements.forEach((el) => {
         if (reduceMotion) {
           el.setAttribute("data-revealed", "");
         } else if (!pending.has(el)) {
@@ -52,41 +52,41 @@ export function useScrollEffects() {
     collect();
     sweep();
 
-    const mutations = new MutationObserver(() => {
-      collect();
-      sweep();
+    const mutations = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) if (node instanceof Element) collect(node);
+      }
     });
     mutations.observe(document.getElementById("root") ?? document.body, {
       childList: true,
       subtree: true,
     });
-    const unsubscribe = subscribeScroll(sweep);
 
-    // Timer-based backup: runs even when animation frames are paused, so content never stays hidden.
-    let scrollTimer = 0;
-    const onScrollFallback = () => {
-      window.clearTimeout(scrollTimer);
-      scrollTimer = window.setTimeout(sweep, 120);
-    };
-    window.addEventListener("scroll", onScrollFallback, { passive: true });
     const safetyTimer = window.setTimeout(sweep, 1200);
 
     return () => {
       observer.disconnect();
       mutations.disconnect();
-      unsubscribe();
-      window.removeEventListener("scroll", onScrollFallback);
-      window.clearTimeout(scrollTimer);
       window.clearTimeout(safetyTimer);
     };
   }, []);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
+    let mutations: MutationObserver | undefined;
+    const scrollToHash = () => {
       const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
-      if (target) target.scrollIntoView({ behavior: "smooth" });
-      else window.scrollTo(0, 0);
+      if (!target) return false;
+      target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+      return true;
+    };
+    const id = requestAnimationFrame(() => {
+      if (!hash) window.scrollTo(0, 0);
+      else if (!scrollToHash()) {
+        mutations = new MutationObserver(() => { if (scrollToHash()) mutations?.disconnect(); });
+        mutations.observe(document.getElementById("root") ?? document.body, { childList: true, subtree: true });
+      }
     });
-    return () => cancelAnimationFrame(id);
+    const expiry = window.setTimeout(() => mutations?.disconnect(), 10000);
+    return () => { cancelAnimationFrame(id); mutations?.disconnect(); window.clearTimeout(expiry); };
   }, [pathname, hash]);
 }

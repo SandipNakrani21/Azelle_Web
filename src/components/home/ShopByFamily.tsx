@@ -24,7 +24,7 @@ export function ShopByFamily() {
       <SectionHeading id="family-h" sub="Find your mood" title="Shop by family" ornamentTone="light" />
       <ul className="row-scroll mx-auto mt-10 flex max-w-[1100px] snap-x gap-4 overflow-x-auto px-6 pb-2 md:grid md:grid-cols-7 md:gap-4 md:overflow-visible md:px-10">
         {FAMILY_CARDS.map(({ label, Icon, tint }, i) => (
-          <li key={label} data-reveal="slide" style={revealOrder(i)} className="w-[92px] shrink-0 snap-start text-center md:w-auto">
+          <li key={label} data-reveal="zoom" style={revealOrder(i)} className="w-[92px] shrink-0 snap-start text-center md:w-auto">
             <Link to={`/collection?group=${label}`} className="note-card block">
               <span className="note-media relative mx-auto grid h-16 w-16 place-items-center">
                 <span

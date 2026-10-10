@@ -4,9 +4,11 @@ import { Modal } from "@/components/ui/Modal";
 import { ApiError } from "@/lib/api";
 import { useAdminAuth } from "../AdminAuthProvider";
 import { adminUsersApi, type Action, type AdminRole, type AdminUserRow, type ModuleInfo, type Permission, type RoleInput, type UserInput } from "../adminApi";
-import { ActionButton, EmptyState, formatDateTime, isUnauthorized, messageOf, NoticeBanner, PageHeader, useNotice } from "../ui";
+import { ActionButton, EmptyState, formatDateTime, IconButton, isUnauthorized, ListToolbar, messageOf, NoticeBanner, PageHeader, Pagination, useNotice } from "../ui";
 
 type Tab = "users" | "roles";
+/** One line in the user list (the main account included). */
+type UserRowData = { id: string; name: string; email: string; phone: string; roleName: string; roleId: string; active: boolean; lastLoginAt: string | null; owner: boolean };
 const ACTION_LABELS: Record<Action, string> = { view: "View", add: "Add", update: "Update", delete: "Delete", export: "Export" };
 
 // System → Users and System → Roles (RBAC). The same page, opened with view="users" or view="roles".
@@ -23,10 +25,18 @@ export default function AdminUsers({ view = "users" }: { view?: Tab }) {
   const [notice, setNotice] = useNotice();
   const [editingUser, setEditingUser] = useState<AdminUserRow | "new" | null>(null);
   const [editingRole, setEditingRole] = useState<AdminRole | "new" | null>(null);
+  /** The eye opens the same editor, read-only. */
+  const [viewingRole, setViewingRole] = useState<AdminRole | null>(null);
+  /** Clicking a role's user count lists the people who have it. */
+  const [peopleOf, setPeopleOf] = useState<AdminRole | null>(null);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<{ kind: "user" | "role"; id: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const closeUser = useCallback(() => setEditingUser(null), []);
   const closeRole = useCallback(() => setEditingRole(null), []);
+  const closeRoleView = useCallback(() => setViewingRole(null), []);
+  const closePeople = useCallback(() => setPeopleOf(null), []);
   const closeDelete = useCallback(() => setDeleting(null), []);
 
   const load = useCallback(async () => {
@@ -70,10 +80,44 @@ export default function AdminUsers({ view = "users" }: { view?: Tab }) {
 
   const totalPermissions = modules.reduce((n, m) => n + m.actions.length, 0);
 
+  // ── The lists: search, then a page at a time ───────────────────────────
+  const PER_PAGE = 10;
+  const term = query.trim().toLowerCase();
+
+  /** The main account (from the environment) sits at the top of the user list, read-only. */
+  const allUsers: UserRowData[] = useMemo(
+    () => [
+      ...(owner ? [{ id: "owner", name: owner.name, email: owner.email, phone: "", roleName: owner.role, roleId: "", active: true, lastLoginAt: null, owner: true }] : []),
+      ...(users ?? []).map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        phone: u.phone ?? "",
+        roleName: u.role?.name ?? "—",
+        roleId: u.role?._id ?? "",
+        active: u.active,
+        lastLoginAt: u.lastLoginAt,
+        owner: false,
+      })),
+    ],
+    [owner, users],
+  );
+
+  const byId = new Map((users ?? []).map((u) => [u.id, u]));
+  const shownUsers = allUsers.filter((u) => !term || `${u.name} ${u.email} ${u.phone}`.toLowerCase().includes(term));
+  const userPages = Math.max(1, Math.ceil(shownUsers.length / PER_PAGE));
+  const pagedUsers = shownUsers.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const shownRoles = roles.filter((r) => !term || `${r.name} ${r.description}`.toLowerCase().includes(term));
+  const rolePages = Math.max(1, Math.ceil(shownRoles.length / PER_PAGE));
+  const pagedRoles = shownRoles.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  /** Everyone who has the role whose count was clicked. */
+  const rolePeople = peopleOf ? allUsers.filter((u) => (peopleOf.key === "super_admin" && u.owner) || u.roleId === peopleOf.id) : [];
+
   return (
     <div>
       <PageHeader
-        eyebrow="System"
         title={tab === "users" ? "Users" : "Roles"}
         subtitle={
           tab === "users"
@@ -96,89 +140,113 @@ export default function AdminUsers({ view = "users" }: { view?: Tab }) {
       />
       <NoticeBanner notice={notice} onDismiss={() => setNotice(null)} />
 
-      <div className="mt-8" />
+      <ListToolbar
+        query={query}
+        onQuery={(v) => {
+          setQuery(v);
+          setPage(1);
+        }}
+        placeholder={tab === "users" ? "Search name, email or mobile" : "Search roles"}
+        right={tab === "users" ? `${shownUsers.length} shown` : `${shownRoles.length} of ${roles.length}`}
+      />
 
       {tab === "users" ? (
-        <div className="mt-6 space-y-3">
+        <div className="mt-5 space-y-3">
           {!users ? (
             <p className="py-10 text-center text-sm">Loading…</p>
           ) : (
             <>
-              {owner && <UserRow name={owner.name} email={owner.email} role={owner.role} note="Main account (ADMIN_EMAIL) · can never be locked out" active you={Boolean(admin?.owner)} />}
-              {users.length === 0 && <EmptyState title="No team members yet" body="Add a user to give someone their own admin sign-in with limited access." />}
-              {users.map((u, i) => (
+              {pagedUsers.map((u, i) => (
                 <UserRow
                   key={u.id}
-                  delay={(i + 1) * 60}
+                  delay={i * 60}
                   name={u.name}
                   email={u.email}
-                  role={u.role?.name ?? "—"}
-                  note={u.lastLoginAt ? `Last sign-in ${formatDateTime(u.lastLoginAt)}` : "Never signed in"}
+                  phone={u.phone ?? ""}
+                  role={u.roleName}
+                  note={u.owner ? "Main account (ADMIN_EMAIL) · can never be locked out" : u.lastLoginAt ? `Last sign-in ${formatDateTime(u.lastLoginAt)}` : "Never signed in"}
                   active={u.active}
                   you={admin?.email === u.email}
-                  onEdit={can("users.update") ? () => setEditingUser(u) : undefined}
-                  onDelete={admin?.email === u.email || !can("users.delete") ? undefined : () => setDeleting({ kind: "user", id: u.id, name: u.name })}
+                  onEdit={u.owner || !can("users.update") ? undefined : () => setEditingUser(byId.get(u.id) ?? null)}
+                  onDelete={u.owner || admin?.email === u.email || !can("users.delete") ? undefined : () => setDeleting({ kind: "user", id: u.id, name: u.name })}
                 />
               ))}
+              {shownUsers.length === 0 && (
+                <EmptyState
+                  title={query ? "Nobody matches that search" : "No team members yet"}
+                  body={query ? "Try part of a name, an email or a mobile number." : "Add a user to give someone their own admin sign-in with limited access."}
+                />
+              )}
             </>
           )}
+          <Pagination page={page} pages={userPages} total={shownUsers.length} onChange={setPage} />
         </div>
       ) : (
-        /* Role list */
-        <div className="admin-card admin-rise mt-6 overflow-x-auto rounded-[20px]">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-line bg-surface2 text-[11px] uppercase tracking-[0.14em]">
-              <tr>
-                <th className="px-5 py-3 font-semibold">Role</th>
-                <th className="px-5 py-3 font-semibold">Description</th>
-                <th className="px-5 py-3 text-center font-semibold">Users</th>
-                <th className="px-5 py-3 font-semibold">Access</th>
-                <th className="px-5 py-3 text-right font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
-              {roles.map((r, i) => {
-                const locked = r.key === "super_admin";
-                const share = totalPermissions ? r.permissions.length / totalPermissions : 0;
-                return (
-                  <tr key={r.id} className="admin-rise transition-colors duration-300 hover:bg-surface2/50" style={{ animationDelay: `${i * 50}ms` }}>
-                    <td className="px-5 py-4">
-                      <p className="admin-title font-display text-xl">{r.name}</p>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-soft">{r.system ? `Built-in · level ${i + 1}` : "Custom"}</p>
-                    </td>
-                    <td className="max-w-[280px] px-5 py-4 text-[13px]">{r.description || "—"}</td>
-                    <td className="px-5 py-4 text-center font-semibold tabular-nums">{r.userCount + (locked ? 1 : 0)}</td>
-                    <td className="px-5 py-4">
-                      <p className="text-[13px] tabular-nums">
-                        {r.permissions.length} of {totalPermissions} permissions
-                      </p>
-                      <span className="mt-1.5 block h-1.5 w-40 rounded-full bg-surface2" aria-hidden="true">
-                        <span className="admin-fade block h-full rounded-full" style={{ width: `${share * 100}%`, background: "var(--menu-gradient)" }} />
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex justify-end gap-2">
-                        {locked || !can("roles.update") ? (
-                          <ActionButton kind="ghost" onClick={() => setEditingRole(r)}>
-                            View
-                          </ActionButton>
+        /* Role list — the name opens the role, the count opens the people who have it. */
+        <div className="mt-5">
+          <div className="admin-card admin-rise overflow-x-auto rounded-[20px]">
+            <table className="admin-table min-w-[640px]">
+              <thead>
+                <tr>
+                  <th>Role</th>
+                  <th className="!text-center">Users</th>
+                  <th>Access</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedRoles.map((r, i) => {
+                  const locked = r.key === "super_admin";
+                  const share = totalPermissions ? r.permissions.length / totalPermissions : 0;
+                  const people = r.userCount + (locked ? 1 : 0);
+                  return (
+                    <tr key={r.id} className="admin-rise" style={{ animationDelay: `${i * 50}ms` }}>
+                      <td>
+                        <button type="button" className="admin-link-title" onClick={() => setViewingRole(r)}>
+                          {r.name}
+                        </button>
+                        <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-soft">{r.system ? "Built-in" : "Custom"}</p>
+                      </td>
+                      <td className="!text-center">
+                        {people > 0 ? (
+                          <button type="button" className="admin-count" onClick={() => setPeopleOf(r)} aria-label={`Show the ${people} people with the ${r.name} role`}>
+                            {people}
+                          </button>
                         ) : (
-                          <ActionButton kind="edit" onClick={() => setEditingRole(r)}>
-                            Edit
-                          </ActionButton>
+                          <span className="text-soft">0</span>
                         )}
-                        {!r.system && can("roles.delete") && (
-                          <ActionButton kind="delete" onClick={() => setDeleting({ kind: "role", id: r.id, name: r.name })}>
-                            Delete
-                          </ActionButton>
-                        )}
-                      </div>
+                      </td>
+                      <td>
+                        <p className="text-[13px] tabular-nums">
+                          {r.permissions.length} of {totalPermissions} permissions
+                        </p>
+                        <span className="mt-1.5 block h-1.5 w-40 rounded-full bg-surface2" aria-hidden="true">
+                          <span className="admin-fade block h-full rounded-full" style={{ width: `${share * 100}%`, background: "var(--menu-gradient)" }} />
+                        </span>
+                      </td>
+                      <td>
+                        <div className="flex justify-end gap-2">
+                          <IconButton kind="view" label={`View ${r.name} permissions`} onClick={() => setViewingRole(r)} />
+                          {!locked && can("roles.update") && <IconButton kind="edit" label={`Edit ${r.name}`} onClick={() => setEditingRole(r)} />}
+                          {!r.system && can("roles.delete") && (
+                            <IconButton kind="delete" label={`Delete ${r.name}`} onClick={() => setDeleting({ kind: "role", id: r.id, name: r.name })} />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {shownRoles.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="!text-center text-soft">
+                      No role matches that search.
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={page} pages={rolePages} total={shownRoles.length} onChange={setPage} />
         </div>
       )}
 
@@ -210,7 +278,57 @@ export default function AdminUsers({ view = "users" }: { view?: Tab }) {
           await load();
         }}
       />
-      <Modal open={deleting !== null} onClose={closeDelete} label="Confirm delete">
+      <RoleEditor
+        open={viewingRole !== null}
+        role={viewingRole}
+        modules={modules}
+        actions={actions}
+        readOnly
+        onClose={closeRoleView}
+        onSave={async () => undefined}
+      />
+      {/* Who has this role — opened from the count in the Users column. */}
+      <Modal from="right" open={peopleOf !== null} onClose={closePeople} label="People with this role" panelClassName="max-w-[560px]">
+        <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8">
+          <h2 className="admin-title font-display text-3xl">{peopleOf?.name}</h2>
+          <p className="mt-1 text-sm text-soft">
+            {rolePeople.length} {rolePeople.length === 1 ? "person has" : "people have"} this role.
+          </p>
+          <ul className="mt-6 space-y-3">
+            {rolePeople.map((p) => (
+              <li key={p.id} className="flex flex-wrap items-center gap-4 rounded-[16px] border border-line bg-surface p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">
+                    {p.name}
+                    {p.owner && <span className="ml-2 rounded-full bg-[#f6ecdc] px-2 py-0.5 text-[10.5px] font-bold uppercase text-[#7a5200]">Main account</span>}
+                    {!p.active && <span className="ml-2 rounded-full bg-[#ece8e1] px-2 py-0.5 text-[10.5px] font-bold uppercase text-[#5b5249]">Inactive</span>}
+                  </p>
+                  <p className="break-all text-[13px]">{p.email}</p>
+                  <p className="text-[13px] tabular-nums text-soft">{p.phone || "No mobile number"}</p>
+                </div>
+                {!p.owner && admin?.email !== p.email && can("users.delete") && (
+                  <IconButton
+                    kind="delete"
+                    label={`Delete ${p.name}`}
+                    onClick={() => {
+                      setPeopleOf(null);
+                      setDeleting({ kind: "user", id: p.id, name: p.name });
+                    }}
+                  />
+                )}
+              </li>
+            ))}
+            {rolePeople.length === 0 && <li className="rounded-[16px] border border-dashed border-line p-6 text-center text-sm text-soft">Nobody has this role yet.</li>}
+          </ul>
+          <div className="mt-7 flex justify-end">
+            <ActionButton kind="ghost" onClick={closePeople}>
+              Close
+            </ActionButton>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal from="right" open={deleting !== null} onClose={closeDelete} label="Confirm delete">
         <div className="p-7 md:p-8">
           <h2 className="admin-title font-display text-3xl">Delete {deleting?.name}?</h2>
           <p className="mt-3 text-sm">
@@ -242,7 +360,7 @@ function TriCheckbox({ checked, indeterminate, onChange, label, disabled }: { ch
         if (el) el.indeterminate = Boolean(indeterminate) && !checked;
       }}
       onChange={(e) => onChange(e.target.checked)}
-      className="h-[18px] w-[18px] cursor-pointer accent-[#b46a7a] disabled:cursor-not-allowed"
+      className="perm-box"
     />
   );
 }
@@ -336,7 +454,7 @@ function RoleEditor({
   const groups = [...new Set(modules.map((m) => m.group))];
 
   return (
-    <Modal open={open} onClose={onClose} label={role ? `${readOnly ? "View" : "Edit"} role` : "Add role"} panelClassName="max-w-[980px]">
+    <Modal from="right" open={open} onClose={onClose} label={role ? `${readOnly ? "View" : "Edit"} role` : "Add role"} panelClassName="max-w-[980px]">
       <form onSubmit={submit} noValidate className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <h2 className="admin-title font-display text-3xl">{role ? (readOnly ? role.name : `Edit ${role.name}`) : "Add a role"}</h2>
@@ -376,8 +494,8 @@ function RoleEditor({
           <p className="mt-1 text-[12.5px] text-soft">Tick a column header to select that action for every module, or “All” to select a whole row. Any action also ticks View.</p>
           {errors.permissions && <p className={fieldErrorClass}>{errors.permissions}</p>}
           <div className="mt-3 overflow-x-auto rounded-[16px] border border-line">
-            <table className="w-full min-w-[680px] text-sm">
-              <thead className="bg-surface2">
+            <table className="perm-table w-full min-w-[680px] text-sm">
+              <thead className="perm-head">
                 <tr>
                   <th className="px-4 py-3 text-left">
                     <label className="flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.14em]">
@@ -402,8 +520,8 @@ function RoleEditor({
               <tbody>
                 {groups.map((g) => (
                   <Fragment key={g}>
-                    <tr className="bg-surface">
-                      <td colSpan={actions.length + 2} className="px-4 pb-1.5 pt-4 text-[10.5px] font-bold uppercase tracking-[0.2em] text-soft">
+                    <tr className="perm-group">
+                      <td colSpan={actions.length + 2} className="px-4 py-2 text-[10.5px] font-bold uppercase tracking-[0.2em]">
                         {g}
                       </td>
                     </tr>
@@ -413,7 +531,7 @@ function RoleEditor({
                         const rowKeys = m.actions.map((a) => key(m, a));
                         const rowCount = rowKeys.filter((k) => selected.has(k)).length;
                         return (
-                          <tr key={m.key} className="border-t border-line transition-colors duration-200 hover:bg-surface2/60">
+                          <tr key={m.key} className="border-t border-line">
                             <td className="px-4 py-3">
                               <p className="font-semibold">{m.label}</p>
                               {m.notes && (
@@ -472,6 +590,7 @@ function RoleEditor({
 function UserRow({
   name,
   email,
+  phone,
   role,
   note,
   active,
@@ -482,6 +601,7 @@ function UserRow({
 }: {
   name: string;
   email: string;
+  phone: string;
   role: string;
   note: string;
   active: boolean;
@@ -507,22 +627,17 @@ function UserRow({
           {you && <span className="rounded-full bg-[#dfe9f7] px-2 py-0.5 text-[10.5px] font-bold uppercase text-[#1f4f8f]">You</span>}
           {!active && <span className="rounded-full bg-[#ece8e1] px-2 py-0.5 text-[10.5px] font-bold uppercase text-[#5b5249]">Inactive</span>}
         </p>
-        <p className="break-all text-[13px]">{email}</p>
+        <p className="break-all text-[13px]">
+          {email}
+          {phone && <span className="ml-2 tabular-nums text-soft">· {phone}</span>}
+        </p>
         <p className="text-[12px] text-soft">{note}</p>
       </div>
       <span className="rounded-full border border-line px-3 py-1 text-[12px] font-semibold">{role}</span>
       {(onEdit || onDelete) && (
         <div className="flex gap-2">
-          {onEdit && (
-            <ActionButton kind="edit" onClick={onEdit}>
-              Edit
-            </ActionButton>
-          )}
-          {onDelete && (
-            <ActionButton kind="delete" onClick={onDelete}>
-              Delete
-            </ActionButton>
-          )}
+          {onEdit && <IconButton kind="edit" label={`Edit ${name}`} onClick={onEdit} />}
+          {onDelete && <IconButton kind="delete" label={`Delete ${name}`} onClick={onDelete} />}
         </div>
       )}
     </div>
@@ -530,14 +645,18 @@ function UserRow({
 }
 
 function UserEditor({ open, user, roles, onClose, onSave }: { open: boolean; user: AdminUserRow | null; roles: AdminRole[]; onClose: () => void; onSave: (input: UserInput) => Promise<void> }) {
-  const [form, setForm] = useState<UserInput>({ name: "", email: "", role: "", active: true, password: "" });
+  const [form, setForm] = useState<UserInput>({ name: "", email: "", phone: "", role: "", active: true, password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setForm(user ? { name: user.name, email: user.email, role: user.role?._id ?? "", active: user.active, password: "" } : { name: "", email: "", role: roles[0]?.id ?? "", active: true, password: "" });
+    setForm(
+      user
+        ? { name: user.name, email: user.email, phone: user.phone ?? "", role: user.role?._id ?? "", active: user.active, password: "" }
+        : { name: "", email: "", phone: "", role: roles[0]?.id ?? "", active: true, password: "" },
+    );
     setErrors({});
     setError("");
   }, [open, user, roles]);
@@ -558,7 +677,7 @@ function UserEditor({ open, user, roles, onClose, onSave }: { open: boolean; use
 
   const err = (k: string) => errors[k] && <p className={fieldErrorClass}>{errors[k]}</p>;
   return (
-    <Modal open={open} onClose={onClose} label={user ? "Edit user" : "Add user"} panelClassName="max-w-[520px]">
+    <Modal from="right" open={open} onClose={onClose} label={user ? "Edit user" : "Add user"} panelClassName="max-w-[520px]">
       <form onSubmit={submit} noValidate className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8">
         <h2 className="admin-title font-display text-3xl">{user ? `Edit ${user.name}` : "Add a team member"}</h2>
         <div className="mt-6 grid gap-4">
@@ -575,6 +694,21 @@ function UserEditor({ open, user, roles, onClose, onSave }: { open: boolean; use
             </label>
             <input id="u-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={fieldClass} />
             {err("email")}
+          </div>
+          <div>
+            <label htmlFor="u-phone" className={labelClass}>
+              Mobile <span className="font-normal normal-case tracking-normal text-soft">(optional)</span>
+            </label>
+            <input
+              id="u-phone"
+              inputMode="numeric"
+              autoComplete="off"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+              className={fieldClass}
+              placeholder="9876543210"
+            />
+            {err("phone")}
           </div>
           <div>
             <label htmlFor="u-role" className={labelClass}>

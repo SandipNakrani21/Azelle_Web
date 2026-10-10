@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useOverlayPresence } from "@/hooks/useOverlayPresence";
 
 type DrawerProps = {
   open: boolean;
@@ -14,8 +15,10 @@ type DrawerProps = {
 export function Drawer({ open, onClose, label, side = "right", children, panelClassName = "w-full max-w-md" }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(open, onClose, panelRef);
+  const present = useOverlayPresence(open);
 
   const offscreen = side === "right" ? "translate-x-full" : "-translate-x-full";
+  if (!present) return null;
 
   return (
     <div className={`fixed inset-0 z-[70] ${open ? "" : "pointer-events-none"}`} inert={!open}>

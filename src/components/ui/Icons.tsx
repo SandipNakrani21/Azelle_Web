@@ -470,3 +470,32 @@ export const QuoteBlob = ({ color, ...p }: P & { color: string }) => (
     </text>
   </svg>
 );
+
+// Wishlist heart (small UI icon) — the 64-grid HeartIcon above is the decorative "cruelty free" mark.
+export const WishIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" {...line(p)}>
+    <path d="M12 20.5C7 17.2 3.5 14.2 3.5 10.4A4.4 4.4 0 0 1 12 8.1a4.4 4.4 0 0 1 8.5 2.3c0 3.8-3.5 6.8-8.5 10.1z" />
+  </svg>
+);
+
+export const WishFilledIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true" {...p}>
+    <path d="M12 20.5C7 17.2 3.5 14.2 3.5 10.4A4.4 4.4 0 0 1 12 8.1a4.4 4.4 0 0 1 8.5 2.3c0 3.8-3.5 6.8-8.5 10.1z" />
+  </svg>
+);
+
+export const TrolleyIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" {...line(p)}>
+    <path d="M2.5 4h2.2l2.1 10.2a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2l1.6-6.3H6" />
+    <circle cx="9.5" cy="19.5" r="1.4" />
+    <circle cx="17" cy="19.5" r="1.4" />
+  </svg>
+);
+
+/** "Discover" on a product card — an eye, for looking closer. */
+export const EyeIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" {...line(p)}>
+    <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);

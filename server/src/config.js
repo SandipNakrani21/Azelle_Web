@@ -9,6 +9,9 @@ export const config = {
   mongoUri: process.env.MONGODB_URI ?? "mongodb://127.0.0.1:27017/azelle",
   sessionSecret: process.env.SESSION_SECRET ?? "",
   sessionCookieName: "azelle.admin.sid",
+  // Storefront accounts: their own cookie, kept for 30 days of inactivity (shoppers stay signed in).
+  customerCookieName: "azelle.sid",
+  customerSessionMs: 30 * 24 * 60 * 60 * 1000,
   // Admin is signed out after this long without any request.
   sessionIdleMs: 10 * 60 * 1000,
   // Admin credentials come only from the environment (server/.env locally, project settings on Vercel).

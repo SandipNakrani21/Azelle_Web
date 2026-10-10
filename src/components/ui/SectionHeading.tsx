@@ -12,7 +12,7 @@ type SectionHeadingProps = {
 // Display-font line, ✦ separator, then the uppercase title.
 export function SectionHeading({ id, sub, title, ornamentTone = "current", className = "" }: SectionHeadingProps) {
   return (
-    <div data-reveal="slide" className={`px-6 text-center ${className}`}>
+    <div data-reveal="blur" className={`px-6 text-center ${className}`}>
       {sub && (
         <>
           <p className="section-sub">{sub}</p>

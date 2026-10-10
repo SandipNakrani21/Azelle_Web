@@ -58,7 +58,7 @@ export function ProductGallery({ product }: { product: Product }) {
               aria-pressed={i === index}
               className={`zoom-tile h-16 w-16 shrink-0 overflow-hidden rounded-[12px] border-2 bg-[#fbfaf7] md:h-full md:min-h-0 md:w-full ${i === index ? "border-ink" : "border-transparent opacity-70 hover:opacity-100"}`}
             >
-              <img src={sized(src, 200)} alt="" className="h-full w-full object-cover" />
+              <img src={sized(src, 200)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -69,8 +69,9 @@ export function ProductGallery({ product }: { product: Product }) {
         {images.map((src, i) => (
           <img
             key={`${src}-${i}`}
-            src={sized(src, 1200)}
-            srcSet={srcSet(src, [600, 900, 1200])}
+            src={i === index ? sized(src, 1200) : undefined}
+            srcSet={i === index ? srcSet(src, [600, 900, 1200]) : undefined}
+            decoding="async"
             sizes="(min-width: 1024px) 600px, 100vw"
             alt={`${product.name}, image ${i + 1} of ${count}`}
             aria-hidden={i !== index}

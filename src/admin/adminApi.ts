@@ -28,7 +28,19 @@ export type ProductInput = {
 };
 
 /** RBAC is a module × action matrix, e.g. "orders.update" (see server/src/rbac.js). */
-export type ModuleKey = "dashboard" | "analytics" | "orders" | "customers" | "products" | "reviews" | "coupons" | "users" | "roles" | "settings";
+export type ModuleKey =
+  | "dashboard"
+  | "analytics"
+  | "visitors"
+  | "orders"
+  | "customers"
+  | "products"
+  | "reviews"
+  | "coupons"
+  | "announcements"
+  | "users"
+  | "roles"
+  | "settings";
 export type Action = "view" | "add" | "update" | "delete" | "export";
 export type Permission = `${ModuleKey}.${Action}`;
 
@@ -144,16 +156,37 @@ export type Dashboard = {
   products: { total: number; active: number; soldOut: number };
 };
 
+/** A storefront account, or â on the Guests tab â someone who ordered without one. */
 export type AdminCustomer = {
+  id?: string;
   email: string;
   name: string;
   phone: string;
-  city: string;
-  state: string;
+  city?: string;
+  state?: string;
   orders: number;
   spent: number;
-  firstOrderAt: string;
-  lastOrderAt: string;
+  active?: boolean;
+  marketing?: boolean;
+  notes?: string;
+  source?: "storefront" | "admin";
+  lastLoginAt?: string | null;
+  createdAt?: string;
+  firstOrderAt?: string;
+  lastOrderAt?: string;
+};
+
+export type CustomerInput = { name: string; email: string; phone: string; active: boolean; marketing: boolean; notes: string; password: string };
+
+export type CustomerList = {
+  type: "accounts" | "guests";
+  customers: AdminCustomer[];
+  total: number;
+  page: number;
+  pages: number;
+  counts: { accounts: number; guests: number };
+  /** True only for a Super Admin â the add / edit / delete buttons. */
+  canManage: boolean;
 };
 
 export type AdminCoupon = {
@@ -219,8 +252,11 @@ export const adminCommerceApi = {
   refund: (id: string) => api<{ order: AdminOrder }>(`${orderPath(id)}/refund`, { method: "POST", json: {} }),
   saveNote: (id: string, note: string) => api<{ order: AdminOrder }>(`${orderPath(id)}/note`, { method: "PUT", json: { note } }),
 
-  listCustomers: (params: { q?: string; sort?: string; page?: number }) =>
-    api<{ customers: AdminCustomer[]; total: number; page: number; pages: number }>(`/api/admin/customers${query(params)}`),
+  listCustomers: (params: { q?: string; sort?: string; page?: number; type?: string }) => api<CustomerList>(`/api/admin/customers${query(params)}`),
+  createCustomer: (input: CustomerInput) => api<{ customer: AdminCustomer }>("/api/admin/customers", { method: "POST", json: input }),
+  updateCustomer: (id: string, input: CustomerInput) =>
+    api<{ customer: AdminCustomer }>(`/api/admin/customers/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
+  deleteCustomer: (id: string) => api<{ ok: true }>(`/api/admin/customers/${encodeURIComponent(id)}`, { method: "DELETE" }),
 
   listCoupons: () => api<{ coupons: AdminCoupon[] }>("/api/admin/coupons"),
   createCoupon: (input: CouponInput) => api<{ coupon: AdminCoupon }>("/api/admin/coupons", { method: "POST", json: input }),
@@ -300,8 +336,8 @@ export const adminAnalyticsApi = {
 // ── Users & roles (RBAC) ────────────────────────────────────────────────────
 export type ModuleInfo = { key: ModuleKey; label: string; group: string; actions: Action[]; notes?: Partial<Record<Action, string>> };
 export type AdminRole = { id: string; name: string; description: string; permissions: Permission[]; userCount: number; key?: string; system?: boolean };
-export type AdminUserRow = { id: string; name: string; email: string; role: { _id: string; name: string } | null; active: boolean; lastLoginAt: string | null; createdAt: string };
-export type UserInput = { name: string; email: string; role: string; active: boolean; password: string };
+export type AdminUserRow = { id: string; name: string; email: string; phone?: string; role: { _id: string; name: string } | null; active: boolean; lastLoginAt: string | null; createdAt: string };
+export type UserInput = { name: string; email: string; phone: string; role: string; active: boolean; password: string };
 export type RoleInput = { name: string; description: string; permissions: Permission[] };
 
 export const adminUsersApi = {
@@ -338,3 +374,84 @@ export async function downloadCsv(path: string) {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// ── Visitors (our own first-party log) ──────────────────────────────────────
+export type AdminVisitor = {
+  id: string;
+  visitorId: string;
+  email: string;
+  name: string;
+  phone: string;
+  identifiedVia: string;
+  identifiedAt: string | null;
+  hasAccount: boolean;
+  orders: number;
+  sessions: number;
+  pageViews: number;
+  landingPath: string;
+  lastPath: string;
+  source: string;
+  referrer: string;
+  utm: { source: string; medium: string; campaign: string };
+  device: "mobile" | "tablet" | "desktop";
+  browser: string;
+  os: string;
+  country: string;
+  firstSeen: string;
+  lastSeen: string;
+  pages: { path: string; title: string; at: string }[];
+};
+
+export type VisitorSummary = {
+  days: number;
+  totals: { visitors: number; pageViews: number; sessions: number; known: number; returning: number; live: number };
+  daily: { date: string; visitors: number; views: number }[];
+  pages: { path: string; views: number }[];
+  sources: { source: string; visitors: number }[];
+  devices: { device: string; visitors: number }[];
+};
+
+export const adminVisitorsApi = {
+  list: (params: { q?: string; who?: string; days?: number; sort?: string; page?: number }) =>
+    api<{ visitors: AdminVisitor[]; total: number; page: number; pages: number }>(`/api/admin/visitors${query(params)}`),
+  summary: (days: number) => api<VisitorSummary>(`/api/admin/visitors/summary${query({ days })}`),
+};
+
+// ── Announcements (storefront popup + "What's new" ribbon) ──────────────────
+export type AdminAnnouncement = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  message: string;
+  ctaLabel: string;
+  ctaHref: string;
+  placement: "both" | "popup" | "ribbon";
+  tone: "gradient" | "light" | "dark";
+  image: string;
+  active: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  priority: number;
+  dismissDays: number;
+  views: number;
+  clicks: number;
+  dismissals: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  /** Switched on, started and not finished — i.e. on the storefront right now. */
+  live: boolean;
+};
+
+export type AnnouncementInput = Omit<AdminAnnouncement, "id" | "views" | "clicks" | "dismissals" | "createdBy" | "createdAt" | "updatedAt" | "live" | "startsAt" | "endsAt"> & {
+  startsAt: string;
+  endsAt: string;
+};
+
+export const adminAnnouncementsApi = {
+  list: () => api<{ announcements: AdminAnnouncement[] }>("/api/admin/announcements"),
+  create: (input: AnnouncementInput) => api<{ announcement: AdminAnnouncement }>("/api/admin/announcements", { method: "POST", json: input }),
+  update: (id: string, input: AnnouncementInput) =>
+    api<{ announcement: AdminAnnouncement }>(`/api/admin/announcements/${encodeURIComponent(id)}`, { method: "PUT", json: input }),
+  remove: (id: string) => api<{ ok: true }>(`/api/admin/announcements/${encodeURIComponent(id)}`, { method: "DELETE" }),
+};

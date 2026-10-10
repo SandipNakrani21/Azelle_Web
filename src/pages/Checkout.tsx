@@ -5,6 +5,7 @@ import { Field, fieldClass, fieldErrorClass, labelClass } from "@/components/ui/
 import { setTag, trackEvent } from "@/lib/analytics";
 import { ApiError } from "@/lib/api";
 import { placeOrder, verifyPayment } from "@/lib/orders";
+import { identifyVisitor } from "@/lib/visits";
 import { openPayment } from "@/lib/payments";
 import { formatPrice } from "@/lib/products";
 import { revealOrder } from "@/lib/reveal";
@@ -102,6 +103,8 @@ export default function Checkout() {
       });
       clear();
       trackEvent(chosen === "cod" ? "purchase_cod" : "purchase_started");
+      // From here on this browser is a known customer in the admin panel's Visitors list.
+      identifyVisitor({ email: order.customer.email, name: order.customer.name, phone: order.customer.phone, via: "order" });
       setTag("order_value", String(order.total));
       const orderUrl = `/order/${order.number}`;
 

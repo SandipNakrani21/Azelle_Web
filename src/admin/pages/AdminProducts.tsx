@@ -365,7 +365,7 @@ export default function AdminProducts() {
         )}
       </div>
 
-      <Modal open={deleteOpen} onClose={closeDelete} label="Delete product">
+      <Modal from="right" open={deleteOpen} onClose={closeDelete} label="Delete product">
         <div className="p-7 md:p-8">
           <h2 className="font-display text-3xl">Delete this product?</h2>
           <p className="mt-3 leading-relaxed">

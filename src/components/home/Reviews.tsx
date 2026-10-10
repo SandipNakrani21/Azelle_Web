@@ -66,7 +66,7 @@ export function Reviews() {
   return (
     <section id="reviews" aria-labelledby="reviews-h" className="py-16 md:py-24">
       <SectionHeading id="reviews-h" sub="Worn and loved" title="What they say" />
-      <div data-reveal="slide" className="relative mx-auto mt-12 max-w-[1200px] px-12 md:px-16" aria-roledescription="carousel">
+      <div data-reveal="right" className="relative mx-auto mt-12 max-w-[1200px] px-12 md:px-16" aria-roledescription="carousel">
         <div className="overflow-hidden">
           <ul
             className="flex"

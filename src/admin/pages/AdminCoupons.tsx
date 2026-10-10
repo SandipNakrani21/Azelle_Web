@@ -79,7 +79,6 @@ export default function AdminCoupons() {
   return (
     <div>
       <PageHeader
-        eyebrow="Marketing"
         title="Coupons"
         subtitle="Live, public coupons appear in the cart's “View all coupons” list. Hidden ones work when typed."
         actions={
@@ -170,7 +169,7 @@ export default function AdminCoupons() {
         }}
       />
 
-      <Modal open={deleting !== null} onClose={closeDelete} label="Delete coupon">
+      <Modal from="right" open={deleting !== null} onClose={closeDelete} label="Delete coupon">
         <div className="p-7 md:p-8">
           <h2 className="admin-title font-display text-3xl">Delete {deleting?.code}?</h2>
           <p className="mt-3 text-sm">Customers will no longer be able to use it. Past orders keep their discount. To pause a coupon instead, edit it and switch it off.</p>
@@ -221,7 +220,7 @@ function CouponEditor({ open, coupon, onClose, onSave }: { open: boolean; coupon
   const fieldError = (key: string) => errors[key] && <p className={fieldErrorClass}>{errors[key]}</p>;
 
   return (
-    <Modal open={open} onClose={onClose} label={coupon ? "Edit coupon" : "New coupon"} panelClassName="max-w-[560px]">
+    <Modal from="right" open={open} onClose={onClose} label={coupon ? "Edit coupon" : "New coupon"} panelClassName="max-w-[560px]">
       <form onSubmit={submit} className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8" noValidate>
         <h2 className="admin-title font-display text-3xl">{coupon ? `Edit ${coupon.code}` : "New coupon"}</h2>
 

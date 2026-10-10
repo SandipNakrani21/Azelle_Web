@@ -67,7 +67,6 @@ export default function AdminReviews() {
   return (
     <div>
       <PageHeader
-        eyebrow="Customers"
         title="Reviews"
         subtitle="New reviews appear on the store only after you publish them. Ratings on product cards update straight away."
         actions={<ExportButton path="/api/admin/reviews/export" perm="reviews.export" />}

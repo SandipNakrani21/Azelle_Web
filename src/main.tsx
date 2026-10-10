@@ -6,6 +6,7 @@ import { AuthProvider } from "./providers/AuthProvider";
 import { CartProvider } from "./providers/CartProvider";
 import { ProductsProvider } from "./providers/ProductsProvider";
 import { StoreProvider } from "./providers/StoreProvider";
+import { WishlistProvider } from "./providers/WishlistProvider";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -14,9 +15,11 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <StoreProvider>
           <ProductsProvider>
-            <CartProvider>
-              <App />
-            </CartProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <App />
+              </CartProvider>
+            </WishlistProvider>
           </ProductsProvider>
         </StoreProvider>
       </AuthProvider>

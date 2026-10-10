@@ -9,11 +9,13 @@ export const ACTIONS = ["view", "add", "update", "delete", "export"];
 export const MODULES = [
   { key: "dashboard", label: "Azelle dashboard", group: "Dashboards", actions: ["view", "export"] },
   { key: "analytics", label: "Clarity dashboard", group: "Dashboards", actions: ["view", "export"] },
+  { key: "visitors", label: "Visitors", group: "Dashboards", actions: ["view", "export"], notes: { view: "Who is on the site, and their email once known" } },
   { key: "orders", label: "Orders", group: "Sales", actions: ["view", "update", "delete", "export"], notes: { update: "Accept, ship, track", delete: "Cancel, refund" } },
-  { key: "customers", label: "Customers", group: "Sales", actions: ["view", "export"] },
+  { key: "customers", label: "Customers", group: "Sales", actions: ["view", "add", "update", "delete", "export"], notes: { add: "Super Admin only", update: "Super Admin only", delete: "Super Admin only" } },
   { key: "products", label: "Products", group: "Catalogue", actions: ["view", "add", "update", "delete", "export"] },
   { key: "reviews", label: "Reviews", group: "Catalogue", actions: ["view", "update", "delete", "export"], notes: { update: "Publish, hide" } },
   { key: "coupons", label: "Coupons", group: "Catalogue", actions: ["view", "add", "update", "delete", "export"] },
+  { key: "announcements", label: "Announcements", group: "Catalogue", actions: ["view", "add", "update", "delete", "export"], notes: { update: "Publish, pause, edit" } },
   { key: "users", label: "Admin users", group: "System", actions: ["view", "add", "update", "delete"] },
   { key: "roles", label: "Roles", group: "System", actions: ["view", "add", "update", "delete"] },
   { key: "settings", label: "Settings", group: "System", actions: ["view"] },
@@ -49,25 +51,34 @@ export const DEFAULT_ROLES = [
     key: "admin",
     name: "Admin",
     description: "Everything except managing admin users and roles.",
-    permissions: all("dashboard", "analytics", "orders", "customers", "products", "reviews", "coupons", "settings"),
+    // Customers are people's personal details: Admin and Manager can read and export them,
+    // but only a Super Admin can add, change or delete an account.
+    permissions: [...all("dashboard", "analytics", "visitors", "orders", "products", "reviews", "coupons", "announcements", "settings"), ...only("view", "customers"), ...only("export", "customers")],
   },
   {
     key: "manager",
     name: "Manager",
     description: "Runs the store day to day — orders, customers, products, reviews and coupons.",
-    permissions: [...all("dashboard", "analytics", "orders", "products", "reviews", "coupons"), ...only("view", "customers")],
+    permissions: [
+      ...all("dashboard", "analytics", "visitors", "orders", "products", "reviews", "coupons"),
+      ...only("view", "customers"),
+      ...only("export", "customers"),
+      ...only("view", "announcements"),
+      ...only("add", "announcements"),
+      ...only("update", "announcements"),
+    ],
   },
   {
     key: "user",
     name: "User",
     description: "Handles orders — packs, ships and answers customers.",
-    permissions: ["dashboard.view", "orders.view", "orders.update", "customers.view", "products.view"],
+    permissions: ["dashboard.view", "orders.view", "orders.update", "customers.view", "products.view", "announcements.view"],
   },
   {
     key: "viewer",
     name: "Viewer",
     description: "Read-only access to dashboards and lists.",
-    permissions: only("view", "dashboard", "analytics", "orders", "customers", "products", "reviews", "coupons"),
+    permissions: only("view", "dashboard", "analytics", "visitors", "orders", "customers", "products", "reviews", "coupons", "announcements"),
   },
 ];
 export const ROLE_ORDER = DEFAULT_ROLES.map((r) => r.key);

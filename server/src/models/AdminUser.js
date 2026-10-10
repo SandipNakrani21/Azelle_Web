@@ -28,6 +28,8 @@ const adminUserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 60 },
     email: { type: String, required: true, trim: true, lowercase: true, maxlength: 120, unique: true },
+    /** Optional contact number, shown next to the admin in the Roles list. */
+    phone: { type: String, trim: true, maxlength: 20, default: "" },
     passwordHash: { type: String, required: true, select: false },
     role: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: true },
     active: { type: Boolean, default: true },
@@ -47,7 +49,7 @@ adminUserSchema.set("toJSON", {
 export const AdminUser = mongoose.model("AdminUser", adminUserSchema);
 
 /** Bump when the built-in roles' default permissions change: each built-in role is reset once. */
-const DEFAULTS_VERSION = 2; // 2 = module × action matrix
+const DEFAULTS_VERSION = 3; // 2 = module × action matrix, 3 = visitors + announcements + customer CRUD
 
 /**
  * Makes sure the five built-in roles exist (runs on every start). An existing role with the same name

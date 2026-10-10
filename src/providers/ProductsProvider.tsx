@@ -15,6 +15,13 @@ type ProductsContextValue = {
 
 const ProductsContext = createContext<ProductsContextValue | null>(null);
 
+// React's development checks may mount twice; share the active request, never stale stock data.
+let catalogueRequest: Promise<{ products: Product[] }> | null = null;
+function requestCatalogue() {
+  catalogueRequest ??= api<{ products: Product[] }>("/api/products").finally(() => { catalogueRequest = null; });
+  return catalogueRequest;
+}
+
 // Loads the live catalogue. The API only returns active, non-deleted products.
 export function ProductsProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -24,7 +31,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const load = useCallback(async () => {
     setStatus((current) => (current === "ready" ? current : "loading"));
     try {
-      const data = await api<{ products: Product[] }>("/api/products");
+      const data = await requestCatalogue();
       setProducts(data.products);
       setStatus("ready");
       setError("");

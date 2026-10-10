@@ -416,7 +416,7 @@ function AcceptDialog({
   const num = (key: keyof Parcel) => (e: ChangeEvent<HTMLInputElement>) => setParcel((p) => ({ ...p, [key]: Number(e.target.value) }));
 
   return (
-    <Modal open={open} onClose={onClose} label="Accept order" panelClassName="max-w-[640px]">
+    <Modal from="right" open={open} onClose={onClose} label="Accept order" panelClassName="max-w-[640px]">
       <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto p-6 md:p-8">
         <h2 className="font-display text-3xl">Accept {detail.order.number}</h2>
         <p className="mt-2 text-sm">
@@ -585,7 +585,7 @@ function CancelDialog({
   }, [open]);
 
   return (
-    <Modal open={open} onClose={onClose} label="Cancel order">
+    <Modal from="right" open={open} onClose={onClose} label="Cancel order">
       <div className="p-7 md:p-8">
         <h2 className="font-display text-3xl">Cancel this order?</h2>
         <p className="mt-2 text-sm">Any booked shipment is cancelled with the partner. The reason is shown to the customer.</p>
@@ -618,7 +618,7 @@ function ShipDialog({ open, onClose, busy, needsAwb, onConfirm }: { open: boolea
     if (open) setAwb("");
   }, [open]);
   return (
-    <Modal open={open} onClose={onClose} label="Mark as shipped">
+    <Modal from="right" open={open} onClose={onClose} label="Mark as shipped">
       <div className="p-7 md:p-8">
         <h2 className="font-display text-3xl">Mark as shipped?</h2>
         <p className="mt-2 text-sm">Use this once the courier has picked up the parcel. The customer sees “Shipped” with the tracking details.</p>

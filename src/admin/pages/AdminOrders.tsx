@@ -67,7 +67,6 @@ export default function AdminOrders() {
   return (
     <div>
       <PageHeader
-        eyebrow="Sales"
         title="Orders"
         subtitle={email ? <>Showing orders from <span className="font-semibold">{email}</span> · <button type="button" className="text-link" onClick={() => update({ email: "" })}>Show all</button></> : "Accept pending orders and choose how they ship."}
         actions={

@@ -25,7 +25,6 @@ export default function AdminSettings() {
   return (
     <div>
       <PageHeader
-        eyebrow="Configuration"
         title="Settings"
         subtitle={
           <>

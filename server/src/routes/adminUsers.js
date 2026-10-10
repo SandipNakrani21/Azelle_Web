@@ -9,6 +9,9 @@ import { ACTIONS, DEFAULT_ROLES, hashPassword, MODULES, PERMISSION_KEYS, ROLE_OR
 export const adminUsersRouter = Router();
 
 const EMAIL = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+/** 10 digits starting with 6â9, the same rule as the storefront. */
+const MOBILE = /^[6-9]\d{9}$/;
+const digits = (v) => (typeof v === "string" ? v.replace(/\D/g, "").slice(-10) : "");
 const text = (v, max) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
 const invalid = (res, fields) => res.status(400).json({ error: "Please fix the highlighted fields.", fields });
 const bad = (res, status, error) => res.status(status).json({ error });
@@ -105,6 +108,8 @@ async function parseUser(body = {}, { creating }) {
   const email = text(body.email, 120).toLowerCase();
   if (!EMAIL.test(email)) fields.email = "Enter a valid email.";
   if (email === config.admin.email.toLowerCase()) fields.email = "This email is the main Super Admin account.";
+  const phone = digits(body.phone);
+  if (phone && !MOBILE.test(phone)) fields.phone = "Enter a valid 10-digit Indian mobile number.";
   const roleId = String(body.role ?? "");
   const role = mongoose.isValidObjectId(roleId) ? await Role.findById(roleId) : null;
   if (!role) fields.role = "Choose a role.";
@@ -112,7 +117,7 @@ async function parseUser(body = {}, { creating }) {
   if (creating || password) {
     if (!STRONG_PASSWORD.test(password)) fields.password = "8+ characters with upper and lower case, a number and a symbol.";
   }
-  return { fields, data: { name, email, role: role?._id, active: body.active !== false }, password, roleKey: role?.key ?? "" };
+  return { fields, data: { name, email, phone, role: role?._id, active: body.active !== false }, password, roleKey: role?.key ?? "" };
 }
 
 // Only a Super Admin may create, change or remove Super Admins.

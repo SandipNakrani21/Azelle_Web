@@ -10,8 +10,8 @@ export function HouseSplit() {
   return (
     <section id="house" aria-labelledby="house-h" className="mx-auto max-w-[1200px] px-6 py-16 md:px-10 md:py-24">
       {/* Two columns from lg only — at tablet widths the text column became too narrow beside the photo. */}
-      <div data-reveal="slide" className="grid items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-24">
-        <div>
+      <div className="grid items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-24">
+        <div data-reveal="left">
           <p className="section-sub">About the house</p>
           <Ornament align="left" className="mb-4 mt-2" />
           <h2 id="house-h" className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] leading-[1.05]">
@@ -32,7 +32,7 @@ export function HouseSplit() {
             Read more
           </Link>
         </div>
-        <div className="zoom-tile relative min-h-[320px] overflow-hidden rounded-[20px] bg-surface2 md:min-h-[380px] lg:min-h-0">
+        <div data-reveal="right" className="zoom-tile relative min-h-[320px] overflow-hidden rounded-[20px] bg-surface2 md:min-h-[380px] lg:min-h-0">
           {image && (
           <img
             src={sized(image, 1200)}

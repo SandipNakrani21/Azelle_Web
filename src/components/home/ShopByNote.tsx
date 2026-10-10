@@ -22,7 +22,7 @@ export function ShopByNote() {
       <SectionHeading id="notes-h" sub="Follow your nose" title="Shop by note" ornamentTone="light" />
       <ul className="row-scroll mx-auto mt-10 flex max-w-[1100px] snap-x gap-4 overflow-x-auto px-6 pb-2 md:grid md:grid-cols-7 md:gap-4 md:overflow-visible md:px-10">
         {NOTES.map(({ label, Icon }, i) => (
-          <li key={label} data-reveal="slide" style={revealOrder(i)} className="w-[92px] shrink-0 snap-start text-center md:w-auto">
+          <li key={label} data-reveal="zoom" style={revealOrder(i)} className="w-[92px] shrink-0 snap-start text-center md:w-auto">
             <Link to={`/collection?note=${encodeURIComponent(label)}`} className="note-card block">
               <span className="note-media mx-auto grid h-16 w-16 place-items-center">
                 <Icon className="h-14 w-14" />

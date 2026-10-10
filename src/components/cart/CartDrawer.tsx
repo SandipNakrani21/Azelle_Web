@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Bottle } from "@/components/ui/Bottle";
 import { Drawer } from "@/components/ui/Drawer";
@@ -25,6 +25,7 @@ export function CartDrawer() {
   const { isAuthenticated, openAuth } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const previousPath = useRef(pathname);
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState<CouponFeedback | null>(null);
   const [couponOpen, setCouponOpen] = useState(false);
@@ -39,7 +40,8 @@ export function CartDrawer() {
   };
 
   useEffect(() => {
-    closeCart();
+    if (previousPath.current !== pathname) closeCart();
+    previousPath.current = pathname;
   }, [pathname, closeCart]);
 
   // Each time the cart closes, reset the coupon form and collapse the section again.

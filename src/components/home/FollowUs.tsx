@@ -12,7 +12,7 @@ export function FollowUs() {
       <SectionHeading id="follow-h" sub="Share the ritual" title="Follow the house" />
       <ul className="mx-auto mt-10 grid max-w-[1440px] grid-cols-2 gap-3 px-5 md:grid-cols-3 md:px-10 lg:grid-cols-6">
         {tiles.map((p, i) => (
-          <li key={p.id} data-reveal="slide" style={revealOrder(i)} className="follow-tile overflow-hidden rounded-[14px] bg-surface2">
+          <li key={p.id} data-reveal="zoom" style={revealOrder(i)} className="follow-tile overflow-hidden rounded-[14px] bg-surface2">
             <img src={sized(p.images[2] ?? p.images[0], 500)} alt={`${p.name} styled on a table`} loading="lazy" decoding="async" className="aspect-square w-full object-cover" />
           </li>
         ))}

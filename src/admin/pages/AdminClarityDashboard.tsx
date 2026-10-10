@@ -47,7 +47,7 @@ export default function AdminClarityDashboard() {
   if (!clarity.configured) {
     return (
       <div>
-        <PageHeader eyebrow="Microsoft Clarity" title="Clarity dashboard" />
+        <PageHeader title="Clarity dashboard" />
         <Card className="mt-8">
           <p className="font-semibold">Connect Microsoft Clarity to see visitors here.</p>
           <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
@@ -67,7 +67,6 @@ export default function AdminClarityDashboard() {
   return (
     <div>
       <PageHeader
-        eyebrow="Microsoft Clarity · last 24 hours"
         title="Clarity dashboard"
         subtitle={
           <>

@@ -37,20 +37,20 @@ export function Atelier() {
           </div>
 
           <div className="self-center py-2">
-            <p data-reveal="slide" className="section-sub">
+            <p data-reveal="left" className="section-sub">
               Celebrating the craft
             </p>
             <div data-reveal="slide">
               <Ornament align="left" tone="light" className="mb-4 mt-2" />
             </div>
-            <h2 id="atelier-h" data-reveal="slide" style={revealOrder(1)} className="font-display text-[clamp(1.9rem,3.4vw,2.8rem)] uppercase leading-[1.05]">
+            <h2 id="atelier-h" data-reveal="left" style={revealOrder(1)} className="font-display text-[clamp(1.9rem,3.4vw,2.8rem)] uppercase leading-[1.05]">
               Made slowly,
               <br />
               made to linger
             </h2>
             <ul className="mt-6 space-y-3">
               {ATELIER_CHECKS.map((item, i) => (
-                <li key={item} data-reveal="slide" style={revealOrder(i + 2)} className="flex items-center gap-3 text-base italic md:text-lg">
+                <li key={item} data-reveal="right" style={revealOrder(i + 2)} className="flex items-center gap-3 text-base italic md:text-lg">
                   <CheckCircleIcon className="shrink-0" />
                   {item}
                 </li>

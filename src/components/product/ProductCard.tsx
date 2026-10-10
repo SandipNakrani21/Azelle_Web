@@ -1,25 +1,33 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Bottle } from "@/components/ui/Bottle";
+import { EyeIcon, TrolleyIcon, WishFilledIcon, WishIcon } from "@/components/ui/Icons";
 import { Stars } from "@/components/ui/Stars";
-import { sized } from "@/lib/images";
+import { sized, srcSet } from "@/lib/images";
 import { DEFAULT_SIZE_ID, formatPrice, unitPrice, type Product } from "@/lib/products";
 import { revealOrder } from "@/lib/reveal";
 import { useCart } from "@/providers/CartProvider";
+import { useWishlist } from "@/providers/WishlistProvider";
 
-// Hover (desktop): bottle tilts 10°, title underlines, outline button fills — all 0.5s.
+// Hover (desktop): bottle tilts 10°, title underlines, action icons turn a full clockwise circle
+// (and back anti-clockwise when the pointer leaves) while the brand gradient fills the button.
 export function ProductCard({ product, order = 0 }: { product: Product; order?: number }) {
   const { add } = useCart();
+  const { has, toggle } = useWishlist();
+  const saved = has(product.id);
   const href = `/product/${product.slug}`;
+  const [previewPhoto, setPreviewPhoto] = useState(false);
 
   return (
-    <li data-reveal="slide" style={revealOrder(order)} className="product-card flex flex-col items-center text-center">
+    <li data-reveal="slide" style={revealOrder(order)} className="product-card flex flex-col items-center text-center" onPointerEnter={(event) => { if (event.pointerType !== "touch") setPreviewPhoto(true); }}>
       <Link to={href} className="card-media relative block w-full" tabIndex={-1} aria-hidden="true">
         {product.images[0] ? (
           // Real product photo (first image); the second photo fades in on hover when there is one.
-          <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden rounded-[18px] bg-[#fbfaf7] shadow-[0_12px_30px_rgba(27,24,21,.08)]">
-            <img src={sized(product.images[0], 560)} alt="" loading="lazy" decoding="async" className="card-photo absolute inset-0 h-full w-full object-cover" />
-            {product.images[1] && (
-              <img src={sized(product.images[1], 560)} alt="" loading="lazy" decoding="async" className="card-photo-alt absolute inset-0 h-full w-full object-cover" />
+          // No tile or shadow behind it — the photo sits straight on the section colour.
+          <div className="relative mx-auto aspect-square w-full max-w-[280px] overflow-hidden">
+            <img src={sized(product.images[0], 560)} srcSet={srcSet(product.images[0])} sizes="(min-width: 1280px) 230px, (min-width: 768px) 30vw, 45vw" width="560" height="560" alt="" loading="lazy" decoding="async" className="card-photo absolute inset-0 h-full w-full object-cover" />
+            {previewPhoto && product.images[1] && (
+              <img src={sized(product.images[1], 560)} srcSet={srcSet(product.images[1])} sizes="(min-width: 1280px) 230px, (min-width: 768px) 30vw, 45vw" width="560" height="560" alt="" loading="lazy" decoding="async" className="card-photo-alt absolute inset-0 h-full w-full object-cover" />
             )}
           </div>
         ) : (
@@ -29,13 +37,17 @@ export function ProductCard({ product, order = 0 }: { product: Product; order?: 
         )}
         {!product.inStock && <span className="sold-badge">Sold out</span>}
       </Link>
-      <h3 className="mt-5 text-[15px] font-medium uppercase leading-snug tracking-[0.06em]">
+      {/* Name and price share one line, at the same size and weight. */}
+      <h3 className="mt-5 text-balance text-[15px] font-bold uppercase leading-snug tracking-[0.05em]">
         {/* .card-title and .link-underline get extra padding below lg (index.css) for a tap-sized target. */}
         <Link to={href} className="card-title text-gradient">
           {product.name}
         </Link>
+        <span className="card-sep" aria-hidden="true">
+          -
+        </span>
+        <span className="card-price">{formatPrice(unitPrice(product, DEFAULT_SIZE_ID))}</span>
       </h3>
-      <p className="mt-1 text-[13px]">{product.family}</p>
       {/* Rating from approved reviews */}
       {product.ratingCount ? (
         <Link to={`${href}#reviews`} className="mt-1.5 flex items-center gap-1.5 text-[12.5px]" aria-label={`Rated ${product.ratingAvg} out of 5 from ${product.ratingCount} reviews`}>
@@ -49,19 +61,31 @@ export function ProductCard({ product, order = 0 }: { product: Product; order?: 
           No reviews yet
         </p>
       )}
-      <p className="mt-2 font-display text-xl">{formatPrice(unitPrice(product, DEFAULT_SIZE_ID))}</p>
-      <button
-        type="button"
-        className="btn btn-secondary card-btn mt-4 w-full max-w-[200px] !min-w-0 !px-3"
-        disabled={!product.inStock}
-        onClick={() => add(product.id, DEFAULT_SIZE_ID)}
-        aria-label={product.inStock ? `Add ${product.name}, 50 ml, to cart` : `${product.name} is sold out`}
-      >
-        {product.inStock ? "Add to cart" : "Sold out"}
-      </button>
-      <Link to={href} className="link-underline mt-3" aria-label={`Discover ${product.name}`}>
-        Discover
-      </Link>
+      <div className="mt-4 flex items-center justify-center gap-3">
+        <Link to={href} className="pcard-btn" data-label="Discover" aria-label={`Discover ${product.name}`}>
+          <EyeIcon width={20} height={20} />
+        </Link>
+        <button
+          type="button"
+          className={`pcard-btn ${saved ? "is-saved" : ""}`}
+          data-label={saved ? "Saved" : "Wishlist"}
+          aria-pressed={saved}
+          onClick={() => toggle(product.id)}
+          aria-label={saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
+        >
+          {saved ? <WishFilledIcon width={20} height={20} /> : <WishIcon width={20} height={20} />}
+        </button>
+        <button
+          type="button"
+          className="pcard-btn"
+          data-label={product.inStock ? "Add to cart" : "Sold out"}
+          disabled={!product.inStock}
+          onClick={() => add(product.id, DEFAULT_SIZE_ID)}
+          aria-label={product.inStock ? `Add ${product.name}, 50 ml, to cart` : `${product.name} is sold out`}
+        >
+          <TrolleyIcon width={20} height={20} />
+        </button>
+      </div>
     </li>
   );
 }

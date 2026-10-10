@@ -37,3 +37,6 @@ export const IconClock = make(<><circle cx="12" cy="12" r="8.5" /><path d="M12 7
 export const IconBox = make(<><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z" /><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9" /></>);
 export const IconRefresh = make(<><path d="M20 11a8 8 0 0 0-14.5-4.5L4 8" /><path d="M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16" /><path d="M20 20v-4h-4" /></>);
 export const IconDownload = make(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M4.5 17.5v1.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-1.5" /></>);
+
+export const IconMegaphone = make(<><path d="M4 10v4a2 2 0 0 0 2 2h1.5l1 4.5h3l-1-4.5L19 19V5L10.5 8H6a2 2 0 0 0-2 2z" /><path d="M19 9.5a3 3 0 0 1 0 5" /></>);
+export const IconVisitors = make(<><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.2 2.4 3.4 5.4 3.4 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.4-5.4-3.4-8.5S9.8 5.9 12 3.5z" /></>);

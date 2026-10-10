@@ -1,4 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { accountApi, type Account } from "@/lib/account";
+import { trackEvent } from "@/lib/analytics";
+import { ApiError } from "@/lib/api";
+import { forgetVisitorIdentity, identifyVisitor } from "@/lib/visits";
 
 export type User = { name: string; email: string; phone?: string };
 
@@ -20,10 +24,10 @@ type AuthContextValue = {
   closeAuth: () => void;
 };
 
+// The account itself lives in the database behind an http-only session cookie (/api/account).
+// This copy is only so the header shows the right name before the first "who am I" answers.
 const STORAGE_KEY = "azelle.user";
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadUser(): User | null {
   try {
@@ -35,11 +39,7 @@ function loadUser(): User | null {
   return null;
 }
 
-function nameFromEmail(email: string): string {
-  const local = email.split("@")[0] ?? "";
-  const words = local.split(/[._-]+/).filter(Boolean);
-  return words.length ? words.map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "Guest";
-}
+const toUser = (account: Account): User => ({ name: account.name, email: account.email, phone: account.phone });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(loadUser);
@@ -51,42 +51,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
       else localStorage.removeItem(STORAGE_KEY);
     } catch {
-      // Storage unavailable; the session lasts for this visit only.
+      // Storage unavailable; the session cookie still keeps them signed in.
     }
   }, [user]);
 
-  const complete = useCallback((next: User) => {
-    setUser(next);
+  // Ask the server who is signed in. It is the only source of truth: the session may have expired,
+  // or they may have signed in on another tab.
+  useEffect(() => {
+    let cancelled = false;
+    void accountApi
+      .me()
+      .then(({ customer }) => {
+        if (cancelled) return;
+        setUser(customer ? toUser(customer) : null);
+        if (customer) identifyVisitor({ email: customer.email, name: customer.name, phone: customer.phone, via: "signin" });
+      })
+      .catch(() => {
+        // API unreachable — keep whatever the last visit remembered rather than signing them out.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const complete = useCallback((account: Account, via: "signin" | "signup") => {
+    setUser(toUser(account));
     setAuthOpen(false);
+    trackEvent(via === "signup" ? "sign_up" : "sign_in");
+    identifyVisitor({ email: account.email, name: account.name, phone: account.phone, via });
     const continuation = pending.current;
     pending.current = null;
     continuation?.();
   }, []);
 
-  // Stubs: validate, then resolve to a local user after ~400ms. Swap for the real auth API.
+  /** Turns a field-level API error into the single message the form shows. */
+  const message = (err: unknown, fallback: string) => {
+    if (err instanceof ApiError) {
+      const first = Object.values(err.fields)[0];
+      return new Error(first || err.message || fallback);
+    }
+    return new Error(fallback);
+  };
+
   const login = useCallback(
     async (email: string, password: string) => {
-      await delay(400);
       if (!EMAIL_RE.test(email)) throw new Error("Enter a valid email address.");
-      if (password.length < 8) throw new Error("Your password must be at least 8 characters.");
-      complete({ name: nameFromEmail(email), email });
+      if (!password) throw new Error("Enter your password.");
+      try {
+        const { customer } = await accountApi.login(email, password);
+        complete(customer, "signin");
+      } catch (err) {
+        throw message(err, "Could not sign you in. Please try again.");
+      }
     },
     [complete],
   );
 
   const signup = useCallback(
     async (name: string, email: string, password: string, phone: string) => {
-      await delay(400);
       if (name.trim().length < 2) throw new Error("Enter your full name.");
       if (!EMAIL_RE.test(email)) throw new Error("Enter a valid email address.");
       if (!INDIAN_MOBILE_RE.test(phone)) throw new Error("Enter a valid 10-digit Indian mobile number.");
       if (!PASSWORD_RULE.test(password)) throw new Error("Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a symbol.");
-      complete({ name: name.trim(), email, phone });
+      try {
+        const { customer } = await accountApi.signup({ name: name.trim(), email, phone, password, marketing: true });
+        complete(customer, "signup");
+      } catch (err) {
+        throw message(err, "Could not create your account. Please try again.");
+      }
     },
     [complete],
   );
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(() => {
+    setUser(null);
+    forgetVisitorIdentity();
+    void accountApi.logout().catch(() => {
+      // Already signed out locally; the cookie expires on its own.
+    });
+  }, []);
 
   const openAuth = useCallback((onSuccess?: () => void) => {
     pending.current = onSuccess ?? null;

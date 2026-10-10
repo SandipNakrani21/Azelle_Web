@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Drawer } from "@/components/ui/Drawer";
 import { AccountMenu } from "./AccountMenu";
-import { BagIcon, ChevronDownIcon, CloseIcon, MenuIcon, SearchIcon } from "@/components/ui/Icons";
+import { BagIcon, ChevronDownIcon, CloseIcon, MenuIcon, SearchIcon, WishFilledIcon, WishIcon } from "@/components/ui/Icons";
 import { Logo } from "@/components/ui/Logo";
 import { Ornament } from "@/components/ui/Ornament";
 import { sized } from "@/lib/images";
@@ -12,6 +12,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import { subscribeScroll } from "@/lib/scrollLoop";
 import { useCart } from "@/providers/CartProvider";
 import { useProducts } from "@/providers/ProductsProvider";
+import { useWishlist } from "@/providers/WishlistProvider";
 
 type MenuItem = {
   label: string;
@@ -38,7 +39,7 @@ function buildMenu(products: Product[]): MenuItem[] {
       columns: [{ heading: "Information", links: [...INFORMATION_LINKS, { label: "Help", to: "/pages/help" }] }],
     },
     {
-      label: "Our House",
+      label: "About",
       columns: [
         { heading: "Our House", links: HOUSE_LINKS },
         { heading: "Others", links: OTHERS_LINKS },
@@ -94,6 +95,7 @@ const HIDE_AFTER = 160;
 
 export function Header() {
   const { count, openCart } = useCart();
+  const { count: saved } = useWishlist();
   const { products } = useProducts();
   const MENU = useMemo(() => buildMenu(products), [products]);
   const location = useLocation();
@@ -163,17 +165,17 @@ export function Header() {
         className={`site-header fixed inset-x-0 top-0 z-50 ${solid || openMenu ? "is-solid" : ""} ${hidden ? "is-hidden" : ""}`}
         onMouseLeave={() => setOpenMenu(null)}
       >
-        <div className="mx-auto grid h-[var(--header-h)] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-10">
-          <div className="flex items-center">
+        <div className="reference-header mx-auto grid h-[var(--header-h)] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-10">
+          <div className="reference-header__nav flex items-center">
             <button type="button" className="icon-btn -ml-2 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
               <MenuIcon />
             </button>
             <nav aria-label="Primary" className="hidden lg:block">
-              <ul className="flex gap-8">
+              <ul className="flex items-center gap-9">
                 {MENU.map((item) => {
                   const isOpen = openMenu === item.label;
                   return (
-                    <li key={item.label} onMouseEnter={() => setOpenMenu(item.label)}>
+                    <li key={item.label} className={item.label === "Shop" ? "order-1" : item.label === "Information" ? "order-3" : "order-4"} onMouseEnter={() => setOpenMenu(item.label)}>
                       <button
                         type="button"
                         className="nav-link"
@@ -181,20 +183,22 @@ export function Header() {
                         onClick={() => setOpenMenu(isOpen ? null : item.label)}
                       >
                         <span>{item.label}</span>
-                        <ChevronDownIcon className={`transition-transform duration-500 ${isOpen ? "rotate-180" : ""}`} />
                       </button>
                     </li>
                   );
                 })}
+                <li className="order-2" onMouseEnter={() => setOpenMenu(null)}>
+                  <Link to="/collection" className="nav-link"><span>Collections</span></Link>
+                </li>
               </ul>
             </nav>
           </div>
 
-          <Link to="/" className="logo-link flex flex-col items-center leading-none" aria-label="Azelle Fragrances, home">
+          <Link to="/" className="reference-header__logo logo-link flex flex-col items-center leading-none" aria-label="Azelle Fragrances, home">
             <Logo imgClassName="h-[34px] md:h-[40px]" taglineClassName="text-[9px] tracking-[0.5em]" />
           </Link>
 
-          <div className="flex items-center justify-end">
+          <div className="reference-header__actions flex items-center justify-end gap-2">
             <Link to="/collection" className="icon-btn" aria-label="Browse the collection">
               <SearchIcon />
             </Link>
@@ -254,6 +258,11 @@ export function Header() {
           {/* Everything starts collapsed: tapping a section opens it (and closes the others), so the
               drawer stays short instead of listing every link at once. */}
           <nav aria-label="Mobile" className="px-6 py-4">
+            <Link to="/wishlist" className="flex items-center gap-3 border-b border-line py-4 font-display text-2xl">
+              {saved > 0 ? <WishFilledIcon width={20} height={20} /> : <WishIcon width={20} height={20} />}
+              Wishlist
+              {saved > 0 && <span className="text-[13px] font-semibold text-soft">({saved})</span>}
+            </Link>
             {MENU.map((item) => {
               const sectionOpen = item.label === openSection;
               const single = item.columns.length === 1;

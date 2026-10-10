@@ -14,6 +14,7 @@ import {
   IconDashboard,
   IconExpand,
   IconLogout,
+  IconMegaphone,
   IconOrders,
   IconProducts,
   IconReviews,
@@ -21,6 +22,7 @@ import {
   IconSettings,
   IconStore,
   IconUsers,
+  IconVisitors,
 } from "./icons";
 
 export function AdminSplash({ label = "Checking your session…" }: { label?: string }) {
@@ -72,6 +74,7 @@ const NAV: NavGroup[] = [
     items: [
       { to: "/admin/dashboard", label: "Azelle dashboard", icon: IconSales, perm: "dashboard.view", end: true },
       { to: "/admin/dashboard/clarity", label: "Clarity dashboard", icon: IconClarity, perm: "analytics.view" },
+      { to: "/admin/visitors", label: "Visitors", icon: IconVisitors, perm: "visitors.view" },
     ],
   },
   {
@@ -91,6 +94,7 @@ const NAV: NavGroup[] = [
       { to: "/admin/products", label: "Products", icon: IconProducts, perm: "products.view" },
       { to: "/admin/reviews", label: "Reviews", icon: IconReviews, perm: "reviews.view", badge: "reviews" },
       { to: "/admin/coupons", label: "Coupons", icon: IconCoupons, perm: "coupons.view" },
+      { to: "/admin/announcements", label: "Announcements", icon: IconMegaphone, perm: "announcements.view" },
     ],
   },
   {
@@ -324,6 +328,17 @@ export function RequireAdmin() {
 
   return (
     <div className="admin-shell min-h-screen text-ink" data-clarity-mask="True">
+      {/* Gradient the round icon buttons use on hover (referenced from CSS). */}
+      <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="azelle-icon-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21">
+            <stop offset="0" stopColor="#e6b45a" />
+            <stop offset="0.35" stopColor="#e9a58f" />
+            <stop offset="0.7" stopColor="#cf8f9c" />
+            <stop offset="1" stopColor="#9fc2ad" />
+          </linearGradient>
+        </defs>
+      </svg>
       <a href="#admin-main" className="skip-link">
         Skip to content
       </a>
