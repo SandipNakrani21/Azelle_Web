@@ -142,3 +142,5 @@ export async function lookupOrder(number: string, contact: string) {
   rememberOrder(data.order.number, data.accessKey);
   return data;
 }
+
+export const fetchMyOrders = () => api<{orders:{order:Order;accessKey:string}[]}>("/api/orders/mine");

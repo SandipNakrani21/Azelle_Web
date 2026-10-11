@@ -1,4 +1,7 @@
+import { pagesRouter } from "./routes/pages.js";
 import express from "express";
+import { supportRouter } from "./routes/support.js";
+import { SupportRequest } from "./models/SupportRequest.js";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import mongoose from "mongoose";
@@ -49,6 +52,7 @@ function createApp() {
 
   // Public storefront API.
   app.use("/api/products", publicProductsRouter);
+  app.use("/api/support", express.json({limit:"15kb"}), supportRouter);
   app.use("/api/store", express.json({ limit: "20kb" }), storeRouter);
   app.use("/api/orders", express.json({ limit: "50kb" }), ordersRouter);
   app.use("/api/reviews", express.json({ limit: "20kb" }), reviewsRouter);
@@ -104,6 +108,7 @@ function createApp() {
   app.use("/api/admin/dashboard", requireAdmin, crud("dashboard"), adminDashboardRouter);
   // Orders: cancel / refund are "delete"; every other change (accept, ship, track, notes) is "update".
   app.use("/api/admin/orders", requireAdmin, crud("orders", (req) => (req.method === "GET" ? undefined : /\/(cancel|refund)$/.test(req.path) ? "delete" : "update")), adminOrdersRouter);
+  app.get("/api/admin/support", requireAdmin, crud("customers"), async (_req,res,next)=>{try{res.json({requests:await SupportRequest.find().sort({createdAt:-1}).limit(100).lean()});}catch(error){next(error)}});
   app.use("/api/admin/customers", requireAdmin, crud("customers"), adminCustomersRouter);
   app.use("/api/admin/coupons", requireAdmin, crud("coupons"), adminCouponsRouter);
   app.use("/api/admin/settings", requireAdmin, crud("settings"), adminSettingsRouter);
@@ -115,7 +120,9 @@ function createApp() {
   // Users and roles check their own actions inside the router.
   app.use("/api/admin/users", requireAdmin, adminUsersRouter);
 
+  app.use("/api",pagesRouter);
   app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
+
 
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {

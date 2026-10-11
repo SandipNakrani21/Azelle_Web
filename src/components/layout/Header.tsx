@@ -5,9 +5,9 @@ import { AccountMenu } from "./AccountMenu";
 import { BagIcon, ChevronDownIcon, CloseIcon, MenuIcon, SearchIcon, WishFilledIcon, WishIcon } from "@/components/ui/Icons";
 import { Logo } from "@/components/ui/Logo";
 import { Ornament } from "@/components/ui/Ornament";
-import { sized } from "@/lib/images";
-import { COLLECTIONS, HOUSE_LINKS, INFORMATION_LINKS, linkState, OTHERS_LINKS, shopMenuColumns, type MenuColumn, type MenuEntry } from "@/lib/navigation";
-import { matchesNote, type Product } from "@/lib/products";
+
+import { HOUSE_LINKS, INFORMATION_LINKS, linkState, OTHERS_LINKS, shopMenuColumns, type MenuColumn, type MenuEntry } from "@/lib/navigation";
+import { type Product } from "@/lib/products";
 import { useAuth } from "@/providers/AuthProvider";
 import { subscribeScroll } from "@/lib/scrollLoop";
 import { useCart } from "@/providers/CartProvider";
@@ -17,22 +17,16 @@ import { useWishlist } from "@/providers/WishlistProvider";
 type MenuItem = {
   label: string;
   columns: MenuColumn[];
-  feature?: { title: string; to: string; image: string };
+
 };
 
-type Feature = NonNullable<MenuItem["feature"]>;
-
-const featureOf = (p: Product): Feature => ({ title: p.name, to: `/product/${p.slug}`, image: p.images[0] });
-
-// Shop: gender, notes, family, bestsellers, collections — only this menu shows a product image.
-// Information and Our House mirror the footer (links live in src/lib/navigation.ts).
 function buildMenu(products: Product[]): MenuItem[] {
-  const featured = products.find((p) => p.images.length > 0);
+
   return [
     {
       label: "Shop",
       columns: shopMenuColumns(products),
-      feature: featured ? featureOf(featured) : undefined,
+
     },
     {
       label: "Information",
@@ -46,33 +40,6 @@ function buildMenu(products: Product[]): MenuItem[] {
       ],
     },
   ];
-}
-
-// The top product (first in catalogue order, with photos) behind a Shop menu link — used for the hover preview.
-function productForLink(to: string, products: Product[]): Product | undefined {
-  const withImages = products.filter((p) => p.images.length > 0);
-  const url = new URL(to, window.location.origin);
-  if (url.pathname.startsWith("/product/")) return withImages.find((p) => p.slug === url.pathname.slice("/product/".length));
-  const note = url.searchParams.get("note");
-  if (note) return withImages.find((p) => matchesNote(p, note));
-  const group = url.searchParams.get("group");
-  if (group) return withImages.find((p) => (p.families as string[]).includes(group));
-  const collection = COLLECTIONS.find((c) => c.slug === url.searchParams.get("collection"));
-  if (collection) return withImages.find((p) => p.families.some((f) => collection.families.includes(f)));
-  return withImages[0];
-}
-
-function FeatureTile({ feature }: { feature: Feature }) {
-  return (
-    <Link to={feature.to} className="zoom-tile ml-auto block w-[260px] shrink-0">
-      <div className="aspect-square overflow-hidden rounded-[14px] bg-[#fbfaf7]">
-        <img key={feature.image} src={sized(feature.image, 640)} alt="" className="h-full w-full animate-[fadeIn_0.45s_ease-out] object-cover" />
-      </div>
-      <p key={feature.title} className="mt-3 animate-[fadeIn_0.45s_ease-out] text-sm uppercase tracking-[0.14em]">
-        {feature.title}
-      </p>
-    </Link>
-  );
 }
 
 // A menu entry is either a page link or an action button (Login & Signup opens the sign-in window).
@@ -145,13 +112,6 @@ export function Header() {
     }
   }, [mobileOpen]);
 
-  // Shop menu preview: hovering or focusing a link shows its top product's first image.
-  const [preview, setPreview] = useState<Product | null>(null);
-  useEffect(() => setPreview(null), [openMenu]);
-  const previewEntry = (entry: MenuEntry) => {
-    if ("to" in entry) setPreview(productForLink(entry.to, products) ?? null);
-  };
-
   const { openAuth } = useAuth();
   const startAuth = useCallback(() => {
     setOpenMenu(null);
@@ -162,7 +122,7 @@ export function Header() {
   return (
     <>
       <header
-        className={`site-header fixed inset-x-0 top-0 z-50 ${solid || openMenu ? "is-solid" : ""} ${hidden ? "is-hidden" : ""}`}
+        className={`site-header fixed inset-x-0 top-0 z-50 ${solid || openMenu ? "is-solid" : ""} ${!solid && !openMenu ? "is-hero-transparent" : ""} ${hidden ? "is-hidden" : ""}`}
         onMouseLeave={() => setOpenMenu(null)}
       >
         <div className="reference-header mx-auto grid h-[var(--header-h)] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-10">
@@ -190,12 +150,15 @@ export function Header() {
                 <li className="order-2" onMouseEnter={() => setOpenMenu(null)}>
                   <Link to="/collection" className="nav-link"><span>Collections</span></Link>
                 </li>
+                <li className="order-5" onMouseEnter={() => setOpenMenu(null)}>
+                  
+                </li>
               </ul>
             </nav>
           </div>
 
           <Link to="/" className="reference-header__logo logo-link flex flex-col items-center leading-none" aria-label="Azelle Fragrances, home">
-            <Logo imgClassName="h-[34px] md:h-[40px]" taglineClassName="text-[9px] tracking-[0.5em]" />
+            <Logo imgClassName="h-[34px] md:h-[40px]" />
           </Link>
 
           <div className="reference-header__actions flex items-center justify-end gap-2">
@@ -218,17 +181,17 @@ export function Header() {
           (item) =>
             openMenu === item.label && (
               <div key={item.label} className="menu-panel absolute inset-x-0 top-full hidden border-t border-line bg-surface shadow-[0_12px_24px_rgba(0,0,0,.08)] lg:block">
-                <div className={`mx-auto flex max-w-[1440px] px-10 py-10 ${item.columns.length > 2 ? "gap-10 xl:gap-14" : "gap-16"}`}>
+                <div className={`mx-auto flex max-w-[1440px] px-10 py-10 ${item.columns.length > 2 ? "gap-8 xl:gap-10" : "gap-16"}`}>
                   {item.columns.map((col) => (
-                    <div key={col.heading} className="min-w-[150px]">
-                      <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-ink">{col.heading}</p>
+                    <div key={col.heading} className="min-w-[130px] shrink-0">
+                      <p className="section-heading-label text-[12px] font-bold uppercase tracking-[0.2em] text-ink">{col.heading}</p>
                       {/* Separator between the column title and its links */}
-                      <div className="mt-3 w-[130px]">
+                      <div className="mt-3">
                         <Ornament align="left" wide />
                       </div>
                       <ul className="mt-4 space-y-3">
                         {col.links.map((l) => (
-                          <li key={l.label} onMouseEnter={() => previewEntry(l)} onFocus={() => previewEntry(l)}>
+                          <li key={l.label}>
                             <MenuEntryLink entry={l} className="menu-link font-display text-xl" onAuth={startAuth} />
                           </li>
                         ))}
@@ -240,7 +203,7 @@ export function Header() {
                       )}
                     </div>
                   ))}
-                  {item.feature && <FeatureTile feature={preview ? featureOf(preview) : item.feature} />}
+
                 </div>
               </div>
             ),
@@ -250,7 +213,7 @@ export function Header() {
       <Drawer open={mobileOpen} onClose={closeMobile} side="left" label="Menu">
         <div className="flex h-full flex-col overflow-y-auto">
           <div className="flex items-center justify-between border-b border-line px-6 py-5">
-            <Logo imgClassName="h-9" taglineClassName="text-[8px] tracking-[0.5em]" />
+            <Logo imgClassName="h-9" />
             <button type="button" className="icon-btn" onClick={closeMobile} aria-label="Close menu">
               <CloseIcon />
             </button>
@@ -258,6 +221,7 @@ export function Header() {
           {/* Everything starts collapsed: tapping a section opens it (and closes the others), so the
               drawer stays short instead of listing every link at once. */}
           <nav aria-label="Mobile" className="px-6 py-4">
+            
             <Link to="/wishlist" className="flex items-center gap-3 border-b border-line py-4 font-display text-2xl">
               {saved > 0 ? <WishFilledIcon width={20} height={20} /> : <WishIcon width={20} height={20} />}
               Wishlist
@@ -345,3 +309,4 @@ export function Header() {
     </>
   );
 }
+

@@ -4,20 +4,21 @@ type SectionHeadingProps = {
   id?: string;
   sub?: string;
   title: string;
+  align?: "center" | "left";
   /** Use "light" (white separator) when the section sits on a gradient or coloured band. */
   ornamentTone?: "current" | "light";
   className?: string;
 };
 
-// Display-font line, ✦ separator, then the uppercase title.
-export function SectionHeading({ id, sub, title, ornamentTone = "current", className = "" }: SectionHeadingProps) {
+// The name sets the divider width; the display title shares the same typography everywhere.
+export function SectionHeading({ id, sub, title, align = "center", ornamentTone = "current", className = "" }: SectionHeadingProps) {
   return (
-    <div data-reveal="blur" className={`px-6 text-center ${className}`}>
+    <div data-reveal="blur" className={`${align === "center" ? "px-6 text-center" : "text-left"} ${className}`}>
       {sub && (
-        <>
+        <div className={`section-heading-name ${align === "center" ? "mx-auto" : ""}`}>
           <p className="section-sub">{sub}</p>
-          <Ornament tone={ornamentTone} className="my-3" />
-        </>
+          <Ornament wide tone={ornamentTone} className="mb-4 mt-2" />
+        </div>
       )}
       <h2 id={id} className="section-title">
         {title}

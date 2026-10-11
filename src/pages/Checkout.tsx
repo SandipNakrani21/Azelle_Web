@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MiniBottle } from "@/components/ui/Bottle";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { Field, fieldClass, fieldErrorClass, labelClass } from "@/components/ui/Field";
 import { setTag, trackEvent } from "@/lib/analytics";
 import { ApiError } from "@/lib/api";
@@ -132,6 +133,7 @@ export default function Checkout() {
   return (
     <div className="pt-[var(--header-h)]">
       <div className="mx-auto max-w-[1280px] px-5 py-10 md:px-10 md:py-14">
+        <div className="page-heading-row"><p className="section-sub">Checkout</p><Breadcrumb title="Checkout" flow /></div>
         <p data-reveal="slide" className="text-[12px] font-medium uppercase tracking-[0.24em]">
           Signed in as {user.email}
         </p>

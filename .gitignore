@@ -17,3 +17,5 @@ server/.env
 server/uploads/*
 !server/uploads/.gitkeep
 server/.data
+
+dist-server

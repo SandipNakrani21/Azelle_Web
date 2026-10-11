@@ -1,0 +1,101 @@
+
+> azelle-web@0.1.0 check
+> npm run build && npm test
+
+
+> azelle-web@0.1.0 build
+> tsc --noEmit && vite build && vite build --ssr src/entry-server.tsx --outDir dist-server
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 139 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                  1.10 kB │ gzip:   0.56 kB
+dist/assets/AdminLayout-CFbwuXq_.css             6.80 kB │ gzip:   1.75 kB
+dist/assets/HomeNew-p2Ow453V.css                12.42 kB │ gzip:   3.19 kB
+dist/assets/index-Can5Fnoo.css                 148.77 kB │ gzip:  30.08 kB
+dist/assets/Modal-hp9K6yQF.js                    0.91 kB │ gzip:   0.55 kB
+dist/assets/payments-Dm-l770t.js                 1.19 kB │ gzip:   0.61 kB
+dist/assets/analytics-DPksPN5r.js                1.22 kB │ gzip:   0.62 kB
+dist/assets/AdminSupport-DFMH-U2I.js             1.27 kB │ gzip:   0.63 kB
+dist/assets/Recovery-CB5u2Zbr.js                 2.09 kB │ gzip:   0.99 kB
+dist/assets/Wishlist-BZIBs81g.js                 2.15 kB │ gzip:   1.03 kB
+dist/assets/MockPayment-DlFKTlIL.js              3.52 kB │ gzip:   1.53 kB
+dist/assets/Account-CyvXEZBI.js                  3.78 kB │ gzip:   1.45 kB
+dist/assets/AdminLogin-BVnR54_R.js               3.79 kB │ gzip:   1.67 kB
+dist/assets/AdminReviews-CkOJYUe2.js             5.54 kB │ gzip:   2.30 kB
+dist/assets/icons-DUDn_XO5.js                    5.69 kB │ gzip:   1.64 kB
+dist/assets/AdminSettings-D9I6osO6.js            5.91 kB │ gzip:   2.10 kB
+dist/assets/AdminAuthProvider-kxb1wimk.js        6.03 kB │ gzip:   2.13 kB
+dist/assets/AdminOrders-B_wOw6XJ.js              6.89 kB │ gzip:   2.50 kB
+dist/assets/AdminClarityDashboard-Bw3RyF0E.js    7.27 kB │ gzip:   2.81 kB
+dist/assets/ui-XWC-dgmY.js                       7.27 kB │ gzip:   2.95 kB
+dist/assets/charts-Fi3jjOzL.js                   7.47 kB │ gzip:   2.63 kB
+dist/assets/HomeNew-DxaaEXei.js                  7.97 kB │ gzip:   2.31 kB
+dist/assets/AdminDashboard-Cu3q2lDS.js           8.51 kB │ gzip:   3.09 kB
+dist/assets/AdminAccess-6lXctT0l.js              9.03 kB │ gzip:   3.10 kB
+dist/assets/api-D-MSM6fU.js                      9.51 kB │ gzip:   3.71 kB
+dist/assets/AdminVisitors-D8J-RyDz.js            9.66 kB │ gzip:   3.26 kB
+dist/assets/AdminCoupons-BzaqBtvD.js            10.52 kB │ gzip:   3.34 kB
+dist/assets/AdminCustomers-BeP0hhi4.js          10.53 kB │ gzip:   3.76 kB
+dist/assets/Order-Cs9jQAXp.js                   11.29 kB │ gzip:   4.16 kB
+dist/assets/Checkout-Vo3GZSkO.js                11.64 kB │ gzip:   4.38 kB
+dist/assets/CartDrawer-DbOboscA.js              11.97 kB │ gzip:   3.88 kB
+dist/assets/AdminProducts-DuF4Rq1Z.js           12.11 kB │ gzip:   3.50 kB
+dist/assets/AdminAnnouncements-DX65S0Jx.js      14.18 kB │ gzip:   4.29 kB
+dist/assets/AuthModal-B2mp5yp8.js               14.58 kB │ gzip:   4.85 kB
+dist/assets/AdminLayout-tEv4rHwu.js             16.40 kB │ gzip:   5.40 kB
+dist/assets/AdminProductForm-Bw__H7CH.js        19.21 kB │ gzip:   6.11 kB
+dist/assets/AdminOrderDetail-BC5n7RdM.js        20.12 kB │ gzip:   5.84 kB
+dist/assets/AdminUsers-CKjR_4bt.js              20.25 kB │ gzip:   6.16 kB
+dist/assets/index-LMAdYj9B.js                  446.72 kB │ gzip: 137.30 kB
+
+✓ built in 4.79s
+vite v8.3.0 building ssr environment for production...
+transforming...
+✓ 113 modules transformed.
+rendering chunks...
+computing gzip size...
+dist-server/assets/Modal-Ccrk7fLx.js                    1.25 kB │ gzip:  0.66 kB
+dist-server/assets/api-CMZWQWZZ.js                      1.26 kB │ gzip:  0.65 kB
+dist-server/assets/payments-BvjjAZLl.js                 1.86 kB │ gzip:  0.80 kB
+dist-server/assets/AdminSupport-Cqq4-imw.js             2.14 kB │ gzip:  0.83 kB
+dist-server/assets/analytics-DOKEDY8c.js                2.22 kB │ gzip:  0.93 kB
+dist-server/assets/Wishlist-8aa51hqK.js                 3.28 kB │ gzip:  1.25 kB
+dist-server/assets/Recovery-DTztpafh.js                 3.31 kB │ gzip:  1.25 kB
+dist-server/assets/MockPayment-CdeWUwXR.js              5.17 kB │ gzip:  1.91 kB
+dist-server/assets/Account-YSDYn08h.js                  5.72 kB │ gzip:  1.81 kB
+dist-server/assets/AdminLogin-CMabPHg6.js               6.00 kB │ gzip:  2.08 kB
+dist-server/assets/icons-BvE4-cLV.js                    8.05 kB │ gzip:  2.02 kB
+dist-server/assets/AdminReviews-D3bV6Vp9.js             8.73 kB │ gzip:  2.87 kB
+dist-server/assets/AdminSettings-CgXMJN6J.js            9.28 kB │ gzip:  2.61 kB
+dist-server/assets/AdminAuthProvider-BTGftwTY.js       10.19 kB │ gzip:  2.98 kB
+dist-server/assets/AdminClarityDashboard-BI20D-hP.js   11.12 kB │ gzip:  3.46 kB
+dist-server/assets/AdminOrders-9FTXio9D.js             11.20 kB │ gzip:  3.23 kB
+dist-server/assets/charts-DuqXqxdW.js                  11.45 kB │ gzip:  3.33 kB
+dist-server/assets/ui-Ygc8Z6w1.js                      11.99 kB │ gzip:  4.24 kB
+dist-server/assets/AdminDashboard-DDKOqXIh.js          13.08 kB │ gzip:  3.86 kB
+dist-server/assets/HomeNew-C-jfTDlD.js                 13.78 kB │ gzip:  3.00 kB
+dist-server/assets/AdminAccess-DAP2U8SY.js             15.01 kB │ gzip:  4.10 kB
+dist-server/assets/AdminVisitors-38h9GlRr.js           15.23 kB │ gzip:  4.09 kB
+dist-server/assets/AdminCustomers-B-3-BdSd.js          17.05 kB │ gzip:  4.82 kB
+dist-server/assets/AdminCoupons-BR053fYz.js            17.28 kB │ gzip:  4.33 kB
+dist-server/assets/Order-DTlwAxf3.js                   17.92 kB │ gzip:  5.32 kB
+dist-server/assets/Checkout-D_Gc85yF.js                18.91 kB │ gzip:  5.42 kB
+dist-server/assets/CartDrawer-B-o1Csd-.js              19.36 kB │ gzip:  5.01 kB
+dist-server/assets/AdminProducts-Chpc_tZe.js           20.36 kB │ gzip:  4.66 kB
+dist-server/assets/AuthModal-FmjQ2HqU.js               23.48 kB │ gzip:  6.04 kB
+dist-server/assets/AdminAnnouncements-OYYPSIV4.js      23.94 kB │ gzip:  5.52 kB
+dist-server/assets/AdminLayout-D2azjc6V.js             26.00 kB │ gzip:  6.89 kB
+dist-server/assets/AdminProductForm-CQbgjBLt.js        31.94 kB │ gzip:  7.81 kB
+dist-server/assets/AdminOrderDetail-BJ8c3RHy.js        32.02 kB │ gzip:  7.40 kB
+dist-server/assets/AdminUsers-mYTwFgRd.js              34.60 kB │ gzip:  8.27 kB
+dist-server/entry-server.js                           293.55 kB │ gzip: 73.72 kB
+
+✓ built in 3.26s
+
+> azelle-web@0.1.0 test
+> node scripts/check-storefront.mjs
+
+112 storefront assertions passed: server HTML, product facts, taxes, metadata, private routes, safe bootstrap and home content.

@@ -1,0 +1,372 @@
+/* ── Admin: the permission matrix ───────────────────────────────────────── */
+/* Header band in the brand gradient, with white labels sitting on top. */
+.perm-head {
+  background: var(--menu-gradient);
+  color: #fff;
+}
+.perm-head th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  text-shadow: 0 1px 2px rgba(27, 24, 21, 0.18);
+}
+.perm-group {
+  background: color-mix(in oklab, var(--accent) 12%, var(--surface));
+}
+
+/* Tick boxes: off is a plain outline, on is the brand gradient, "some of this
+   row / column" is gold — three clearly different states. */
+.perm-box {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid color-mix(in oklab, var(--ink) 30%, transparent);
+  background: #fff;
+  cursor: pointer;
+  transition:
+    background-color 0.25s,
+    border-color 0.25s,
+    transform 0.2s var(--ease-out-slow),
+    box-shadow 0.25s;
+}
+.perm-box:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.perm-box:checked {
+  border-color: transparent;
+  background-image: var(--menu-gradient);
+  box-shadow: 0 4px 10px rgba(180, 106, 122, 0.35);
+}
+/* The tick itself */
+.perm-box:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(42deg);
+}
+.perm-box:indeterminate {
+  border-color: transparent;
+  background: linear-gradient(135deg, #e6b45a, #d9a441);
+  box-shadow: 0 4px 10px rgba(217, 164, 65, 0.35);
+}
+.perm-box:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 9px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: #fff;
+}
+.perm-box:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 45%, transparent);
+}
+/* On the gradient header the "off" state needs to read against colour. */
+.perm-head .perm-box {
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.22);
+}
+.perm-head .perm-box:checked {
+  border-color: #fff;
+  background-image: none;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(27, 24, 21, 0.25);
+}
+.perm-head .perm-box:checked::after {
+  border-color: #8e4458;
+}
+.perm-head .perm-box:indeterminate {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.45);
+}
+@media (any-hover: hover) {
+  .perm-box:not(:disabled):hover {
+    transform: scale(1.1);
+    border-color: var(--ink);
+  }
+  .perm-head .perm-box:not(:disabled):hover {
+    border-color: #fff;
+  }
+}
+
+/* Read-only permission marks (System → User role access). */
+.perm-yes,
+.perm-no {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+.perm-yes {
+  position: relative;
+  background-image: var(--menu-gradient);
+  box-shadow: 0 4px 10px rgba(180, 106, 122, 0.3);
+}
+.perm-yes::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(42deg);
+}
+.perm-no {
+  border: 1.5px solid color-mix(in oklab, var(--ink) 20%, transparent);
+  background: color-mix(in oklab, var(--ink) 4%, transparent);
+}
+
+/* "Discover" is a link, not a button, but wears the same round action style. */
+a.pcard-btn {
+  text-decoration: none;
+}
+
+/* One colour per action column, traced from the same gradient as the header band and
+   mixed down to a light tint so the tick boxes still read clearly on top.
+   Columns: 2 = View, 3 = Add, 4 = Update, 5 = Delete, 6 = Export, 7 = All. */
+.perm-table {
+  --perm-col-1: #e6b45a; /* gold */
+  --perm-col-2: #e9a58f; /* apricot */
+  --perm-col-3: #cf8f9c; /* dusty rose */
+  --perm-col-4: #b46a7a; /* rose */
+  --perm-col-5: #9fc2ad; /* light sage */
+  --perm-col-6: #6f9c86; /* sage */
+}
+.perm-table tbody td:nth-child(2) {
+  background-color: color-mix(in oklab, var(--perm-col-1) 13%, var(--surface));
+}
+.perm-table tbody td:nth-child(3) {
+  background-color: color-mix(in oklab, var(--perm-col-2) 13%, var(--surface));
+}
+.perm-table tbody td:nth-child(4) {
+  background-color: color-mix(in oklab, var(--perm-col-3) 13%, var(--surface));
+}
+.perm-table tbody td:nth-child(5) {
+  background-color: color-mix(in oklab, var(--perm-col-4) 13%, var(--surface));
+}
+.perm-table tbody td:nth-child(6) {
+  background-color: color-mix(in oklab, var(--perm-col-5) 13%, var(--surface));
+}
+.perm-table tbody td:nth-child(7) {
+  background-color: color-mix(in oklab, var(--perm-col-6) 13%, var(--surface));
+}
+/* The group heading spans every column, so it keeps its own band. */
+.perm-table tbody tr.perm-group td {
+  background-color: color-mix(in oklab, var(--accent) 12%, var(--surface));
+}
+/* Row hover as a wash over the column colours. */
+@media (any-hover: hover) {
+  .perm-table tbody tr:not(.perm-group):hover td {
+    background-image: linear-gradient(
+      rgba(27, 24, 21, 0.06),
+      rgba(27, 24, 21, 0.06)
+    );
+  }
+}
+
+/* ── Admin: round icon buttons, matching the storefront's social circles ──
+   A thin outline while resting; on hover the disc turns near-black and the
+   icon is stroked with the brand gradient (same as .social on the storefront). */
+.abtn-icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  gap: 0;
+  border-radius: 999px;
+  color: var(--ink);
+  border: 1px solid color-mix(in oklab, var(--ink) 35%, transparent);
+  background: transparent;
+  box-shadow: none;
+}
+.abtn-icon:focus-visible,
+.abtn-icon:hover:not(:disabled) {
+  color: #e9a58f;
+  background: #0d0c0b;
+  border-color: #0d0c0b;
+}
+.abtn-icon:focus-visible svg,
+.abtn-icon:hover:not(:disabled) svg {
+  stroke: url(#azelle-icon-gradient);
+  transform: none;
+}
+/* Delete keeps a red hint so it is never mistaken for the others. */
+.abtn-icon.abtn-delete {
+  color: #b3261e;
+  border-color: #efc0bb;
+}
+.abtn-icon.abtn-view {
+  color: #4a3a8c;
+  border-color: color-mix(in oklab, #4a3a8c 30%, transparent);
+}
+.abtn-icon.abtn-edit {
+  color: #1f4f8f;
+  border-color: color-mix(in oklab, #1f4f8f 30%, transparent);
+}
+
+/* ── Admin: the search + filter bar above every list ─────────────────────── */
+.admin-toolbar {
+  border: 1px solid var(--line);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  box-shadow: 0 8px 22px rgba(27, 24, 21, 0.05);
+}
+.admin-search {
+  width: 100%;
+  height: 46px;
+  padding: 0 1rem 0 2.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  transition:
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+.admin-search::placeholder {
+  color: var(--soft);
+}
+.admin-search:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+/* ── Admin: pagination ───────────────────────────────────────────────────── */
+.admin-page-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    transform 0.25s var(--ease-out-slow);
+}
+.admin-page-btn.is-current {
+  color: #1b1815;
+  border-color: transparent;
+  background-image: var(--button-gradient);
+  box-shadow: 0 6px 14px rgba(201, 119, 43, 0.25);
+}
+@media (any-hover: hover) {
+  .admin-page-btn:not(.is-current):hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+  }
+}
+
+/* ── Admin: list tables get room to breathe ──────────────────────────────── */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.admin-table thead th {
+  padding: 16px 24px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: left;
+  color: color-mix(in oklab, var(--ink) 70%, transparent);
+  background: color-mix(in oklab, var(--accent) 7%, var(--surface));
+  border-bottom: 1px solid var(--line);
+}
+.admin-table tbody td {
+  padding: 18px 24px;
+  vertical-align: middle;
+}
+.admin-table tbody tr + tr {
+  border-top: 1px solid var(--line);
+}
+.admin-table th:last-child,
+.admin-table td:last-child {
+  padding-right: 28px;
+  text-align: right;
+}
+@media (any-hover: hover) {
+  .admin-table tbody tr:hover {
+    background: color-mix(in oklab, var(--accent) 5%, transparent);
+  }
+}
+
+/* A list cell that opens something: the role name, a customer, an order. */
+.admin-link-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  background-image: var(--name-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: opacity 0.3s;
+  text-align: left;
+}
+.admin-link-title::after {
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 2px;
+  background: var(--menu-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease-out-slow);
+}
+@media (any-hover: hover) {
+  .admin-link-title:hover::after {
+    transform: scaleX(1);
+  }
+}
+.admin-link-title:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* A clickable count, e.g. how many people have a role. */
+.admin-count {
+  min-width: 36px;
+  height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    transform 0.25s var(--ease-out-slow);
+}
+@media (any-hover: hover) {
+  .admin-count:hover {
+    color: #1b1815;
+    border-color: transparent;
+    background-image: var(--button-gradient);
+    transform: translateY(-1px);
+  }
+}
+.admin-count:focus-visible {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 25%, transparent);
+}

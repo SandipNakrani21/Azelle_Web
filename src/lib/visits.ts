@@ -1,3 +1,4 @@
+import { analyticsConsent } from "./consent";
 // First-party visit log. Microsoft Clarity shows how the site is used but never who is using it,
 // so every page view is also sent to our own API: one row per browser, with the email attached the
 // moment the shopper signs in, signs up or orders (see server/src/models/Visit.js).
@@ -44,7 +45,7 @@ function identity(): Identity | null {
 
 /** Remembers who this browser belongs to, so later page views carry the email too. */
 export function identifyVisitor(next: Identity) {
-  if (!next?.email) return;
+  if (!analyticsConsent() || !next?.email) return;
   try {
     localStorage.setItem(IDENTITY_KEY, JSON.stringify(next));
   } catch {
@@ -73,7 +74,7 @@ function campaign() {
 
 /** One page view. Fire-and-forget: a failure here must never affect the page. */
 export async function sendVisit(path: string, who: Identity | null = identity()) {
-  if (/^\/(admin|mock-payment)/.test(path)) return;
+  if (!analyticsConsent() || /^\/(admin|mock-payment)/.test(path)) return;
   const body = JSON.stringify({
     visitorId: visitorId(),
     sessionId: sessionId(),

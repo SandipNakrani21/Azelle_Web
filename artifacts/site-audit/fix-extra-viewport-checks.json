@@ -1,0 +1,56 @@
+[
+  {
+    "size": {
+      "width": 320,
+      "height": 740
+    },
+    "path": "/",
+    "h1": "Fragrancebeyond words.",
+    "overflow": false
+  },
+  {
+    "size": {
+      "width": 320,
+      "height": 740
+    },
+    "path": "/collection",
+    "h1": "Find yoursignature scent.",
+    "overflow": false
+  },
+  {
+    "size": {
+      "width": 320,
+      "height": 740
+    },
+    "path": "/product/white-oud",
+    "h1": "White Oud",
+    "overflow": false
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "path": "/",
+    "h1": "Fragrancebeyond words.",
+    "overflow": false
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "path": "/collection",
+    "h1": "Find yoursignature scent.",
+    "overflow": false
+  },
+  {
+    "size": {
+      "width": 1024,
+      "height": 768
+    },
+    "path": "/product/white-oud",
+    "h1": "White Oud",
+    "overflow": false
+  }
+]

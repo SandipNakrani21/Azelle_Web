@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { MiniBottle } from "@/components/ui/Bottle";
+import { ReviewForm } from "@/components/product/ProductReviews";
+import { useAuth } from "@/providers/AuthProvider";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { fieldClass, labelClass } from "@/components/ui/Field";
 import { CheckCircleIcon } from "@/components/ui/Icons";
 import { trackEvent } from "@/lib/analytics";
@@ -63,6 +66,8 @@ export default function OrderPage() {
   const [params] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, openAuth } = useAuth();
+  const [reviewing, setReviewing] = useState<{id:string;name:string} | null>(null);
 
   const [key, setKey] = useState(() => params.get("key") || orderKey(number));
   const [order, setOrder] = useState<Order | null>(null);
@@ -161,6 +166,7 @@ export default function OrderPage() {
       <section className="relative overflow-hidden" aria-labelledby="order-h">
         <div className="hero__bg" aria-hidden="true" />
         <div className="relative mx-auto max-w-[900px] px-6 pb-14 pt-[calc(var(--header-h)+4rem)] text-center">
+          <div className="page-heading-row"><p className="section-sub">Your order</p><Breadcrumb title={`Order ${order.number}`} /></div>
           <CheckCircleIcon data-reveal="fade" className="mx-auto h-14 w-14" />
           <p data-reveal="slide" style={revealOrder(1)} className="mt-6 text-[12px] font-medium uppercase tracking-[0.3em]">
             Order {order.number} · {STATUS_LABELS[order.status]}
@@ -246,9 +252,11 @@ export default function OrderPage() {
                   </span>
                 </span>
                 <span className="tabular-nums">{formatPrice(l.total)}</span>
+                {order.status === "delivered" && (!user || user.email.toLowerCase() === order.customer.email.toLowerCase()) && <button className="text-link text-sm" onClick={() => user ? setReviewing({id:l.productId,name:l.name}) : openAuth(() => setReviewing({id:l.productId,name:l.name}))}>Write a review</button>}
               </li>
             ))}
           </ul>
+          {reviewing && user && user.email.toLowerCase() === order.customer.email.toLowerCase() && <ReviewForm key={`${order.number}-${reviewing.id}`} product={reviewing} orderNumber={order.number} onDone={() => setReviewing(null)}/>}
           <dl className="space-y-2 border-t border-line pt-4 text-sm">
             <Row label="Subtotal" value={formatPrice(order.subtotal)} />
             {order.discount ? <Row label={`Discount${order.couponCode ? ` (${order.couponCode})` : ""}`} value={`−${formatPrice(order.discount)}`} /> : null}

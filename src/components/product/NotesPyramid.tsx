@@ -46,19 +46,26 @@ const TIERS = [
 const SHAPES = ["150,12 196,96 104,96", "104,96 196,96 242,182 58,182", "58,182 242,182 290,270 10,270"];
 const LABEL_Y = [74, 146, 236];
 const INK = "#1b1815";
+const GLASS_TIERS = TIERS.map((tier, i) => ({ ...tier,
+  from: ["#e6d3f5", "#f5d2e2", "#cce9de"][i],
+  middle: ["#f9dfce", "#e5d8f4", "#f1deca"][i],
+  to: ["#d0eee4", "#d6eee5", "#e3d3f1"][i],
+  deep: ["#654579", "#85445e", "#45675c"][i],
+}));
 
 // Fragrance pyramid. Hovering (or tapping) a tier row or a pyramid layer pops up both together.
-export function NotesPyramid({ product }: { product: Product }) {
+export function NotesPyramid({ product, glossy = false }: { product: Product; glossy?: boolean }) {
+  const tiers = glossy ? GLASS_TIERS : TIERS;
   const [active, setActive] = useState<number | null>(null);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   // Paint the active layer last so its enlarged shape sits above its neighbours.
-  const layerOrder = TIERS.map((_, i) => i).sort((a, b) => Number(a === active) - Number(b === active));
+  const layerOrder = tiers.map((_, i) => i).sort((a, b) => Number(a === active) - Number(b === active));
 
   return (
     <div className="grid items-center gap-10 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:gap-14" onMouseLeave={() => setActive(null)}>
       <svg data-reveal="fade" viewBox="0 0 300 282" className="mx-auto w-full max-w-[300px] overflow-visible" aria-hidden="true">
         <defs>
-          {TIERS.map((t, i) => (
+          {tiers.map((t, i) => (
             <linearGradient key={t.key} id={`${uid}-tier${i}`} x1="0" x2="1" y1="0" y2="1">
               <stop offset="0" stopColor={t.from} />
               <stop offset="1" stopColor={t.to} />
@@ -66,7 +73,7 @@ export function NotesPyramid({ product }: { product: Product }) {
           ))}
         </defs>
         {layerOrder.map((i) => {
-          const t = TIERS[i];
+          const t = tiers[i];
           const isActive = active === i;
           return (
           <g
@@ -100,7 +107,7 @@ export function NotesPyramid({ product }: { product: Product }) {
       </svg>
 
       <ol className="space-y-3.5">
-        {TIERS.map((t, i) => {
+        {tiers.map((t, i) => {
           const notes = product.pyramid[t.key]
             .split(",")
             .map((n) => n.trim())
@@ -111,8 +118,8 @@ export function NotesPyramid({ product }: { product: Product }) {
               key={t.key}
               onMouseEnter={() => setActive(i)}
               onClick={() => setActive(i)}
-              className={`relative cursor-pointer overflow-hidden rounded-[20px] p-5 transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] md:p-6 ${isActive ? "z-10 -translate-y-1.5 scale-[1.03] shadow-[0_26px_50px_rgba(27,24,21,.22)]" : "shadow-[0_10px_24px_rgba(27,24,21,.08)]"}`}
-              style={{ background: `linear-gradient(120deg, ${t.from}, ${t.to})`, color: INK }}
+              className={`relative cursor-pointer overflow-hidden rounded-[20px] p-5 transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] md:p-6 ${glossy ? "notes-tier--glossy" : ""} ${isActive ? "z-10 -translate-y-1.5 scale-[1.03] shadow-[0_26px_50px_rgba(27,24,21,.22)]" : "shadow-[0_10px_24px_rgba(27,24,21,.08)]"}`}
+              style={{ background: glossy ? "rgba(255,255,255,.15)" : `linear-gradient(120deg, ${t.from}, ${t.to})`, color: INK }}
             >
               <div className="relative flex items-start gap-4">
                 <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/70 shadow-sm" style={{ color: t.deep }} aria-hidden="true">

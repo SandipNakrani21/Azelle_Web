@@ -1,22 +1,49 @@
 import { Link } from "react-router-dom";
-import { Ornament } from "@/components/ui/Ornament";
-import { sized, srcSet } from "@/lib/images";
-import { useProducts } from "@/providers/ProductsProvider";
+import { useEffect, useRef, useState } from "react";
+import { SectionHeading } from "@/components/ui/SectionHeading";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+
+const BESTSELLERS = [
+  { name: "Imperium", slug: "imperium" },
+  { name: "Conqueror", slug: "conqueror" },
+  { name: "White Oud", slug: "white-oud" },
+];
 
 export function HouseSplit() {
-  const { products } = useProducts();
-  const image = products[0]?.images[2] ?? products.flatMap((p) => p.images)[0];
-
+  const bottleRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [active, setActive] = useState(0);
+  const [interacting, setInteracting] = useState(false);
+  const [pageVisible, setPageVisible] = useState(typeof document === "undefined" || !document.hidden);
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const playing = visible && loaded && pageVisible && !interacting && !reducedMotion;
+  useEffect(() => {
+    const updateVisibility = () => setPageVisible(!document.hidden);
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setInterval(() => setActive(index => (index + 1) % BESTSELLERS.length), 6500);
+    return () => window.clearInterval(timer);
+  }, [playing, active]);
+  useEffect(() => {
+    const bottle = bottleRef.current;
+    if (!bottle) return;
+    const observer = new IntersectionObserver(entries => {
+      setVisible(entries.some(entry => entry.isIntersecting));
+    }, { threshold: .2 });
+    observer.observe(bottle);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <section id="house" aria-labelledby="house-h" className="mx-auto max-w-[1200px] px-6 py-16 md:px-10 md:py-24">
+    <section id="house" aria-labelledby="house-h" className={`house-light-section mx-auto max-w-[1200px] px-6 py-16 md:px-10 md:py-24 ${visible && pageVisible ? "is-illuminated" : ""}`}>
+      <div className="house-light-background" aria-hidden="true"><i /><i /><i /><span /></div>
       {/* Two columns from lg only — at tablet widths the text column became too narrow beside the photo. */}
-      <div className="grid items-stretch gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-24">
+      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-24">
         <div data-reveal="left">
-          <p className="section-sub">About the house</p>
-          <Ornament align="left" className="mb-4 mt-2" />
-          <h2 id="house-h" className="font-display text-[clamp(2.2rem,4.5vw,3.75rem)] leading-[1.05]">
-            Perfume that takes its time.
-          </h2>
+          <SectionHeading id="house-h" sub="About the house" title="Perfume that takes its time." align="left" />
           <p className="mt-6 font-semibold">Fewer bottles, better made.</p>
           <div className="mt-4 space-y-4 leading-relaxed">
             <p>
@@ -28,22 +55,33 @@ export function HouseSplit() {
               <strong>Composed slowly, worn closely.</strong>
             </p>
           </div>
-          <Link to="/collection" className="link-underline mt-8">
+          <Link to="/pages/our-story" className="link-underline mt-8">
             Read more
           </Link>
         </div>
-        <div data-reveal="right" className="zoom-tile relative min-h-[320px] overflow-hidden rounded-[20px] bg-surface2 md:min-h-[380px] lg:min-h-0">
-          {image && (
+        <div ref={bottleRef} data-reveal="right" className="house-bottle-visual house-bestsellers"
+          role="region" aria-roledescription="carousel" aria-label="Our top three bestsellers"
+          onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)}
+          onFocus={() => setInteracting(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }}>
+          <div className={`house-cinematic-stage house-cinematic-stage--${active} ${playing ? "is-playing" : ""}`}>
+          <div className="house-cinematic-light" aria-hidden="true"><i /><i /></div>
+          <span className="house-cinematic-shadow" aria-hidden="true" />
+          {BESTSELLERS.map((product, index) => <Link key={product.slug}
+            to={`/product/${product.slug}`} className={`house-bestseller-slide ${(index - active + 3) % 3 === 0 ? "is-active" : (index - active + 3) % 3 === 1 ? "is-next" : "is-previous"}`}
+            onFocus={() => setActive(index)}
+            aria-label={`Discover ${product.name}, bestseller number ${index + 1}`}>
           <img
-            src={sized(image, 1200)}
-            srcSet={srcSet(image)}
-            sizes="(min-width: 768px) 400px, 100vw"
-            alt="An Azelle bottle on a stone surface"
+            src={`/images/products/${product.slug}-matched-bottle.webp`}
+            width="900"
+            height="900"
+            alt={`Azelle ${product.name} perfume bottle`}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="house-trio-bottle"
+            onLoad={() => { if (index === 0) setLoaded(true); }}
           />
-          )}
+          </Link>)}
+          </div>
         </div>
       </div>
     </section>

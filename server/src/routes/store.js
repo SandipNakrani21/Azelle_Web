@@ -14,26 +14,8 @@ const couponView = ({ code, label, kind, value, maxDiscount, minSubtotal }) => (
 // Everything the cart and checkout need to price an order exactly like the server does.
 storeRouter.get("/", async (_req, res, next) => {
   try {
-    const coupons = await Coupon.find({ active: true, public: true }).sort({ minSubtotal: 1 }).lean();
-    const { gstRate, shippingFee, maxQtyPerLine } = commerce.store;
-    const { cod } = commerce.payments;
     res.set("Cache-Control", "no-store");
-    res.json({
-      gstRate,
-      shippingFee,
-      maxQtyPerLine,
-      coupons: coupons.filter((c) => isCouponLive(c)).map(couponView),
-      // Microsoft Clarity tracking (the project id is public — it is in the page's script tag anyway).
-      analytics: {
-        clarityProjectId: commerce.analytics.clarity.projectId,
-        test: isDummy(commerce.analytics.clarity),
-        enabled: Boolean(commerce.analytics.clarity.enabled && commerce.analytics.clarity.projectId),
-      },
-      payments: {
-        online: availableGateways().length > 0,
-        cod: { enabled: cod.enabled, maxOrderValue: cod.maxOrderValue, fee: cod.fee },
-      },
-    });
+    res.json(await publicStore());
   } catch (err) {
     next(err);
   }
@@ -113,3 +95,25 @@ storeRouter.post(
     }
   },
 );
+
+export async function publicStore(){
+    const coupons = await Coupon.find({ active: true, public: true }).sort({ minSubtotal: 1 }).lean();
+    const { gstRate, shippingFee, maxQtyPerLine } = commerce.store;
+    const { cod } = commerce.payments;
+    return {
+      gstRate,
+      shippingFee,
+      maxQtyPerLine,
+      coupons: coupons.filter((c) => isCouponLive(c)).map(couponView),
+      // Microsoft Clarity tracking (the project id is public — it is in the page's script tag anyway).
+      analytics: {
+        clarityProjectId: commerce.analytics.clarity.projectId,
+        test: isDummy(commerce.analytics.clarity),
+        enabled: Boolean(commerce.analytics.clarity.enabled && commerce.analytics.clarity.projectId),
+      },
+      payments: {
+        online: availableGateways().length > 0,
+        cod: { enabled: cod.enabled, maxOrderValue: cod.maxOrderValue, fee: cod.fee },
+      },
+    };
+}

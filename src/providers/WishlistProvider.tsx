@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { trackEvent } from "@/lib/analytics";
 
 // Saved ("loved") products. Kept in this browser, like the cart — there are no customer accounts yet.
@@ -17,23 +24,33 @@ const WishlistContext = createContext<WishlistValue | null>(null);
 
 function load(): string[] {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+    const parsed: unknown = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? "[]",
+    );
+    return Array.isArray(parsed)
+      ? parsed.filter((id): id is string => typeof id === "string")
+      : [];
   } catch {
     return [];
   }
 }
 
 export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [ids, setIds] = useState<string[]>(load);
+  const [ids, setIds] = useState<string[]>([]);
 
+  const [restored, setRestored] = useState(false);
   useEffect(() => {
+    setIds(load());
+    setRestored(true);
+  }, []);
+  useEffect(() => {
+    if (!restored) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
     } catch {
       // Storage unavailable — the wishlist lasts for this visit.
     }
-  }, [ids]);
+  }, [ids, restored]);
 
   const value = useMemo<WishlistValue>(() => {
     const set = new Set(ids);
@@ -44,7 +61,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       /** Adds or removes; returns true when the product is now saved. */
       toggle: (id) => {
         const saved = !set.has(id);
-        setIds((list) => (saved ? [id, ...list.filter((x) => x !== id)] : list.filter((x) => x !== id)));
+        setIds((list) =>
+          saved
+            ? [id, ...list.filter((x) => x !== id)]
+            : list.filter((x) => x !== id),
+        );
         trackEvent(saved ? "add_to_wishlist" : "remove_from_wishlist");
         return saved;
       },
@@ -53,12 +74,17 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     };
   }, [ids]);
 
-  return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+  return (
+    <WishlistContext.Provider value={value}>
+      {children}
+    </WishlistContext.Provider>
+  );
 }
 
 export function useWishlist(): WishlistValue {
   const ctx = useContext(WishlistContext);
-  if (!ctx) throw new Error("useWishlist must be used inside <WishlistProvider>");
+  if (!ctx)
+    throw new Error("useWishlist must be used inside <WishlistProvider>");
   return ctx;
 }
 

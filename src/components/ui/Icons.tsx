@@ -17,6 +17,15 @@ const spot: CSSProperties = { fill: "var(--accent)", opacity: 0.22 };
 
 // ── UI ────────────────────────────────────────────────────────
 
+export const ShareIcon = (p: P) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" {...line(p)}>
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4" />
+  </svg>
+);
+
 export const SearchIcon = (p: P) => (
   <svg viewBox="0 0 24 24" width="22" height="22" {...line(p)}>
     <circle cx="11" cy="11" r="6.5" />

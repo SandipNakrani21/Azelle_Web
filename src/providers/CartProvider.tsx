@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useState,
   type ReactNode,
 } from "react";
 import { trackEvent } from "@/lib/analytics";
@@ -32,6 +33,7 @@ type State = { lines: CartLine[]; isOpen: boolean; coupon: Coupon | null };
 const MAX_QTY = 10;
 
 type Action =
+  | { type: "restore"; lines: CartLine[]; coupon: Coupon | null }
   | { type: "add"; productId: string; sizeId: Size["id"]; qty: number }
   | { type: "inc" | "dec" | "remove"; key: string }
   | { type: "open" | "close" | "clear" }
@@ -40,28 +42,53 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    case "restore":
+      return { ...state, lines: action.lines, coupon: action.coupon };
     case "add": {
       const key = cartKey(action.productId, action.sizeId);
       const exists = state.lines.some((l) => l.key === key);
       const lines = exists
-        ? state.lines.map((l) => (l.key === key ? { ...l, qty: Math.min(MAX_QTY, l.qty + action.qty) } : l))
-        : [...state.lines, { key, productId: action.productId, sizeId: action.sizeId, qty: Math.min(MAX_QTY, action.qty) }];
+        ? state.lines.map((l) =>
+            l.key === key
+              ? { ...l, qty: Math.min(MAX_QTY, l.qty + action.qty) }
+              : l,
+          )
+        : [
+            ...state.lines,
+            {
+              key,
+              productId: action.productId,
+              sizeId: action.sizeId,
+              qty: Math.min(MAX_QTY, action.qty),
+            },
+          ];
       return { ...state, lines, isOpen: true };
     }
     case "inc":
       return {
         ...state,
-        lines: state.lines.map((l) => (l.key === action.key ? { ...l, qty: Math.min(MAX_QTY, l.qty + 1) } : l)),
+        lines: state.lines.map((l) =>
+          l.key === action.key
+            ? { ...l, qty: Math.min(MAX_QTY, l.qty + 1) }
+            : l,
+        ),
       };
     case "dec":
       return {
         ...state,
         lines: state.lines.flatMap((l) =>
-          l.key !== action.key ? [l] : l.qty > 1 ? [{ ...l, qty: l.qty - 1 }] : [],
+          l.key !== action.key
+            ? [l]
+            : l.qty > 1
+              ? [{ ...l, qty: l.qty - 1 }]
+              : [],
         ),
       };
     case "remove":
-      return { ...state, lines: state.lines.filter((l) => l.key !== action.key) };
+      return {
+        ...state,
+        lines: state.lines.filter((l) => l.key !== action.key),
+      };
     case "open":
       return { ...state, isOpen: true };
     case "close":
@@ -71,14 +98,19 @@ function reducer(state: State, action: Action): State {
     case "coupon":
       return { ...state, coupon: action.coupon };
     case "prune":
-      return { ...state, lines: state.lines.filter((l) => action.validIds.has(l.productId)) };
+      return {
+        ...state,
+        lines: state.lines.filter((l) => action.validIds.has(l.productId)),
+      };
   }
 }
 
 // Shape-only validation; lines for products that are no longer live are pruned once the catalogue loads.
 function loadLines(): CartLine[] {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+    const parsed: unknown = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? "[]",
+    );
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
       (l): l is CartLine =>
@@ -95,7 +127,9 @@ function loadLines(): CartLine[] {
 
 function loadCoupon(): Coupon | null {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(COUPON_KEY) ?? "null");
+    const parsed: unknown = JSON.parse(
+      localStorage.getItem(COUPON_KEY) ?? "null",
+    );
     return isCoupon(parsed) ? parsed : null;
   } catch {
     return null;
@@ -104,7 +138,12 @@ function loadCoupon(): Coupon | null {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export type DetailedLine = CartLine & { product: Product; size: Size; unit: number; total: number };
+export type DetailedLine = CartLine & {
+  product: Product;
+  size: Size;
+  unit: number;
+  total: number;
+};
 export type CouponFeedback = { ok: boolean; message: string };
 
 type CartContextValue = {
@@ -142,30 +181,44 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const { products, status, getById } = useProducts();
   const store = useStore();
-  const [state, dispatch] = useReducer(reducer, undefined, () => ({ lines: loadLines(), isOpen: false, coupon: loadCoupon() }));
+  const [state, dispatch] = useReducer(reducer, undefined, () => ({
+    lines: [],
+    isOpen: false,
+    coupon: null,
+  }));
+
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    dispatch({ type: "restore", lines: loadLines(), coupon: loadCoupon() });
+    setRestored(true);
+  }, []);
 
   useEffect(() => {
+    if (!restored) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.lines));
     } catch {
       // Storage unavailable; the cart still works for this visit.
     }
-  }, [state.lines]);
+  }, [state.lines, restored]);
 
   useEffect(() => {
+    if (!restored) return;
     try {
-      if (state.coupon) localStorage.setItem(COUPON_KEY, JSON.stringify(state.coupon));
+      if (state.coupon)
+        localStorage.setItem(COUPON_KEY, JSON.stringify(state.coupon));
       else localStorage.removeItem(COUPON_KEY);
     } catch {
       // Storage unavailable; the coupon lasts for this visit only.
     }
-  }, [state.coupon]);
+  }, [state.coupon, restored]);
 
   // Drop lines whose product was deleted or deactivated.
   useEffect(() => {
     if (status !== "ready") return;
     const validIds = new Set(products.map((p) => p.id));
-    if (state.lines.some((l) => !validIds.has(l.productId))) dispatch({ type: "prune", validIds });
+    if (state.lines.some((l) => !validIds.has(l.productId)))
+      dispatch({ type: "prune", validIds });
   }, [status, products, state.lines]);
 
   const add = useCallback(
@@ -177,7 +230,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
   const inc = useCallback((key: string) => dispatch({ type: "inc", key }), []);
   const dec = useCallback((key: string) => dispatch({ type: "dec", key }), []);
-  const remove = useCallback((key: string) => dispatch({ type: "remove", key }), []);
+  const remove = useCallback(
+    (key: string) => dispatch({ type: "remove", key }),
+    [],
+  );
   // Storage is cleared right away (not in an effect): checkout may leave the site for the payment
   // page straight after, before effects get a chance to run.
   const clear = useCallback(() => {
@@ -189,7 +245,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     dispatch({ type: "clear" });
   }, []);
-  const removeCoupon = useCallback(() => dispatch({ type: "coupon", coupon: null }), []);
+  const removeCoupon = useCallback(
+    () => dispatch({ type: "coupon", coupon: null }),
+    [],
+  );
   const openCart = useCallback(() => dispatch({ type: "open" }), []);
   const closeCart = useCallback(() => dispatch({ type: "close" }), []);
 
@@ -198,15 +257,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const product = getById(line.productId);
       if (!product) return [];
       const unit = unitPrice(product, line.sizeId);
-      return [{ ...line, product, size: getSize(line.sizeId), unit, total: unit * line.qty }];
+      return [
+        {
+          ...line,
+          product,
+          size: getSize(line.sizeId),
+          unit,
+          total: unit * line.qty,
+        },
+      ];
     });
     const subtotal = lines.reduce((sum, l) => sum + l.total, 0);
 
     // Coupon: discount comes off the product price; GST is charged on the discounted price; the flat
     // shipping charge applies when the cart has items, unless a free-shipping coupon is active.
     // Rates and coupons come from the server, which re-checks all of this when the order is placed.
-    const coupon = state.coupon ? store.coupons.find((c) => c.code === state.coupon?.code) ?? state.coupon : null;
-    const result = coupon && lines.length > 0 ? evaluateCoupon(coupon, subtotal) : null;
+    const coupon = state.coupon
+      ? (store.coupons.find((c) => c.code === state.coupon?.code) ??
+        state.coupon)
+      : null;
+    const result =
+      coupon && lines.length > 0 ? evaluateCoupon(coupon, subtotal) : null;
     const discount = result?.discount ?? 0;
     const freeShipping = Boolean(result?.freeShipping);
     const tax = round2((subtotal - discount) * store.gstRate);
@@ -219,17 +290,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!found) {
         // Not in the public list — it may be a hidden code, so ask the server.
         try {
-          found = (await api<{ coupon: Coupon }>("/api/store/coupon", { method: "POST", json: { code } })).coupon;
+          found = (
+            await api<{ coupon: Coupon }>("/api/store/coupon", {
+              method: "POST",
+              json: { code },
+            })
+          ).coupon;
         } catch (err) {
-          return { ok: false, message: err instanceof Error ? err.message : `"${code}" isn't a valid coupon code.` };
+          return {
+            ok: false,
+            message:
+              err instanceof Error
+                ? err.message
+                : `"${code}" isn't a valid coupon code.`,
+          };
         }
       }
       const check = evaluateCoupon(found, subtotal);
-      if (check.shortfall > 0) return { ok: false, message: `Add ${formatPrice(check.shortfall)} more to use ${found.code}.` };
+      if (check.shortfall > 0)
+        return {
+          ok: false,
+          message: `Add ${formatPrice(check.shortfall)} more to use ${found.code}.`,
+        };
       dispatch({ type: "coupon", coupon: found });
       return {
         ok: true,
-        message: found.kind === "shipping" ? `${found.code} applied — shipping is free.` : `${found.code} applied — you save ${formatPrice(check.discount)}.`,
+        message:
+          found.kind === "shipping"
+            ? `${found.code} applied — shipping is free.`
+            : `${found.code} applied — you save ${formatPrice(check.discount)}.`,
       };
     };
 
@@ -257,7 +346,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openCart,
       closeCart,
     };
-  }, [state, store, getById, add, inc, dec, remove, clear, removeCoupon, openCart, closeCart]);
+  }, [
+    state,
+    store,
+    getById,
+    add,
+    inc,
+    dec,
+    remove,
+    clear,
+    removeCoupon,
+    openCart,
+    closeCart,
+  ]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

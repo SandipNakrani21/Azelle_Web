@@ -15,7 +15,7 @@ export type Review = {
 export type ReviewSummary = { average: number; count: number; reviewCount: number; breakdown: Record<"1" | "2" | "3" | "4" | "5", number> };
 export type ReviewSort = "newest" | "highest" | "lowest";
 
-export type ReviewInput = { productId: string; rating: number; title: string; body: string; name: string; email: string; city: string };
+export type ReviewInput = { productId: string; orderNumber: string; rating: number; title: string; body: string; name: string; email: string; city: string };
 
 export const fetchReviews = (productId: string, { page = 1, sort = "newest" as ReviewSort } = {}) =>
   api<{ reviews: Review[]; summary: ReviewSummary; page: number; pages: number }>(

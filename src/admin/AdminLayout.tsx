@@ -1,3 +1,4 @@
+import "./admin.css";
 import { Suspense, useEffect, useRef, useState, type ComponentType, type ReactElement, type ReactNode, type SVGProps } from "react";
 import { Link, NavLink, Navigate, Outlet, useLocation } from "react-router-dom";
 import { CloseIcon, MenuIcon } from "@/components/ui/Icons";
@@ -29,7 +30,7 @@ export function AdminSplash({ label = "Checking your session…" }: { label?: st
   return (
     <div className="admin-shell grid min-h-screen place-items-center text-ink">
       <div className="text-center" role="status">
-        <Logo imgClassName="h-14" taglineClassName="text-[10px] tracking-[0.5em]" />
+        <Logo imgClassName="h-14" />
         <p className="mt-3 text-sm">{label}</p>
       </div>
     </div>
@@ -84,6 +85,7 @@ const NAV: NavGroup[] = [
     items: [
       { to: "/admin/orders", label: "All orders", icon: IconOrders, perm: "orders.view", badge: "orders" },
       { to: "/admin/customers", label: "Customers", icon: IconCustomers, perm: "customers.view" },
+      { to: "/admin/support", label: "Support requests", icon: IconCustomers, perm: "customers.view" },
     ],
   },
   {
@@ -319,7 +321,7 @@ export function RequireAdmin() {
         <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-white/15 font-display text-2xl text-white ring-1 ring-white/25">A</span>
       ) : (
         <span className="text-white">
-          <Logo imgClassName="h-11 brightness-0 invert" taglineClassName="text-[9px] tracking-[0.5em] text-white/85" />
+          <Logo imgClassName="h-11 brightness-0 invert" />
           <span className="mt-2 block text-center text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70">Admin studio</span>
         </span>
       )}

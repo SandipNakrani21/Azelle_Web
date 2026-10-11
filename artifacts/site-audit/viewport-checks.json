@@ -1,0 +1,351 @@
+[
+  {
+    "viewport": "large-desktop",
+    "route": "home",
+    "brokenImages": [],
+    "h1": [
+      "Fragrancebeyond words."
+    ],
+    "scrollWidth": 1905,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 5,
+    "visibleSmallControls": [],
+    "width": 1920
+  },
+  {
+    "viewport": "large-desktop",
+    "route": "collection",
+    "brokenImages": [],
+    "h1": [
+      "Find yoursignature scent."
+    ],
+    "scrollWidth": 1905,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 6,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 35
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "viewport": "large-desktop",
+    "route": "product",
+    "brokenImages": [],
+    "h1": [
+      "Imperium"
+    ],
+    "scrollWidth": 1905,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 0,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 30
+      },
+      {
+        "h": 18,
+        "text": "Collection",
+        "w": 52
+      },
+      {
+        "h": 21,
+        "text": "Aromatic",
+        "w": 53
+      },
+      {
+        "h": 21,
+        "text": "Fresh",
+        "w": 38
+      },
+      {
+        "h": 21,
+        "text": "Amber",
+        "w": 43
+      },
+      {
+        "h": 18,
+        "text": "4.5 (117 reviews)",
+        "w": 182
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      }
+    ],
+    "width": 1920
+  },
+  {
+    "viewport": "desktop",
+    "route": "home",
+    "brokenImages": [],
+    "h1": [
+      "Fragrancebeyond words."
+    ],
+    "scrollWidth": 1425,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 5,
+    "visibleSmallControls": [],
+    "width": 1440
+  },
+  {
+    "viewport": "desktop",
+    "route": "collection",
+    "brokenImages": [],
+    "h1": [
+      "Find yoursignature scent."
+    ],
+    "scrollWidth": 1425,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 6,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 35
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "viewport": "desktop",
+    "route": "product",
+    "brokenImages": [],
+    "h1": [
+      "Imperium"
+    ],
+    "scrollWidth": 1425,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 0,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 30
+      },
+      {
+        "h": 18,
+        "text": "Collection",
+        "w": 52
+      },
+      {
+        "h": 21,
+        "text": "Aromatic",
+        "w": 53
+      },
+      {
+        "h": 21,
+        "text": "Fresh",
+        "w": 38
+      },
+      {
+        "h": 21,
+        "text": "Amber",
+        "w": 43
+      },
+      {
+        "h": 18,
+        "text": "4.5 (117 reviews)",
+        "w": 182
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "viewport": "tablet",
+    "route": "home",
+    "brokenImages": [],
+    "h1": [
+      "Fragrancebeyond words."
+    ],
+    "scrollWidth": 753,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 5,
+    "visibleSmallControls": [],
+    "width": 768
+  },
+  {
+    "viewport": "tablet",
+    "route": "collection",
+    "brokenImages": [],
+    "h1": [
+      "Find yoursignature scent."
+    ],
+    "scrollWidth": 753,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 6,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 35
+      },
+      {
+        "h": 19,
+        "text": "Rated 4.5 out of 5 from 117 reviews",
+        "w": 135
+      }
+    ],
+    "width": 768
+  },
+  {
+    "viewport": "tablet",
+    "route": "product",
+    "brokenImages": [],
+    "h1": [
+      "Imperium"
+    ],
+    "scrollWidth": 753,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 0,
+    "visibleSmallControls": [
+      {
+        "h": 18,
+        "text": "Home",
+        "w": 30
+      },
+      {
+        "h": 18,
+        "text": "Collection",
+        "w": 52
+      },
+      {
+        "h": 21,
+        "text": "Aromatic",
+        "w": 53
+      },
+      {
+        "h": 21,
+        "text": "Fresh",
+        "w": 38
+      },
+      {
+        "h": 21,
+        "text": "Amber",
+        "w": 43
+      },
+      {
+        "h": 18,
+        "text": "4.5 (117 reviews)",
+        "w": 182
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      },
+      {
+        "h": 13,
+        "text": "",
+        "w": 13
+      }
+    ],
+    "width": 768
+  },
+  {
+    "viewport": "mobile",
+    "route": "home",
+    "brokenImages": [],
+    "h1": [
+      "Fragrancebeyond words."
+    ],
+    "scrollWidth": 375,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 5,
+    "visibleSmallControls": [],
+    "width": 390
+  },
+  {
+    "viewport": "mobile",
+    "route": "collection",
+    "brokenImages": [],
+    "h1": [
+      "Find yoursignature scent."
+    ],
+    "scrollWidth": 375,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 6,
+    "visibleSmallControls": [
+      {
+        "h": 14,
+        "text": "Home",
+        "w": 27
+      }
+    ],
+    "width": 390
+  },
+  {
+    "viewport": "mobile",
+    "route": "product",
+    "brokenImages": [],
+    "h1": [
+      "Imperium"
+    ],
+    "scrollWidth": 375,
+    "title": "Azelle — Fragrance Beyond Words",
+    "unlabelledLinks": 0,
+    "visibleSmallControls": [
+      {
+        "h": 14,
+        "text": "Home",
+        "w": 26
+      },
+      {
+        "h": 14,
+        "text": "Collection",
+        "w": 46
+      },
+      {
+        "h": 21,
+        "text": "Aromatic",
+        "w": 53
+      },
+      {
+        "h": 21,
+        "text": "Fresh",
+        "w": 38
+      },
+      {
+        "h": 21,
+        "text": "Amber",
+        "w": 43
+      }
+    ],
+    "width": 390
+  }
+]

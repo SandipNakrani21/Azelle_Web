@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { scrollToProductSection } from "@/lib/reviewNavigation";
 
 /**
  * Mounted once in the layout.
@@ -73,7 +74,13 @@ export function useScrollEffects() {
 
   useEffect(() => {
     let mutations: MutationObserver | undefined;
+    let cancelSectionScroll: (() => void) | undefined;
     const scrollToHash = () => {
+      const section = Array.from(document.querySelectorAll<HTMLElement>("[data-product-section]")).find(el => el.dataset.productSection === decodeURIComponent(hash.slice(1)));
+      if (section) {
+        cancelSectionScroll = scrollToProductSection(section.dataset.productSection!);
+        return true;
+      }
       const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
       if (!target) return false;
       target.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
@@ -87,6 +94,6 @@ export function useScrollEffects() {
       }
     });
     const expiry = window.setTimeout(() => mutations?.disconnect(), 10000);
-    return () => { cancelAnimationFrame(id); mutations?.disconnect(); window.clearTimeout(expiry); };
+    return () => { cancelAnimationFrame(id); cancelSectionScroll?.(); mutations?.disconnect(); window.clearTimeout(expiry); };
   }, [pathname, hash]);
 }

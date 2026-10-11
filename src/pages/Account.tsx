@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ornament } from "@/components/ui/Ornament";
-import { fetchOrder, rememberedOrders, STATUS_LABELS, type Order } from "@/lib/orders";
+import { fetchMyOrders, rememberOrder, STATUS_LABELS, type Order } from "@/lib/orders";
 import { formatPrice } from "@/lib/products";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -17,13 +17,14 @@ export default function AccountPage() {
     <section className="relative overflow-hidden">
       <div className="hero__bg opacity-60" aria-hidden="true" />
       <div className="relative mx-auto max-w-[760px] px-6 pb-40 pt-[calc(var(--header-h)+3rem)] md:px-10">
+        <div className="page-heading-row"><p className="section-sub">Our House</p>
         <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.16em]">
           <Link to="/" className="text-link">
             Home
           </Link>{" "}
           / <span className="font-semibold">Account</span>
         </nav>
-        <p className="section-sub mt-10">Our House</p>
+        </div>
         <Ornament align="left" className="my-3" />
         <h1 className="font-display text-[clamp(2.4rem,5vw,3.75rem)] leading-[1.05]">Account</h1>
 
@@ -65,10 +66,10 @@ function YourOrders() {
 
   useEffect(() => {
     let cancelled = false;
-    const entries = rememberedOrders().slice(0, 10);
-    Promise.all(entries.map((e) => fetchOrder(e.number, e.key).then((d) => d.order).catch(() => null))).then((list) => {
-      if (!cancelled) setOrders(list.filter((o): o is Order => o !== null));
-    });
+    fetchMyOrders().then(data => {
+      data.orders.forEach(entry => rememberOrder(entry.order.number, entry.accessKey));
+      if (!cancelled) setOrders(data.orders.map(entry => entry.order));
+    }).catch(() => { if (!cancelled) setOrders([]); });
     return () => {
       cancelled = true;
     };
@@ -85,7 +86,7 @@ function YourOrders() {
         </p>
       ) : orders.length === 0 ? (
         <p className="mt-4 leading-relaxed">
-          No orders on this device yet. Placed an order elsewhere? Find it with <Link to="/pages/order-tracking" className="text-link font-semibold">Order Tracking</Link>.
+          No orders for this account yet. Placed an order elsewhere? Find it with <Link to="/pages/order-tracking" className="text-link font-semibold">Order Tracking</Link>.
         </p>
       ) : (
         <ul className="mt-5 divide-y divide-line">

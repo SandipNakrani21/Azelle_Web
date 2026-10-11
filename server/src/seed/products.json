@@ -442,5 +442,50 @@
     "perfumeOil": null,
     "longevity": "",
     "highlights": []
+  },
+  {
+    "family": "Aromatic Fruity",
+    "group": "Aromatic",
+    "families": [
+      "Aromatic",
+      "Fresh",
+      "Amber"
+    ],
+    "prices": {
+      "30": 399,
+      "50": 599,
+      "100": 999
+    },
+    "notes": "Pineapple · Lavender · Cinnamon",
+    "pyramid": {
+      "top": "Pineapple, Juniper Berry",
+      "heart": "Lavender, Rosemary",
+      "base": "Cinnamon"
+    },
+    "description": "A bold, masculine scent built for commanding presence. Juicy pineapple and crisp juniper berry lead into aromatic lavender and rosemary, finished with a warm trail of cinnamon. Rich projection and long-lasting performance for days that call for confidence.",
+    "tagline": "King of fragrances",
+    "concentration": "Perfume",
+    "perfumeOil": 31,
+    "longevity": "8–12 hours",
+    "highlights": [
+      "31% perfume oil",
+      "Lasts up to 12 hours",
+      "Premium quality ingredients",
+      "Inspired by international fragrances",
+      "For daily wear and special occasions"
+    ],
+    "tint": "#8a5a2b",
+    "inStock": true,
+    "name": "Imperium 2",
+    "slug": "imperium-2",
+    "images": [
+      "/images/products/imperium-matched-bottle.webp",
+      "/uploads/imperium-1.webp",
+      "/uploads/imperium-2.webp",
+      "/uploads/imperium-3.webp",
+      "/uploads/imperium-4.webp",
+      "/uploads/imperium-5.webp"
+    ],
+    "status": "active"
   }
 ]

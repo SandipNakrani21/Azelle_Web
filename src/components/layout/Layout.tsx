@@ -4,11 +4,9 @@ import { AnnouncementCenter } from "@/components/announcements/AnnouncementCente
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
 import { useOverlayPresence } from "@/hooks/useOverlayPresence";
-import { ThemeRail } from "@/components/ThemeRail";
 import { useScrollEffects } from "@/hooks/useScrollEffects";
 import { useVisibleMotion } from "@/hooks/useVisibleMotion";
 import { useVisitLog } from "@/hooks/useVisitLog";
-import { showThemeRail } from "@/lib/themes";
 import { AnnouncementProvider } from "@/providers/AnnouncementProvider";
 import { Footer } from "./Footer";
 import { Header } from "./Header";
@@ -22,6 +20,7 @@ export function Layout() {
   // Every storefront page view is logged for the admin panel's Visitors page (never /admin).
   useVisitLog();
   const { pathname } = useLocation();
+  const isHomeNew = pathname === "/homenew";
   const { isAuthOpen } = useAuth();
   const { isOpen } = useCart();
   const showAuth = useOverlayPresence(isAuthOpen);
@@ -36,18 +35,17 @@ export function Layout() {
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <Header />
+      {!isHomeNew && <Header />}
       <div className="scroll-progress" aria-hidden="true" />
-      <main id="main">
+      <main id="main" className={pathname !== "/" && !isHomeNew ? "inner-page" : undefined}>
         <Outlet />
       </main>
-      <Footer flush={flushFooter} />
+      {!isHomeNew && <Footer flush={flushFooter} />}
       <Suspense fallback={<div role="status" className="fixed bottom-5 right-5 z-[80] rounded-xl bg-surface px-5 py-3 shadow-xl">Opening…</div>}>
         {showCart && <CartDrawer />}
         {showAuth && <AuthModal />}
       </Suspense>
-      <AnnouncementCenter />
-      {showThemeRail && <ThemeRail />}
+      {!isHomeNew && <AnnouncementCenter />}
     </AnnouncementProvider>
   );
 }

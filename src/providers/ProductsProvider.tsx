@@ -23,9 +23,9 @@ function requestCatalogue() {
 }
 
 // Loads the live catalogue. The API only returns active, non-deleted products.
-export function ProductsProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [status, setStatus] = useState<LoadStatus>("loading");
+export function ProductsProvider({ children, initialProducts=[] }: { children: ReactNode;initialProducts?:Product[] }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [status, setStatus] = useState<LoadStatus>(initialProducts.length?"ready":"loading");
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {

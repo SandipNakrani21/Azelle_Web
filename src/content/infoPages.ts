@@ -10,18 +10,18 @@ import { CONTACT } from "@/lib/contact";
 
 export const COMPANY = {
   brand: "Azelle Fragrances",
-  legalName: "[Registered business name]",
-  address: "[Registered office address, City, State – PIN code]",
-  gstin: "[GSTIN]",
+  legalName: "Azelle Perfume",
+  address: "C-1201, Kiran Classic Towers-2, Nani Ved, Katargam, Surat, Gujarat 395004, India",
+  gstin: "Contact us for tax registration details",
   email: CONTACT.email,
   phone: CONTACT.phone,
   hours: "Monday to Saturday, 10:00 am – 7:00 pm IST",
-  grievanceOfficer: "[Grievance Officer name]",
-  grievanceEmail: "[grievance officer email]",
-  jurisdiction: "[City]",
+  grievanceOfficer: "Azelle customer support",
+  grievanceEmail: CONTACT.email,
+  jurisdiction: "Surat",
 };
 
-export const LAST_UPDATED = "14 September 2026";
+export const LAST_UPDATED = "11 October 2026";
 
 export type InfoBlock = string | { list: string[] } | { note: string };
 export type InfoSection = { id: string; heading: string; blocks: InfoBlock[] };
@@ -44,10 +44,10 @@ export type InfoPageContent = {
 };
 
 const grievanceBlock = (): InfoBlock[] => [
-  "If you have a complaint about a product, an order or how we handle your information, please contact our Grievance Officer:",
+  "If you have a complaint about a product, an order or how we handle your information, please contact our customer support team:",
   {
     list: [
-      `Name: ${COMPANY.grievanceOfficer}`,
+      `Support team: ${COMPANY.grievanceOfficer}`,
       `Email: ${COMPANY.grievanceEmail}`,
       `Address: ${COMPANY.legalName}, ${COMPANY.address}`,
       `Hours: ${COMPANY.hours}`,
@@ -100,7 +100,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
         id: "pricing",
         heading: "Prices and payment",
         blocks: [
-          "All prices are in Indian Rupees (₹) and are inclusive of all taxes, including GST. The price you pay will never be more than the MRP printed on the pack.",
+          "Product prices are in Indian Rupees (₹). GST is added to the discounted product subtotal and shipping is shown separately before payment. Review the full checkout total before placing your order.",
           {
             list: [
               "Payments are processed securely by RBI-authorised payment partners using UPI, debit and credit cards, net banking and wallets.",
@@ -165,7 +165,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
           "We always try to resolve concerns directly first. You may also approach the National Consumer Helpline by calling 1915 or visiting consumerhelpline.gov.in, or file a complaint with the appropriate Consumer Commission.",
         ],
       },
-      { id: "grievance", heading: "Grievance Officer", blocks: grievanceBlock() },
+      { id: "grievance", heading: "Customer support and grievances", blocks: grievanceBlock() },
       {
         id: "changes",
         heading: "Changes to these terms",
@@ -294,7 +294,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
           "Our website and products are intended for adults. We do not knowingly collect personal data from anyone under 18 without verifiable consent from a parent or lawful guardian, as required by the Digital Personal Data Protection Act, 2023.",
         ],
       },
-      { id: "grievance", heading: "Grievance Officer", blocks: grievanceBlock() },
+      { id: "grievance", heading: "Customer support and grievances", blocks: grievanceBlock() },
       {
         id: "changes",
         heading: "Changes to this policy",
@@ -404,10 +404,10 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
   "shipping-policy": {
     eyebrow: "Information",
     title: "Shipping Policy",
-    intro: "Free shipping across India on every order, packed securely so your perfume arrives in perfect condition.",
+    intro: "Shipping to serviceable addresses across India. Charges and the full order total are shown before payment.",
     legal: true,
     highlights: [
-      { icon: "truck", title: "Free shipping", text: "On every order, no minimum" },
+      { icon: "truck", title: "Shipping charges", text: "Shown before payment" },
       { icon: "clock", title: "Dispatch in 24–48 hours", text: "Monday to Saturday" },
       { icon: "check", title: "Delivery in 3–7 days", text: "Across most of India" },
     ],
@@ -423,7 +423,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
         id: "charges",
         heading: "Shipping charges",
         blocks: [
-          "Shipping is free on every order, with no minimum order value. There are no hidden charges — the total you see at checkout is the total you pay. If Cash on Delivery is available for your pin code, any conditions are shown at checkout before you place the order.",
+          "Standard shipping is ₹100 per order. An applicable free-shipping coupon can remove this charge. The total shown at checkout includes the charges you will pay. If Cash on Delivery is available for your pin code, any conditions are shown at checkout before you place the order.",
         ],
       },
       {
@@ -500,7 +500,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
   "gst-invoice": {
     eyebrow: "Information",
     title: "GST Invoice",
-    intro: "Every Azelle order comes with a GST-compliant tax invoice. Buying for your business? Add your GSTIN to claim input tax credit.",
+    intro: "For invoice or business-purchase questions, contact Azelle customer support with your order number.",
     legal: true,
     highlights: [
       { icon: "check", title: "Tax invoice included", text: "With every order, by email" },
@@ -522,14 +522,14 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
               "Taxable value and GST — CGST and SGST for deliveries within our state, or IGST for deliveries to other states, based on the place of supply.",
             ],
           },
-          "Our prices already include GST, so adding a GSTIN does not change the amount you pay.",
+          "GST is shown separately in your order total. Invoice requests do not change the checkout calculation.",
         ],
       },
       {
         id: "business",
         heading: "Buying for your business",
         blocks: [
-          "To receive a B2B invoice in your business name, enter your GSTIN and registered business name at checkout. You can then claim input tax credit on the purchase, subject to the conditions of GST law — including the invoice appearing in your GSTR-2B.",
+          "To request a business invoice, contact customer support with your order number, GSTIN and registered business name. Checkout does not currently collect business-invoice details.",
           {
             list: [
               "The GSTIN must be active and the business name must match your registration on the GST portal.",
@@ -600,7 +600,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
             list: [
               "Cruelty free — our perfumes are never tested on animals, in line with India's ban on animal testing of cosmetics.",
               "Made in India — proudly composed, blended and bottled in India.",
-              "Honest pricing — premium quality at a fair price, with free shipping on every order.",
+              "Honest pricing — premium quality at a fair price, with shipping charges shown before payment.",
               "Transparency — clear notes, longevity and ingredients on every product.",
             ],
           },
@@ -651,7 +651,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
           },
         ],
       },
-      { id: "grievance", heading: "Grievance Officer", blocks: grievanceBlock() },
+      { id: "grievance", heading: "Customer support and grievances", blocks: grievanceBlock() },
     ],
   },
 
@@ -760,7 +760,7 @@ export const INFO_PAGES: Record<string, InfoPageContent> = {
       {
         id: "gst",
         heading: "Can I get a GST invoice?",
-        blocks: ["Yes. Every order includes a tax invoice. Add your GSTIN at checkout to receive a B2B invoice in your business name."],
+        blocks: ["For a business-invoice request, contact customer support with your order number, GSTIN and registered business name."],
       },
       {
         id: "bulk",

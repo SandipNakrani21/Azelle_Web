@@ -1,5 +1,5 @@
+import { ConsentNotice } from "./ConsentNotice";
 import { Link } from "react-router-dom";
-import { Bottle } from "@/components/ui/Bottle";
 import { CameraIcon, MailIcon, WhatsAppIcon } from "@/components/ui/Icons";
 import { Logo } from "@/components/ui/Logo";
 import { CONTACT, MAILTO_URL, WHATSAPP_URL } from "@/lib/contact";
@@ -17,14 +17,12 @@ const SOCIAL = [
 ];
 
 // Column heading followed by the same line — ✦ — line rule used under section titles.
-function ColumnHeading({ children, small = false }: { children: string; small?: boolean }) {
+function ColumnHeading({ children }: { children: string }) {
   return (
-    <>
-      <h3 className={`font-bold uppercase ${small ? "text-[13px] tracking-[0.18em]" : "text-[16px] tracking-[0.18em]"}`}>{children}</h3>
-      <div className={`mt-3 ${small ? "w-[110px]" : "w-[140px]"}`}>
-        <Ornament align="left" wide tone="light" />
-      </div>
-    </>
+    <div className="footer-heading w-fit max-w-full">
+      <h3 className="text-[12px] font-bold uppercase tracking-[0.2em]">{children}</h3>
+      <Ornament align="left" wide className="footer-heading-divider mt-3" />
+    </div>
   );
 }
 
@@ -39,6 +37,11 @@ export function Footer({ flush = false }: { flush?: boolean }) {
       {/* Gradient used by the social icons on hover (referenced from CSS). */}
       <svg width="0" height="0" className="absolute" aria-hidden="true" focusable="false">
         <defs>
+          <linearGradient id="azelle-product-action-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21">
+            <stop offset="0" stopColor="#ded0ef" />
+            <stop offset="0.5" stopColor="#ffe0d0" />
+            <stop offset="1" stopColor="#c7ece2" />
+          </linearGradient>
           <linearGradient id="azelle-icon-gradient" gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21">
             <stop offset="0" stopColor="#e6b45a" />
             <stop offset="0.35" stopColor="#e9a58f" />
@@ -48,28 +51,23 @@ export function Footer({ flush = false }: { flush?: boolean }) {
         </defs>
       </svg>
 
-      {/* Bottles standing on the footer's top edge: a slow rocking sway, and a tilt on hover. */}
-      {/* Two identical bottles centred on the footer's top edge (half above, half below). They lean in
-          from their bases until the tops touch in a cross, then lean out apart — like the reference cans. */}
-      <div className="absolute right-[6%] top-0 z-10 flex -translate-y-[64%] items-end" aria-hidden="true">
-        <Bottle tint="#e8cf6f" name="Azelle" decorative className="bottle-lean-left h-28 w-auto md:h-40" />
-        <Bottle tint="#e3a6a8" name="Azelle" decorative className="bottle-lean-right h-28 w-auto md:h-40" />
-      </div>
-
       {/* Full width: the logo column sits at the left edge, "Others" at the right edge, the rest spaced evenly. */}
       <div className="relative grid gap-x-10 gap-y-12 px-6 pb-14 pt-24 sm:grid-cols-2 md:px-12 lg:flex lg:justify-between lg:gap-x-12 xl:px-16">
         {/* 1. Logo, tagline, description — full width while the navs are in two columns. */}
-        <div className="sm:col-span-2 lg:col-span-1">
-          <Logo imgClassName="h-16" taglineClassName="text-[11px] tracking-[0.5em]" />
-          <p className="mt-8 font-display text-xl font-bold">Fragrance Beyond Words</p>
-          <p className="mt-5 max-w-[260px] text-[15.5px] leading-[2]">Niche perfume extracts, composed slowly in small batches.</p>
+        <div className="w-full max-w-[280px] sm:col-span-2 lg:col-span-1 lg:shrink-0">
+          <div className="flex justify-center">
+            <Logo className="-translate-x-3" imgClassName="h-24" />
+          </div>
+          <p className="mt-6 w-full text-left font-display text-[24px] font-bold leading-snug tracking-[-0.025em]">Fragrance Beyond Words</p>
+          <p className="mt-5 w-full text-[15.5px] leading-[2]">Niche perfume extracts, composed slowly in small batches.</p>
+
         </div>
 
         {/* 2–4. Shop, Information, Our house */}
         {COLUMNS.map((col) => (
           <nav key={col.heading} aria-label={col.heading}>
             <ColumnHeading>{col.heading}</ColumnHeading>
-            <ul className="mt-5 space-y-3.5 text-[16px]">
+            <ul className="mt-5 space-y-3.5 font-display text-xl">
               {col.links.map(({ label, to }) => (
                 <li key={label}>
                   <Link to={to} state={linkState(to)} className="footer-link">
@@ -81,10 +79,10 @@ export function Footer({ flush = false }: { flush?: boolean }) {
           </nav>
         ))}
 
-        {/* 5. Others: account, help, social */}
+        {/* 5. Others: account and help */}
         <nav aria-label="Others">
           <ColumnHeading>Others</ColumnHeading>
-          <ul className="mt-5 space-y-3.5 text-[16px]">
+          <ul className="mt-5 space-y-3.5 font-display text-xl">
             <li>
               <Link to="/account" className="footer-link">
                 Account
@@ -102,7 +100,7 @@ export function Footer({ flush = false }: { flush?: boolean }) {
             </li>
           </ul>
           <div className="mt-12">
-            <ColumnHeading small>Follow us on</ColumnHeading>
+            <ColumnHeading>Follow us on</ColumnHeading>
           </div>
           <ul className="mt-5 flex gap-3">
             {SOCIAL.map(({ label, Icon, href, external }) => (
@@ -122,7 +120,8 @@ export function Footer({ flush = false }: { flush?: boolean }) {
         </nav>
       </div>
 
-      <div className="relative border-t border-[color-mix(in_oklab,var(--ink)_18%,transparent)]">
+      <ConsentNotice />
+      <div className="relative">
         <p className="mx-auto max-w-[1280px] px-6 py-6 text-center text-[15px] md:px-10">
           © {new Date().getFullYear()} Azelle Fragrances. All rights reserved. Crafted with care in India.
         </p>

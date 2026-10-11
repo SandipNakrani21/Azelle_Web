@@ -39,7 +39,7 @@ export const Review = mongoose.model("Review", reviewSchema);
 /** Recomputes a product's average rating and review count from its approved reviews. */
 export async function refreshProductRating(productId) {
   const [agg] = await Review.aggregate([
-    { $match: { product: new mongoose.Types.ObjectId(String(productId)), status: "approved" } },
+    { $match: { product: new mongoose.Types.ObjectId(String(productId)), status: "approved",testData:{$ne:true} } },
     { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
   ]);
   await Product.updateOne(

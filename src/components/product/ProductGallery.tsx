@@ -72,6 +72,8 @@ export function ProductGallery({ product }: { product: Product }) {
             src={i === index ? sized(src, 1200) : undefined}
             srcSet={i === index ? srcSet(src, [600, 900, 1200]) : undefined}
             decoding="async"
+            loading={i === index ? "eager" : "lazy"}
+            fetchPriority={i === index ? "high" : "low"}
             sizes="(min-width: 1024px) 600px, 100vw"
             alt={`${product.name}, image ${i + 1} of ${count}`}
             aria-hidden={i !== index}

@@ -1,0 +1,12 @@
+{
+  "mode": "local-demo-only",
+  "publicContentApproved": false,
+  "registeredBusinessName": "Azelle Perfume",
+  "registeredAddress": "C-1201, Kiran Classic Towers-2, Nani Ved, Katargam, Surat, Gujarat 395004, India",
+  "gstin": "DUMMY-NOT-A-GSTIN",
+  "manufacturerName": "Demo manufacturer — replace with verified details",
+  "manufacturerAddress": "Demo address — replace with verified details",
+  "grievanceOfficerName": "Demo contact — replace with verified officer name",
+  "grievanceEmail": "grievance@azelle.test",
+  "note": "Private configuration template. Never import unverified values into public content, schema or actual tax invoices."
+}

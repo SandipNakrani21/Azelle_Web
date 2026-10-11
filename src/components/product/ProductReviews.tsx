@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { fieldClass, fieldErrorClass, labelClass } from "@/components/ui/Field";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Stars, StarInput } from "@/components/ui/Stars";
@@ -9,22 +9,13 @@ import type { Product } from "@/lib/products";
 import { fetchReviews, reviewCountLabel, submitReview, type Review, type ReviewSort, type ReviewSummary } from "@/lib/reviews";
 import { useAuth } from "@/providers/AuthProvider";
 
-/** Smooth-scrolls to the reviews; jumps there if smooth scrolling didn't move the page (e.g. reduced motion). */
-export function scrollToReviews() {
-  const el = document.getElementById("reviews");
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  window.setTimeout(() => {
-    if (Math.abs(el.getBoundingClientRect().top) > window.innerHeight) el.scrollIntoView({ block: "start" });
-  }, 700);
-}
+export { scrollToReviews } from "@/lib/reviewNavigation";
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 // "Customer reviews" — the last section of the product page (id="reviews", linked from the rating
 // under the product name and from product cards).
-export function ProductReviews({ product }: { product: Product }) {
-  const { hash } = useLocation();
+export function ProductReviews({ product, previewSamples = false, showcase = false }: { product: Product; previewSamples?: boolean; showcase?: boolean }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
   const [page, setPage] = useState(1);
@@ -32,7 +23,7 @@ export function ProductReviews({ product }: { product: Product }) {
   const [sort, setSort] = useState<ReviewSort>("newest");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+  const [activeReview, setActiveReview] = useState(0);
 
   const load = useCallback(
     async (nextPage: number, nextSort: ReviewSort, append: boolean) => {
@@ -54,24 +45,55 @@ export function ProductReviews({ product }: { product: Product }) {
   );
 
   useEffect(() => {
-    setFormOpen(false);
     setSort("newest");
+    setReviews([]);
+    setSummary(null);
+    setLoading(true);
+    setError("");
+    setPage(1);
+    setPages(1);
+    // The parent mounts this section near the viewport; avoid a second loading gate.
     void load(1, "newest", false);
   }, [load]);
 
-  // Arriving from a product card's rating (…#reviews): once the reviews have loaded, jump here
-  // directly (no animation, so it can't race the page's own scroll handling).
-  const jumped = useRef("");
-  useEffect(() => {
-    if (hash !== "#reviews" || loading || jumped.current === product.id) return;
-    const t = window.setTimeout(() => {
-      jumped.current = product.id; // once per product, so "Show more reviews" doesn't jump back
-      document.getElementById("reviews")?.scrollIntoView({ block: "start" });
-    }, 100);
-    return () => window.clearTimeout(t);
-  }, [hash, product.id, loading]);
-
   const count = summary?.count ?? 0;
+
+  if (showcase) {
+    const samples = [
+      { id: "sample-a", rating: 5, title: "Bright opening, warm finish", body: "The pineapple opening feels fresh, and the cinnamon gives it a warm finish. A lovely choice for an evening out.", name: "Sample reviewer A" },
+      { id: "sample-b", rating: 4, title: "A confident everyday fragrance", body: "The lavender and rosemary balance the fruity notes nicely. A little goes a long way for my daily routine.", name: "Sample reviewer B" },
+      { id: "sample-c", rating: 5, title: "Beautiful bottle and rich scent", body: "The fragrance moves from a bright opening into a softer, warm dry-down. The bottle looks lovely on my shelf.", name: "Sample reviewer C" },
+    ];
+    const isPreview = previewSamples && !loading && !error && count === 0;
+    const cards = isPreview ? samples : reviews;
+    const ratingCount = isPreview ? samples.length : count;
+    const average = isPreview ? samples.reduce((total, review) => total + review.rating, 0) / samples.length : summary?.average ?? 0;
+    const index = cards.length ? activeReview % cards.length : 0;
+    const current = cards[index];
+    return <section id="reviews" aria-labelledby="reviews-h" className="i2-rating-section">
+      <div className="i2-rating-wrap">
+        <div className="i2-rating-heading"><h2 id="reviews-h">Ratings &amp; Reviews</h2><Link to="/account" className="text-link text-sm">Review from your orders</Link></div>
+        {isPreview && <p className="i2-rating-preview">Design preview · Fictional sample ratings and reviews.</p>}
+        <div className="i2-rating-layout">
+          <div className="i2-rating-overview">
+            <div className="i2-rating-score"><p>{ratingCount ? average.toFixed(1) : "—"}<span>/ 5</span></p><Stars value={average} size={16}/><small>{ratingCount ? `${ratingCount} ${isPreview ? "sample reviews" : "ratings"}` : "No reviews yet"}</small></div>
+            <ul className="i2-rating-bars" aria-label="Rating breakdown">{([5,4,3,2,1] as const).map(star => {
+              const total = isPreview ? samples.filter(review => review.rating === star).length : summary?.breakdown[String(star) as "1" | "2" | "3" | "4" | "5"] ?? 0;
+              return <li key={star}><span className="i2-rating-star">★</span><span>{star}</span><span className="i2-rating-track" aria-hidden="true"><span style={{width:`${ratingCount ? total / ratingCount * 100 : 0}%`}}/></span><span className="i2-rating-count" aria-label={`${total} ${star}-star ratings`}>{total}</span></li>;
+            })}</ul>
+          </div>
+          <div className="i2-review-carousel" aria-label="Customer review carousel">
+            {current && <article className="i2-featured-review" key={current.id} aria-live="polite"><div className="i2-review-top"><strong>{current.name}</strong><span>{isPreview ? "Sample review" : formatDate((current as Review).createdAt)}</span></div><Stars value={current.rating} size={15}/><h3>{current.title}</h3><p>{current.body}</p><div className="i2-review-bottom"><span className="i2-review-avatar" aria-hidden="true">{current.name.charAt(0)}</span>{!isPreview && (current as Review).verifiedPurchase && <span>✓ Verified purchase</span>}</div></article>}
+            {loading && <p role="status">Loading reviews…</p>}
+            {error && <p role="alert">{error}</p>}
+            {!loading && !error && !current && <p>Be the first to share how {product.name} wears.</p>}
+            {cards.length > 1 && <div className="i2-review-controls"><button aria-label="Previous review" onClick={() => setActiveReview((index + cards.length - 1) % cards.length)}>‹</button><div className="i2-review-dots">{cards.map((review, position) => <button key={review.id} aria-label={`Show review ${position + 1}`} aria-current={position === index ? "true" : undefined} onClick={() => setActiveReview(position)}/>)}</div><button aria-label="Next review" onClick={() => setActiveReview((index + 1) % cards.length)}>›</button></div>}
+            {page < pages && <button className="btn btn-secondary" disabled={loading} onClick={() => void load(page + 1, sort, true)}>Show more reviews</button>}
+          </div>
+        </div>
+      </div>
+    </section>;
+  }
 
   return (
     <section id="reviews" aria-labelledby="reviews-h" className="border-t border-line bg-surface py-16 md:py-24">
@@ -114,14 +136,11 @@ export function ProductReviews({ product }: { product: Product }) {
               <p className="mt-2 text-sm">Tried {product.name}? Be the first to share how it wears.</p>
             </>
           )}
-          <button type="button" className="btn btn-primary mt-6 w-full" onClick={() => setFormOpen((o) => !o)} aria-expanded={formOpen}>
-            {formOpen ? "Close" : "Write a review"}
-          </button>
+          <Link to="/account" className="btn btn-primary mt-6 w-full">Review from your orders</Link>
         </div>
 
         {/* Form + list */}
         <div>
-          {formOpen && <ReviewForm product={product} onDone={() => setFormOpen(false)} />}
 
           {(summary?.reviewCount ?? 0) > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -154,6 +173,7 @@ export function ProductReviews({ product }: { product: Product }) {
             </p>
           )}
 
+          {previewSamples && !loading && !error && reviews.length === 0 && <p className="sample-review-notice">Design preview · The sample reviews below are fictional and do not count toward the product rating.</p>}
           <ul className="mt-2 divide-y divide-line">
             {reviews.map((r) => (
               <li key={r.id} className="py-6">
@@ -171,6 +191,11 @@ export function ProductReviews({ product }: { product: Product }) {
                 <span className="sr-only">Rated {r.rating} out of 5</span>
               </li>
             ))}
+            {previewSamples && !loading && !error && reviews.length === 0 && [
+              {rating:5,title:"Bright opening, warm finish",body:"The pineapple opening feels fresh, and the cinnamon gives it a warm finish. A lovely choice for an evening out.",name:"Sample reviewer A"},
+              {rating:4,title:"A confident everyday fragrance",body:"The lavender and rosemary balance the fruity notes nicely. A little goes a long way for my daily routine.",name:"Sample reviewer B"},
+              {rating:5,title:"Beautiful bottle and rich scent",body:"The bottle looks great on my shelf. The fragrance moves from a bright opening into a softer, warm dry-down.",name:"Sample reviewer C"},
+            ].map(sample => <li key={sample.name} className="sample-review-card"><div className="flex flex-wrap items-center gap-3"><Stars value={sample.rating} size={16}/><p className="font-semibold">{sample.title}</p></div><p className="mt-3 leading-relaxed">{sample.body}</p><div className="mt-4 flex items-center justify-between gap-3 text-xs"><span>{sample.name}</span><span className="sample-review-label">Sample review</span></div></li>)}
           </ul>
 
           {loading && reviews.length === 0 && (
@@ -189,7 +214,7 @@ export function ProductReviews({ product }: { product: Product }) {
   );
 }
 
-function ReviewForm({ product, onDone }: { product: Product; onDone: () => void }) {
+export function ReviewForm({ product, orderNumber, onDone }: { product: Pick<Product, "id" | "name">; orderNumber: string; onDone: () => void }) {
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -201,7 +226,7 @@ function ReviewForm({ product, onDone }: { product: Product; onDone: () => void 
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const get = (k: string) => String(data.get(k) ?? "").trim();
-    const input = { productId: product.id, rating, title: get("title"), body: get("body"), name: get("name"), email: get("email"), city: get("city") };
+    const input = { productId: product.id, orderNumber, rating, title: get("title"), body: get("body"), name: get("name"), email: get("email"), city: get("city") };
     const found: Record<string, string> = {};
     if (!rating) found.rating = "Choose a star rating.";
     if (input.body.length < 10) found.body = "Tell us a little more (at least 10 characters).";

@@ -31,9 +31,9 @@ const FALLBACK: StoreConfig = {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 /** Store charges, public coupons and available payment methods — all decided by the server. */
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [config, setConfig] = useState<StoreConfig>(FALLBACK);
-  const [status, setStatus] = useState<StoreContextValue["status"]>("loading");
+export function StoreProvider({ children,initialConfig }: { children: ReactNode;initialConfig?:StoreConfig }) {
+  const [config, setConfig] = useState<StoreConfig>(initialConfig??FALLBACK);
+  const [status, setStatus] = useState<StoreContextValue["status"]>(initialConfig?"ready":"loading");
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +52,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const start=()=>{if(config.analytics)initAnalytics({projectId:config.analytics.clarityProjectId,enabled:config.analytics.enabled,test:config.analytics.test});};
+    start();window.addEventListener("azelle-consent-change",start);return()=>window.removeEventListener("azelle-consent-change",start);
+  },[config.analytics]);
 
   const value = useMemo(() => ({ ...config, status }), [config, status]);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

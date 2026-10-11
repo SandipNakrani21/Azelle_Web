@@ -1,0 +1,5 @@
+
+> azelle-web@0.1.0 test:api
+> node scripts/check-api.mjs
+
+API checks passed: public catalogue, review summary, support validation/access, reset validation, robots, sitemap and production page rendering.

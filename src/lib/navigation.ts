@@ -36,7 +36,8 @@ export const SHOP_TABS: { id: ShopTab; label: string }[] = [
   { id: "collections", label: "Our Collections" },
 ];
 /** Bestsellers are the first products in catalogue order until sales data exists. */
-export const BESTSELLER_COUNT = 5;
+export const BESTSELLER_SLUGS = ["imperium", "conqueror", "white-oud"] as const;
+export const BESTSELLER_COUNT = BESTSELLER_SLUGS.length;
 
 /** Router state for footer/menu links: collection links ask the page to bring the section tabs into view. */
 export type NavState = { focusShop?: boolean };
@@ -44,7 +45,7 @@ export function linkState(to: string): NavState | undefined {
   return to.startsWith("/collection") ? { focusShop: true } : undefined;
 }
 
-export const SHOP_LINKS: NavLink[] = SHOP_TABS.filter((t) => t.id !== "all").map((t) => ({ label: t.label, to: `/collection?tab=${t.id}` }));
+export const SHOP_LINKS: NavLink[] = SHOP_TABS.filter((t) => t.id !== "all" && t.id !== "gender").map((t) => ({ label: t.label, to: `/collection?tab=${t.id}` }));
 
 export const INFORMATION_LINKS: NavLink[] = [
   { label: "Terms & Conditions", to: "/pages/terms-and-conditions" },
@@ -76,7 +77,7 @@ export const NAV_SECTIONS: NavSection[] = [
 /** The five Shop menu columns. Bestsellers are the first live products until sales data exists. */
 export function shopMenuColumns(products: { name: string; slug: string }[]): MenuColumn[] {
   return [
-    { heading: "Shop by Gender", links: GENDERS.map((g) => ({ label: g, to: `/collection?gender=${g}` })) },
+
     {
       heading: "Shop by Notes",
       links: TOP_NOTES.map((n) => ({ label: n, to: `/collection?note=${encodeURIComponent(n)}` })),

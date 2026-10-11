@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Router } from "express";
 import { commerce } from "../commerce.config.js";
+import { Customer } from "../models/Customer.js";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
 import { refreshProductRating, Review } from "../models/Review.js";
@@ -32,7 +33,7 @@ reviewsRouter.get("/", async (req, res, next) => {
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.min(20, Math.max(1, Number(req.query.limit) || 5));
     const sort = SORTS[req.query.sort] ?? SORTS.newest;
-    const match = { product: new mongoose.Types.ObjectId(productId), status: "approved" };
+    const match = { product: new mongoose.Types.ObjectId(productId), status: "approved", testData: { $ne: true } };
     // Every approved rating counts in the summary; only those with a written review are listed.
     const written = { ...match, body: { $ne: "" } };
 
@@ -67,14 +68,16 @@ reviewsRouter.post(
   rateLimit({ windowMs: 60 * 60 * 1000, max: 8, message: "You've sent several reviews already. Please try again later." }),
   async (req, res, next) => {
     try {
+      const customer = req.session?.customerId ? await Customer.findById(req.session.customerId).lean() : null;
+      if (!customer?.active) return res.status(401).json({ error: "Please log in to review a past order." });
       const body = req.body ?? {};
       const errors = {};
       const productId = String(body.productId ?? "");
       const rating = Math.round(Number(body.rating));
       const title = text(body.title, 80);
       const reviewText = typeof body.body === "string" ? body.body.trim().slice(0, 1500) : "";
-      const name = text(body.name, 60);
-      const email = text(body.email, 120).toLowerCase();
+      const name = text(customer.name, 60);
+      const email = text(customer.email, 120).toLowerCase();
       const city = text(body.city, 60);
       if (!(rating >= 1 && rating <= 5)) errors.rating = "Choose a star rating.";
       if (reviewText.length < 10) errors.body = "Tell us a little more (at least 10 characters).";
@@ -85,19 +88,15 @@ reviewsRouter.post(
       const product = mongoose.isValidObjectId(productId) ? await Product.findOne({ _id: productId, isDeleted: false, status: "active" }).lean() : null;
       if (!product) return res.status(404).json({ error: "Product not found." });
 
+      const purchased = await Order.exists({ number: String(body.orderNumber ?? ""), "customer.email": email, "lines.productId": productId, status: "delivered" });
+      if (!purchased) return res.status(403).json({ error: "You can review only products from your own delivered orders." });
+
       // One review per email per product.
       if (await Review.exists({ product: product._id, email })) {
         return res.status(409).json({ error: "You've already reviewed this fragrance. Thank you!" });
       }
 
-      // "Verified purchase" when this email has a paid/COD order for the product that wasn't cancelled.
-      const verifiedPurchase = Boolean(
-        await Order.exists({
-          "customer.email": email,
-          "lines.productId": productId,
-          status: { $in: ["pending", "accepted", "shipped", "delivered"] },
-        }),
-      );
+      const verifiedPurchase = true;
 
       const approved = !commerce.reviews.requireApproval;
       const review = await Review.create({

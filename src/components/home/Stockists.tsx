@@ -5,8 +5,8 @@ import { STOCKISTS } from "@/lib/content";
 export function Stockists() {
   return (
     <section id="stockists" aria-labelledby="stockists-h" className="bg-accent py-8 text-accent-ink md:py-10">
-      <SectionHeading id="stockists-h" sub="Find us in person" title="Our stockists" ornamentTone="light" className="[&_.section-sub]:text-[24px]" />
-      <div className="mt-6 overflow-hidden">
+      <SectionHeading id="stockists-h" sub="Find us in person" title="Our stockists" />
+      <div className="stockists-bar mt-6 overflow-hidden">
         <p className="sr-only">{STOCKISTS.join(", ")}</p>
         <ul className="slide-track" aria-hidden="true">
           {[...STOCKISTS, ...STOCKISTS].map((name, i) => (

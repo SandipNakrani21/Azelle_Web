@@ -69,8 +69,8 @@ function topicsFor(product: Product): Topic[] {
     {
       Icon: TruckIcon,
       title: "Shipping & delivery",
-      hint: "Free shipping across India",
-      body: "Every order ships free, securely packed so your bottle arrives in perfect condition.",
+      hint: "Shipping across India",
+      body: "Standard shipping is ₹100 per order, unless an applicable free-shipping coupon removes it. Check your full total before paying.",
       points: [
         "Dispatched within 24–48 hours (Monday to Saturday).",
         "Delivered in 3–7 business days, depending on your pin code.",
@@ -106,7 +106,7 @@ function topicsFor(product: Product): Topic[] {
 }
 
 const PROMISES: { Icon: IconType; title: string; text: string }[] = [
-  { Icon: TruckIcon, title: "Free shipping", text: "On every order" },
+  { Icon: TruckIcon, title: "Shipping", text: "Charges shown at checkout" },
   { Icon: ClockIcon, title: "Fast dispatch", text: "Within 24–48 hours" },
   { Icon: CheckCircleIcon, title: "Safe delivery", text: "Replacement if damaged" },
 ];

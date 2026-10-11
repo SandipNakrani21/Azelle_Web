@@ -1,0 +1,38 @@
+[
+  {
+    "h1": "Contact Us",
+    "overflow": false,
+    "url": "/pages/contact-us",
+    "width": 390
+  },
+  {
+    "h1": "Shipping Policy",
+    "overflow": false,
+    "url": "/pages/shipping-policy",
+    "width": 390
+  },
+  {
+    "h1": "Get Help",
+    "overflow": false,
+    "url": "/pages/help",
+    "width": 390
+  },
+  {
+    "h1": "Contact Us",
+    "overflow": false,
+    "url": "/pages/contact-us",
+    "width": 768
+  },
+  {
+    "h1": "Shipping Policy",
+    "overflow": false,
+    "url": "/pages/shipping-policy",
+    "width": 768
+  },
+  {
+    "h1": "Get Help",
+    "overflow": false,
+    "url": "/pages/help",
+    "width": 768
+  }
+]

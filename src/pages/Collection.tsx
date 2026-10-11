@@ -1,12 +1,14 @@
 import { useEffect, useMemo } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { CatalogueStatus } from "@/components/product/CatalogueStatus";
 import { ProductCard } from "@/components/product/ProductCard";
 import { fieldClass } from "@/components/ui/Field";
 import { ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "@/components/ui/Icons";
 import { MultiSelect } from "@/components/ui/MultiSelect";
+import { GlossySelect } from "@/components/ui/GlossySelect";
 import { Ornament } from "@/components/ui/Ornament";
-import { BESTSELLER_COUNT, COLLECTIONS, GENDERS, SHOP_TABS, type NavState, type ShopTab } from "@/lib/navigation";
+import { BESTSELLER_SLUGS, GENDERS, COLLECTIONS, SHOP_TABS, type NavState, type ShopTab } from "@/lib/navigation";
 import { DEFAULT_SIZE_ID, FAMILIES, matchesNote, unitPrice } from "@/lib/products";
 import { revealOrder } from "@/lib/reveal";
 import { useProducts } from "@/providers/ProductsProvider";
@@ -83,14 +85,15 @@ export default function Collection() {
   const query = params.get("q") ?? "";
   const sort: SortId = SORTS.find((s) => s.id === params.get("sort"))?.id ?? "featured";
   // Links that only carry a filter (?note=, ?group=, …) open the matching tab automatically.
-  const tab: ShopTab =
+  const requestedTab: ShopTab =
     SHOP_TABS.find((t) => t.id === params.get("tab"))?.id ??
     (genders.length ? "gender" : notes.length ? "notes" : groups.length ? "family" : collections.length ? "collections" : "all");
+  const tab = requestedTab === "gender" ? "all" : requestedTab;
   const tabLabel = SHOP_TABS.find((t) => t.id === tab)?.label ?? "All";
 
   // Within one filter, a product matches if it has ANY of the selected values.
   const search = query.trim().toLowerCase();
-  const base = tab === "bestsellers" ? products.slice(0, BESTSELLER_COUNT) : products;
+  const base = tab === "bestsellers" ? BESTSELLER_SLUGS.flatMap(slug => products.filter(product => product.slug === slug)) : products;
   const filtered = base.filter(
     (p) =>
       (!groups.length || p.families.some((f) => groups.includes(f))) &&
@@ -134,10 +137,6 @@ export default function Collection() {
   // The multi-select filter shown in the strip depends on the active section.
   const sectionFilter = (() => {
     switch (tab) {
-      case "gender":
-        return (
-          <MultiSelect label="Gender" allLabel="All genders" plural="genders" options={GENDERS.map((g) => ({ value: g, label: g }))} selected={genders} onChange={(v) => update({ gender: v })} />
-        );
       case "notes":
         return (
           <MultiSelect label="Notes" allLabel="All notes" plural="notes" searchable options={allNotes.map((n) => ({ value: n, label: n }))} selected={notes} onChange={(v) => update({ note: v })} />
@@ -163,13 +162,16 @@ export default function Collection() {
   })();
 
   return (
-    <div>
+    <div id="catalogue" className="collection-page raised-product-section">
       <section className="relative overflow-hidden" aria-labelledby="collection-h">
         <div className="hero__bg" aria-hidden="true" />
         <div className="relative mx-auto max-w-[1440px] px-6 pb-14 pt-[calc(var(--header-h)+4rem)] text-center md:pb-20">
+          <div className="page-heading-row page-heading-row--center">
           <p data-reveal="slide" className="section-sub">
             {collections.length === 1 ? collections[0].label : tab === "all" ? "The collection" : tabLabel}
           </p>
+          <Breadcrumb title="Collection" />
+          </div>
           <div data-reveal="slide">
             <Ornament tone="light" className="my-3" />
           </div>
@@ -182,14 +184,15 @@ export default function Collection() {
       </section>
 
       <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+        <div className="collection-controls mt-10 rounded-[22px] border p-4 md:p-5">
         {/* Sections — same as the footer's Shop links */}
         <div
           id="shop-sections"
           role="group"
           aria-label="Shop sections"
-          className="flex scroll-mt-[calc(var(--header-h)+1rem)] flex-wrap justify-center gap-2 pb-6 pt-10"
+          className="flex scroll-mt-[calc(var(--header-h)+1rem)] flex-wrap justify-center gap-2 pb-5"
         >
-          {SHOP_TABS.map((t) => (
+          {SHOP_TABS.filter(t => t.id !== "gender").map((t) => (
             <button key={t.id} type="button" aria-pressed={t.id === tab} onClick={() => selectTab(t.id)} className={`chip ${t.id === tab ? "is-active" : ""}`}>
               {t.label}
             </button>
@@ -199,7 +202,7 @@ export default function Collection() {
         {/* Search · section filter (multi-select) · sort · pagination */}
         <div
           id="results"
-          className="scroll-mt-[calc(var(--header-h)+1rem)] rounded-[22px] border border-line bg-surface p-4 shadow-[0_12px_30px_rgba(27,24,21,.06)] md:p-5"
+          className="scroll-mt-[calc(var(--header-h)+1rem)]"
         >
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <div className="relative min-w-0 basis-full xl:flex-1 xl:basis-0">
@@ -218,16 +221,7 @@ export default function Collection() {
             </div>
             {sectionFilter && <div className="w-full sm:w-[260px]">{sectionFilter}</div>}
             <div className="w-full sm:w-[240px]">
-              <label htmlFor="collection-sort" className="sr-only">
-                Sort by
-              </label>
-              <select id="collection-sort" value={sort} onChange={(e) => update({ sort: e.target.value === "featured" ? null : e.target.value })} className={stripField}>
-                {SORTS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    Sort: {s.label}
-                  </option>
-                ))}
-              </select>
+              <GlossySelect label="Sort" value={sort} options={SORTS} onChange={value => update({ sort: value === "featured" ? null : value })} />
             </div>
             <div className="flex w-full items-center justify-between gap-4 sm:ml-auto sm:w-auto">
               <p className="whitespace-nowrap text-[15px]" aria-live="polite">
@@ -248,7 +242,8 @@ export default function Collection() {
           </div>
         </div>
 
-        {tab === "gender" && <p className="pt-5 text-center text-sm">Gender tags are being added — showing every fragrance for now.</p>}
+        </div>
+
 
         {status !== "ready" ? (
           <CatalogueStatus status={status} error={error} onRetry={reload} />
@@ -268,7 +263,7 @@ export default function Collection() {
           className="mt-10 grid grid-cols-2 gap-x-5 gap-y-14 md:grid-cols-3"
         >
           {visible.map((product, i) => (
-            <ProductCard key={product.id} product={product} order={i} />
+            <ProductCard key={product.id} product={product} order={i} raised />
           ))}
         </ul>
 

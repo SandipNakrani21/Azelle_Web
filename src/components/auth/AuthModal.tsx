@@ -248,7 +248,7 @@ export function AuthModal() {
         <aside className="relative hidden flex-col overflow-hidden px-8 py-[clamp(20px,4vh,40px)] md:flex">
           <div className="hero__bg" aria-hidden="true" />
           <div className="relative flex justify-center">
-            <Logo imgClassName="h-[clamp(40px,6vh,56px)]" taglineClassName="text-[10px] tracking-[0.5em]" />
+            <Logo imgClassName="h-[clamp(40px,6vh,56px)]" />
           </div>
           {/* Centred tagline, separator and benefits (same for sign in and sign up) */}
           <div className="relative my-auto py-6 text-center">
@@ -280,7 +280,7 @@ export function AuthModal() {
           </button>
 
           <div className="px-10 text-center">
-            <Logo className="mb-3 md:hidden" imgClassName="h-9" taglineClassName="text-[8px] tracking-[0.5em]" />
+            <Logo className="mb-3 md:hidden" imgClassName="h-9" />
             <h2 className="pb-[0.1em] font-display text-[clamp(1.6rem,4vh,2.35rem)] font-bold leading-tight" style={gradientHeading}>
               {isSignIn ? "Welcome Back" : "Join The House"}
             </h2>
@@ -339,7 +339,7 @@ export function AuthModal() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setNotice("Password reset by email is coming soon. For help right now, please contact our team.")}
+                    onClick={() => { window.location.assign("/forgot-password"); }}
                     className="text-link py-1 text-[14px] font-semibold lg:py-0"
                   >
                     Forgot password?

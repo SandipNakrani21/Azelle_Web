@@ -1,17 +1,21 @@
+import { Seo } from "./components/layout/Seo";
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import Home from "@/pages/Home";
 
 // Load checkout, product details and admin code only when their routes are opened.
+const RecoveryPage = lazy(() => import("@/pages/Recovery"));
+const AdminSupport = lazy(() => import("@/admin/pages/AdminSupport"));
 const AccountPage = lazy(() => import("@/pages/Account"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
-const Collection = lazy(() => import("@/pages/Collection"));
-const InfoPage = lazy(() => import("@/pages/InfoPage"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+import Collection from "@/pages/Collection";
+import InfoPage from "@/pages/InfoPage";
+import NotFound from "@/pages/NotFound";
 const OrderPage = lazy(() => import("@/pages/Order"));
-const ProductPage = lazy(() => import("@/pages/Product"));
+import ProductPage from "@/pages/Product";
 const WishlistPage = lazy(() => import("@/pages/Wishlist"));
+const HomeNew = lazy(() => import("@/pages/HomeNew"));
 const AdminRoot = lazy(() => import("@/admin/AdminLayout").then((module) => ({ default: module.AdminRoot })));
 const AdminHome = lazy(() => import("@/admin/AdminLayout").then((module) => ({ default: module.AdminHome })));
 const RequireAdmin = lazy(() => import("@/admin/AdminLayout").then((module) => ({ default: module.RequireAdmin })));
@@ -38,6 +42,7 @@ const MockPayment = lazy(() => import("@/pages/MockPayment"));
 export default function App() {
   return (
     <Suspense fallback={<div role="status" className="grid min-h-[60vh] place-items-center pt-24 text-soft">Loading page…</div>}>
+    <Seo />
     <Routes>
       <Route path="admin" element={<AdminRoot />}>
         <Route path="login" element={<AdminLogin />} />
@@ -49,6 +54,7 @@ export default function App() {
           <Route path="visitors" element={<Can perm="visitors.view"><AdminVisitors /></Can>} />
           <Route path="orders" element={<Can perm="orders.view"><AdminOrders /></Can>} />
           <Route path="orders/:id" element={<Can perm="orders.view"><AdminOrderDetail /></Can>} />
+          <Route path="support" element={<Can perm="customers.view"><AdminSupport /></Can>} />
           <Route path="customers" element={<Can perm="customers.view"><AdminCustomers /></Can>} />
           <Route path="coupons" element={<Can perm="coupons.view"><AdminCoupons /></Can>} />
           <Route path="announcements" element={<Can perm="announcements.view"><AdminAnnouncements /></Can>} />
@@ -69,11 +75,14 @@ export default function App() {
 
       <Route element={<Layout />}>
         <Route index element={<Home />} />
+        <Route path="homenew" element={<HomeNew />} />
         <Route path="collection" element={<Collection />} />
         <Route path="product/:slug" element={<ProductPage />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="order/:id" element={<OrderPage />} />
         <Route path="pages/:slug" element={<InfoPage />} />
+        <Route path="forgot-password" element={<RecoveryPage />} />
+        <Route path="reset-password" element={<RecoveryPage />} />
         <Route path="account" element={<AccountPage />} />
         <Route path="wishlist" element={<WishlistPage />} />
         <Route path="*" element={<NotFound />} />

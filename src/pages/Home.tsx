@@ -9,18 +9,21 @@ import { useProducts } from "@/providers/ProductsProvider";
 
 export default function Home() {
   const { products, status, error, reload } = useProducts();
+  const featuredProducts = products.filter((product) =>
+    ["white-oud", "imperium", "urban-voyage", "desire-edge", "conqueror"].includes(product.slug)
+  ).slice(0, 5);
 
   return (
     <div className="glossy-home">
       <Hero />
-      <Marquee items={MARQUEE_ITEMS} className="bg-accent py-4 text-accent-ink" />
+      <Marquee items={MARQUEE_ITEMS} className="home-marquee" />
 
       <section id="collection" aria-labelledby="collection-h" className="collection-band py-16 md:py-24">
         <SectionHeading id="collection-h" sub="Composed slowly, worn closely" title="The collection" />
         <CatalogueStatus status={status} error={error} onRetry={reload} />
         <ul className="scroll-drift mx-auto mt-14 grid max-w-[1440px] grid-cols-2 gap-x-5 gap-y-14 px-5 md:grid-cols-3 md:px-10 xl:grid-cols-5">
-          {products.map((product, i) => (
-            <ProductCard key={product.id} product={product} order={i} />
+          {featuredProducts.map((product, i) => (
+            <ProductCard key={product.id} product={product} order={i} raised />
           ))}
         </ul>
       </section>

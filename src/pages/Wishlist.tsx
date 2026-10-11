@@ -21,13 +21,14 @@ export default function WishlistPage() {
     <section className="relative overflow-hidden">
       <div className="hero__bg opacity-60" aria-hidden="true" />
       <div className="relative mx-auto max-w-[1200px] px-5 pb-24 pt-[calc(var(--header-h)+3rem)] md:px-10">
+        <div className="page-heading-row"><p className="section-sub">Saved for later</p>
         <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.16em]">
           <Link to="/" className="text-link">
             Home
           </Link>{" "}
           / <span className="font-semibold">Wishlist</span>
         </nav>
-        <p className="section-sub mt-10">Saved for later</p>
+        </div>
         <Ornament align="left" className="my-3" />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-[clamp(2.4rem,5vw,3.75rem)] leading-[1.05]">Wishlist</h1>

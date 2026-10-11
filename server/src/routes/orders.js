@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Coupon } from "../models/Coupon.js";
 import { Order } from "../models/Order.js";
+import { Customer } from "../models/Customer.js";
 import { availableGateways, codAllowed, GATEWAYS } from "../integrations/payments/index.js";
 import { commerce } from "../commerce.config.js";
 import { rateLimit } from "../middleware/rateLimit.js";
@@ -123,6 +124,17 @@ async function loadOwnedOrder(req, res) {
   }
   return order;
 }
+
+// Signed-in order history, including orders placed on other devices.
+ordersRouter.get("/mine", async (req, res, next) => {
+  try {
+    const customer = req.session?.customerId ? await Customer.findById(req.session.customerId).lean() : null;
+    if (!customer?.active) return res.status(401).json({ error: "Please log in to view your orders." });
+    const orders = await Order.find({ "customer.email": customer.email }).select("+accessKey").sort({ createdAt: -1 }).limit(100);
+    res.set("Cache-Control", "no-store");
+    res.json({ orders: orders.map(order => ({ order: publicOrderView(order), accessKey: order.accessKey })) });
+  } catch (error) { next(error); }
+});
 
 // The customer's order page. An unpaid online order is re-checked with the gateway on each view.
 ordersRouter.get("/:number", async (req, res, next) => {

@@ -19,7 +19,7 @@ const NOTES: { label: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] =
 export function ShopByNote() {
   return (
     <section id="notes" aria-labelledby="notes-h" className="pb-12 pt-16 md:pb-16 md:pt-20">
-      <SectionHeading id="notes-h" sub="Follow your nose" title="Shop by note" ornamentTone="light" />
+      <SectionHeading id="notes-h" sub="Follow your nose" title="Shop by note" />
       <ul className="row-scroll mx-auto mt-10 flex max-w-[1100px] snap-x gap-4 overflow-x-auto px-6 pb-2 md:grid md:grid-cols-7 md:gap-4 md:overflow-visible md:px-10">
         {NOTES.map(({ label, Icon }, i) => (
           <li key={label} data-reveal="zoom" style={revealOrder(i)} className="w-[92px] shrink-0 snap-start text-center md:w-auto">

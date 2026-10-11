@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { accountApi, type Account } from "@/lib/account";
 import { trackEvent } from "@/lib/analytics";
 import { ApiError } from "@/lib/api";
@@ -6,17 +15,24 @@ import { forgetVisitorIdentity, identifyVisitor } from "@/lib/visits";
 
 export type User = { name: string; email: string; phone?: string };
 
-export const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+export const EMAIL_RE =
+  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 /** Indian mobile number: 10 digits starting with 6–9 (the +91 country code is fixed in the form). */
 export const INDIAN_MOBILE_RE = /^[6-9]\d{9}$/;
 /** 8+ characters with an uppercase letter, a lowercase letter, a number and a symbol. */
-export const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+export const PASSWORD_RULE =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
 type AuthContextValue = {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string, phone: string) => Promise<void>;
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+    phone: string,
+  ) => Promise<void>;
   logout: () => void;
   isAuthOpen: boolean;
   /** Opens the auth modal; `onSuccess` runs once the user is signed in. */
@@ -31,29 +47,47 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function loadUser(): User | null {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-    if (parsed && typeof parsed === "object" && "email" in parsed && "name" in parsed) return parsed as User;
+    const parsed: unknown = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? "null",
+    );
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "email" in parsed &&
+      "name" in parsed
+    )
+      return parsed as User;
   } catch {
     // Ignore malformed or unavailable storage.
   }
   return null;
 }
 
-const toUser = (account: Account): User => ({ name: account.name, email: account.email, phone: account.phone });
+const toUser = (account: Account): User => ({
+  name: account.name,
+  email: account.email,
+  phone: account.phone,
+});
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(loadUser);
+  const [user, setUser] = useState<User | null>(null);
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    setUser(loadUser());
+    setRestored(true);
+  }, []);
   const [isAuthOpen, setAuthOpen] = useState(false);
   const pending = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    if (!restored) return;
     try {
       if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
       else localStorage.removeItem(STORAGE_KEY);
     } catch {
       // Storage unavailable; the session cookie still keeps them signed in.
     }
-  }, [user]);
+  }, [user, restored]);
 
   // Ask the server who is signed in. It is the only source of truth: the session may have expired,
   // or they may have signed in on another tab.
@@ -64,7 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then(({ customer }) => {
         if (cancelled) return;
         setUser(customer ? toUser(customer) : null);
-        if (customer) identifyVisitor({ email: customer.email, name: customer.name, phone: customer.phone, via: "signin" });
+        if (customer)
+          identifyVisitor({
+            email: customer.email,
+            name: customer.name,
+            phone: customer.phone,
+            via: "signin",
+          });
       })
       .catch(() => {
         // API unreachable — keep whatever the last visit remembered rather than signing them out.
@@ -78,7 +118,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(toUser(account));
     setAuthOpen(false);
     trackEvent(via === "signup" ? "sign_up" : "sign_in");
-    identifyVisitor({ email: account.email, name: account.name, phone: account.phone, via });
+    identifyVisitor({
+      email: account.email,
+      name: account.name,
+      phone: account.phone,
+      via,
+    });
     const continuation = pending.current;
     pending.current = null;
     continuation?.();
@@ -95,7 +140,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      if (!EMAIL_RE.test(email)) throw new Error("Enter a valid email address.");
+      if (!EMAIL_RE.test(email))
+        throw new Error("Enter a valid email address.");
       if (!password) throw new Error("Enter your password.");
       try {
         const { customer } = await accountApi.login(email, password);
@@ -110,11 +156,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(
     async (name: string, email: string, password: string, phone: string) => {
       if (name.trim().length < 2) throw new Error("Enter your full name.");
-      if (!EMAIL_RE.test(email)) throw new Error("Enter a valid email address.");
-      if (!INDIAN_MOBILE_RE.test(phone)) throw new Error("Enter a valid 10-digit Indian mobile number.");
-      if (!PASSWORD_RULE.test(password)) throw new Error("Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a symbol.");
+      if (!EMAIL_RE.test(email))
+        throw new Error("Enter a valid email address.");
+      if (!INDIAN_MOBILE_RE.test(phone))
+        throw new Error("Enter a valid 10-digit Indian mobile number.");
+      if (!PASSWORD_RULE.test(password))
+        throw new Error(
+          "Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a symbol.",
+        );
       try {
-        const { customer } = await accountApi.signup({ name: name.trim(), email, phone, password, marketing: true });
+        const { customer } = await accountApi.signup({
+          name: name.trim(),
+          email,
+          phone,
+          password,
+          marketing: true,
+        });
         complete(customer, "signup");
       } catch (err) {
         throw message(err, "Could not create your account. Please try again.");
@@ -142,7 +199,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated: Boolean(user), login, signup, logout, isAuthOpen, openAuth, closeAuth }),
+    () => ({
+      user,
+      isAuthenticated: Boolean(user),
+      login,
+      signup,
+      logout,
+      isAuthOpen,
+      openAuth,
+      closeAuth,
+    }),
     [user, login, signup, logout, isAuthOpen, openAuth, closeAuth],
   );
 

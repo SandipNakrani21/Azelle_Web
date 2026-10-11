@@ -53,7 +53,7 @@ export default function AdminLogin() {
       <aside className="relative hidden overflow-hidden lg:block" aria-hidden="true">
         <div className="hero__bg" />
         <div className="relative flex h-full flex-col justify-between p-12">
-          <Logo className="self-start" imgClassName="h-16" taglineClassName="text-[10px] tracking-[0.5em]" />
+          <Logo className="self-start" imgClassName="h-16" />
           <div>
             <p className="font-display text-[clamp(2.5rem,4vw,3.75rem)] leading-[1.05]">Fragrance Beyond Words</p>
             <p className="mt-4 max-w-sm text-lg">Orders, products, customers and analytics — each team member with their own role.</p>
@@ -64,7 +64,7 @@ export default function AdminLogin() {
 
       <main className="admin-shell grid place-items-center px-6 py-12">
         <div className="w-full max-w-[400px]">
-          <Logo className="lg:hidden" imgClassName="h-12" taglineClassName="text-[9px] tracking-[0.5em]" />
+          <Logo className="lg:hidden" imgClassName="h-12" />
           <p className="mt-8 text-[11px] font-semibold uppercase tracking-[0.24em] lg:mt-0">Admin panel</p>
           <h1 className="admin-title mt-2 font-display text-[2.9rem] leading-none">Sign in</h1>
           <p className="mt-3 text-sm">Use your admin email and password.</p>

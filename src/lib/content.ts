@@ -4,7 +4,7 @@
 export const MARQUEE_ITEMS = [
   "Perfume extract",
   "Small-batch composed",
-  "Complimentary shipping",
+  "Shipping across India",
   "Natural absolutes",
 ];
 
@@ -99,5 +99,5 @@ export const ATELIER_CHECKS = [
   "Hand-finished bottles",
   "Composed with natural absolutes",
   "Samples with every order",
-  "Complimentary shipping, always",
+  "Shipping charges shown before payment",
 ];
